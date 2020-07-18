@@ -1314,6 +1314,13 @@ void cmdDisableEnEx(PCHAR szCmd)
 
 //-----------------------------------------------------
 
+void cmdDisableVehMapIcon(PCHAR szCmd)
+{
+	pGame->m_bDisableVehMapIcons = !pGame->m_bDisableVehMapIcons;
+}
+
+//-----------------------------------------------------
+
 void cmdStartPiss(PCHAR szCmd)
 {
 	if(pNetGame) {
@@ -1379,6 +1386,8 @@ void SetupCommands()
 
 	pCmdWindow->AddCmdProc("pagesize", cmdSetChatPageSize);
 	pCmdWindow->AddCmdProc("timestamp", cmdToggleChatTimeStamp);
+
+	pCmdWindow->AddCmdProc("disvehico", cmdDisableVehMapIcon);
 
 #ifndef _DEBUG
 	if (tSettings.bDebug)

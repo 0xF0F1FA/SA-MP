@@ -90,6 +90,7 @@ public:
 	float m_fGlobalMarkerRadius;
 	float m_fNameTagDrawDistance; // The distance which players will start rendering nametags
 	bool m_bDisableEnterExits; // Interior enter/exits disabled?
+	bool m_bDisableVehMapIcons;
 	unsigned int m_uiMaxRconAttempt;
 
 	RakNet::Time64 m_iLastTimeSaved;

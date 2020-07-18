@@ -6301,6 +6301,14 @@ static cell n_DisableInteriorEnterExits(AMX *amx, cell *params)
 	return 1;
 }
 
+// native DisableVehicleMarkers()
+static cell n_DisableVehicleMarkers(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "DisableVehicleMarkers", 0);
+	pNetGame->m_bDisableVehMapIcons = true;
+	return 1;
+}
+
 // native SetNameTagDrawDistance(Float:distance)
 static cell n_SetNameTagDrawDistance(AMX *amx, cell *params)
 {
@@ -6540,6 +6548,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetDisabledWeapons",		n_SetDisabledWeapons },
 	{ "UsePlayerPedAnims",		n_UsePlayerPedAnims },
 	{ "DisableInteriorEnterExits", n_DisableInteriorEnterExits },
+	DEFINE_NATIVE(DisableVehicleMarkers),
 	{ "SetNameTagDrawDistance", n_SetNameTagDrawDistance },
 	DEFINE_NATIVE(DisableNameTagLOS),
 	DEFINE_NATIVE(SetPlayerBlurLevel),

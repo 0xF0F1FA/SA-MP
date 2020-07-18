@@ -60,7 +60,8 @@ private:
 	DWORD			m_dwRaceCheckpointMarker;
 	DWORD			m_dwRaceCheckpointHandle;
 
-public:	
+public:
+	bool m_bDisableVehMapIcons;
 
 	CPlayerPed *NewPlayer(int iPlayerID, int iSkin,float fPosX,float fPosY,float fPosZ,float fRotation,BYTE byteCreateMarker = 1);
 	CVehicle *NewVehicle(int iType,float fPosX,float fPosY,float fPosZ,float fRotation, PCHAR szNumberPlate);

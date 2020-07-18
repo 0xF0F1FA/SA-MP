@@ -332,14 +332,6 @@ typedef struct
 	unsigned char bPassenger : 1;
 	unsigned char bBackLeft : 1;
 	unsigned char bBackRight : 1;
-} CAR_WINDOW_FLAG;
-
-typedef struct
-{
-	unsigned char bDriver : 1;
-	unsigned char bPassenger : 1;
-	unsigned char bBackLeft : 1;
-	unsigned char bBackRight : 1;
 } VEHICLE_OPEN_CLOSE_FLAG;
 
 #endif // _SAMP_SHARED_H

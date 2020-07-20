@@ -2454,6 +2454,24 @@ static cell n_GetVehicleModelInfo(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetVehicleParamsSirenState(vehicleid)
+static cell n_GetVehicleParamsSirenState(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetVehicleParamsSirenState", 1);
+
+	if (pNetGame->GetVehiclePool()) {
+		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle != nullptr) {
+			// TODO: Add custom siren set check here
+			if (VehicleModelWithSiren(pVehicle->m_SpawnInfo.iVehicleType))
+				return pVehicle->bOldSirenState;
+			else
+				return -1;
+		}
+	}
+	return 0;
+}
+
 //----------------------------------------------------------------------------------
 
 // native SendClientMessage(playerid, color, const message[])
@@ -6782,6 +6800,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SetVehicleFeature),
 	DEFINE_NATIVE(SetVehicleVisibility),
 	DEFINE_NATIVE(GetVehicleModelInfo),
+	DEFINE_NATIVE(GetVehicleParamsSirenState),
 
 	// Messaging
 	{ "SendClientMessage",		n_SendClientMessage },

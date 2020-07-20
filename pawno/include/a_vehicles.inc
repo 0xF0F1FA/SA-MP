@@ -97,3 +97,4 @@ native SetVehicleDoorState(vehicleid, doorid, bool:door_state);
 native SetVehicleFeature(vehicleid, toggle);
 native SetVehicleVisibility(vehicleid, visible);
 native GetVehicleModelInfo(vehiclemodel, infotype, &Float:X, &Float:Y, &Float:Z);
+native GetVehicleParamsSirenState(vehicleid);

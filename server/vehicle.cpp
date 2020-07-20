@@ -311,6 +311,7 @@ void CVehicle::SetVirtualWorld(int iVirtualWorld)
 
 bool CVehicle::HandleSiren(unsigned char ucPlayerId, bool bSirenState)
 {
+	// TODO: Add custom siren set check here
 	if (VehicleModelWithSiren(m_SpawnInfo.iVehicleType)) {
 		if (bOldSirenState != bSirenState) {
 			CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();

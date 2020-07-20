@@ -37,8 +37,8 @@ CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, ID3DXFont *pFont)
 	m_lFontSizeY = rectSize.bottom - rectSize.top;
 
 	m_dwChatTextColor = D3DCOLOR_ARGB(255,255,255,255);
-	m_dwChatInfoColor = D3DCOLOR_ARGB(255,0,200,200);
-	m_dwChatDebugColor = D3DCOLOR_ARGB(255,244,164,25);
+	m_dwChatInfoColor = D3DCOLOR_ARGB(255, 136, 170, 98);
+	m_dwChatDebugColor = D3DCOLOR_ARGB(255, 169, 196, 228);
 	m_dwChatBackgroundColor = D3DCOLOR_ARGB(255,0,0,0);
 }
 

@@ -304,14 +304,16 @@ void CNetGame::Process()
 		}	
 	}
 	else {
-		if(pGame->FindPlayerPed()->IsInVehicle()) {
-			pGame->FindPlayerPed()->RemoveFromVehicleAndPutAt(1500.0f,-887.0979f,32.56055f);
+		CPlayerPed* pLocalPed = pGame->FindPlayerPed();
+		if(pLocalPed->IsInVehicle()) {
+			pLocalPed->RemoveFromVehicleAndPutAt(1093.4f, -2036.5f, 82.710602f);
 		} else {
-			pGame->FindPlayerPed()->TeleportTo(1500.0f,-887.0979f,32.56055f);
+			pLocalPed->TeleportTo(1133.0504f, -2038.4034f, 69.1f);
 		}
-		pGame->GetCamera()->SetPosition(1497.803f,-887.0979f,62.56055f,0.0f,0.0f,0.0f);
-		pGame->GetCamera()->LookAtPoint(1406.65f,-795.7716f,82.2771f,2);
-		pGame->FindPlayerPed()->TogglePlayerControllable(0);
+		pGame->GetCamera()->SetPosition(1093.0f, -2036.0f, 90.0f,0.0f,0.0f,0.0f);
+		pGame->GetCamera()->LookAtPoint(384.0f, -1557.0f, 20.0f,2);
+		pLocalPed->TogglePlayerControllable(0);
+		pGame->SetWorldWeather(1);
 		pGame->DisplayHud(false);
 	}
 

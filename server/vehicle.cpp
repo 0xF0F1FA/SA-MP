@@ -61,6 +61,7 @@ CVehicle::CVehicle( int iModel, VECTOR *vecPos,
 	m_TrailerID = 0;
 	m_CabID = 0;
 	m_bDead = false;
+	bOldSirenState = false; // disabled
 }
 
 //----------------------------------------------------
@@ -306,4 +307,23 @@ void CVehicle::SetVirtualWorld(int iVirtualWorld)
 	bsData.Write(iVirtualWorld); // vw id
 	pNetGame->SendToAll(RPC_ScrSetVehicleVirtualWorld, &bsData);
 
+}
+
+bool CVehicle::HandleSiren(unsigned char ucPlayerId, bool bSirenState)
+{
+	if (VehicleModelWithSiren(m_SpawnInfo.iVehicleType)) {
+		if (bOldSirenState != bSirenState) {
+			CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();
+			CGameMode* pGameMode = pNetGame->GetGameMode();
+			int ret = 0;
+			if (pFilterScripts)
+				ret = pFilterScripts->OnVehicleSirenStateChange(ucPlayerId, m_VehicleID, bSirenState);
+			if (pGameMode && !ret)
+				pGameMode->OnVehicleSirenStateChange(ucPlayerId, m_VehicleID, bSirenState);
+
+			bOldSirenState = bSirenState;
+		}
+		return true;
+	}
+	return false;
 }

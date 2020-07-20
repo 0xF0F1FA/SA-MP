@@ -1212,3 +1212,21 @@ void CFilterScripts::OnClientCheckResponse(cell playerid, cell type, cell addres
 		}
 	}
 }
+
+int CFilterScripts::OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate)
+{
+	int idx = 0;
+	cell ret = 0;
+	for (char i = 0; i < MAX_FILTER_SCRIPTS; i++) {
+		if (m_pFilterScripts[i] != NULL) {
+			if (!amx_FindPublic(m_pFilterScripts[i], "OnVehicleSirenStateChange", &idx)) {
+				amx_Push(m_pFilterScripts[i], newstate);
+				amx_Push(m_pFilterScripts[i], vehicleid);
+				amx_Push(m_pFilterScripts[i], playerid);
+				amx_Exec(m_pFilterScripts[i], &ret, idx);
+				if (ret) return 1;
+			}
+		}
+	}
+	return ret;
+}

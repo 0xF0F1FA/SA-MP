@@ -81,6 +81,7 @@ public:
 	void OnPlayerEndTyping(cell playerid);
 	int OnPlayerStunt(cell playerid, cell vehicleid);
 	void OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
+	int OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
 };
 
 //----------------------------------------------------------------------------------

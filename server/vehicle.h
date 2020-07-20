@@ -61,6 +61,8 @@ public:
 	bool m_bWrecked;
 	bool m_bSunked;
 
+	bool bOldSirenState;
+
 	void Process(float fElapsedTime);
 
 	CVehicle(int iModel,VECTOR *vecPos,float fRotation,int iColor1,int iColor2, int iRespawnTime);
@@ -82,6 +84,7 @@ public:
 	void Respawn();
 	bool IsOccupied();
 	bool IsATrainPart();
+	bool HandleSiren(unsigned char ucPlayerId, bool bSirenState);
 
 	void Update(BYTE bytePlayerID, MATRIX4X4 * matWorld, float fHealth, VEHICLEID TrailerID);
 

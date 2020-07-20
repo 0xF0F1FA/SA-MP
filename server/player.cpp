@@ -660,6 +660,11 @@ void CPlayer::StoreInCarFullSyncData(INCAR_SYNC_DATA *picSync)
 		pVehicle->m_bSirenOn = (m_icSync.ucInfo & 0x04);
 		pVehicle->m_bWrecked = (m_icSync.ucInfo & 0x08);
 		pVehicle->m_bSunked = (m_icSync.ucInfo & 0x10);
+
+		// Nofity scripts for siren change, or simply return false if the given
+		// vehicle doesn't have siren or have siren initialized.
+		if(!pVehicle->HandleSiren(m_bytePlayerID, m_icSync.byteSirenOn != 0))
+			m_icSync.byteSirenOn = 0;
 	}
 
 	m_icSync.byteCurrentWeapon = CheckWeapon(m_icSync.byteCurrentWeapon);

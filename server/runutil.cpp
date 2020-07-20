@@ -450,6 +450,32 @@ const char* GetWeaponName(int iWeaponID)
 	return "";
 }
 
+// Apperently Rhinos would have siren, but it is disabled by the main function on game wise
+// From adddress: gta_sa.exe:0x006D8470
+bool VehicleModelWithSiren(int iModelId)
+{
+	switch (iModelId) {
+	case 427: // Enforcer
+	case 430: // Predator
+	//case 432: // Rhino
+	case 433: // Barracks
+	case 490: // FBI Rancher
+	case 523: // HPV1000
+	case 528: // FBI Truck
+	case 596: // LSPD Police Car
+	case 597: // SFPD Police Car
+	case 598: // LVPD Police Car
+	case 599: // Police Ranger
+	case 601: // S.W.A.T.
+
+	case 407: // Firetruck
+	case 416: // Ambulance
+	case 423: // Mr.Whoopee
+		return true;
+	}
+	return false;
+}
+
 void Util_UrlUnencode(char *enc)
 {
 	char *write_pos = enc;

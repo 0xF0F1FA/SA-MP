@@ -3637,7 +3637,7 @@ static cell n_GetTickCount(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetTickCount", 0);
 
-	return (cell)GetTickCount();
+	return (cell)RakNet::GetTime32() - pNetGame->m_iInitialTime;
 }
 
 //----------------------------------------------------------------------------------

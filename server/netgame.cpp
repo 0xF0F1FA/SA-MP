@@ -194,6 +194,8 @@ CNetGame::CNetGame()
 			dwPort, dwMaxPlayers, bLanMode?"ON":"OFF" );
 	}
 
+	m_iInitialTime = RakNet::GetTime32();
+
 	m_iGameState = GAMESTATE_STOPPED;
 }
 

@@ -93,6 +93,8 @@ public:
 	bool m_bDisableVehMapIcons;
 	unsigned int m_uiMaxRconAttempt;
 
+	RakNet::Time32 m_iInitialTime;
+
 	RakNet::Time64 m_iLastTimeSaved;
 	unsigned int m_uiNumOfTicksInSec;
 	unsigned int m_uiTickCount;

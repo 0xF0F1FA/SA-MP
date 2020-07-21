@@ -22,12 +22,12 @@
 		return 0; \
 	}
 
-template <typename U>
-void AddString(U **buf_p, size_t &maxlen, const cell *string, int width, int prec)
+template <typename U, typename U2>
+void AddString(U **buf_p, size_t &maxlen, const U2 *string, int width, int prec)
 {
 	int		size = 0;
 	U		*buf;
-	static cell nlstr[] = {'(','n','u','l','l',')','\0'};
+	static U2 nlstr[] = {'(','n','u','l','l',')','\0'};
 
 	buf = *buf_p;
 
@@ -412,6 +412,22 @@ reswitch:
 		case 'h':
 		case 'x':
 			AddHex(&buf_p, llen, *get_amxaddr(amx, params[arg]), width, flags);
+			arg++;
+			break;
+		case 'q':
+			cell* _cstr;
+			int _length;
+			char* _result;
+			amx_GetAddr(amx, params[arg], &_cstr);
+			amx_StrLen(_cstr, &_length);
+			if (_length > 0 && (_result = (char*)malloc((_length + 1) * sizeof(*_result))) != NULL) {
+				amx_GetString(_result, _cstr, sizeof(*_result) > 1, _length + 1);
+
+				char* _query = sqlite3_mprintf("%q", _result);
+				AddString(&buf_p, llen, _query, width, prec);
+				sqlite3_free(_query);
+				free(_result);
+			}
 			arg++;
 			break;
 		case '%':

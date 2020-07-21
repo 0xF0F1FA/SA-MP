@@ -363,6 +363,8 @@ void VehicleSpawn(RPCParameters *rpcParams)
 	bsData.Read(fSpawnRotation);
 	bsData.Read(iInterior);
 
+	bsData.Read(pVehiclePool->m_bHasSiren[VehicleID]);
+
 	bsData.ReadBits((unsigned char*)&pVehiclePool->m_Windows[VehicleID], 4);
 	bsData.ReadBits((unsigned char*)&pVehiclePool->m_Doors[VehicleID], 4);
 

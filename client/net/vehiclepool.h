@@ -41,6 +41,7 @@ public:
 	int					m_iRespawnDelay[MAX_VEHICLES];
 	int					m_iVirtualWorld[MAX_VEHICLES];
 	CHAR				m_charNumberPlate[MAX_VEHICLES][9];
+	bool				m_bHasSiren[MAX_VEHICLES];
 
 	CVehiclePool();
 	~CVehiclePool();

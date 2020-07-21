@@ -40,7 +40,7 @@
 native GetVehicleModelCount(modelid);
 native GetVehicleModelsUsed();
 native IsValidVehicle(vehicleid);
-native CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:a, color1, color2, respawndelay);
+native CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:a, color1, color2, respawndelay, addsiren=0);
 native DestroyVehicle(vehicleid);
 native SetVehicleSpawnInfo(vehicleid, modelid, Float:x, Float:y, Float:z, Float:r, color1, color2, respawndelay = -2, interior = -2);
 native GetVehicleSpawnInfo(vehicleid, &Float:x, &Float:y, &Float:z, &Float:r, &color1, &color2);

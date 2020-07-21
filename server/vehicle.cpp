@@ -11,9 +11,8 @@
 
 //----------------------------------------------------------
 
-CVehicle::CVehicle( int iModel, VECTOR *vecPos,
-				    float fRotation, int iColor1,
-				    int iColor2, int iRespawnDelay)
+CVehicle::CVehicle( int iModel, VECTOR *vecPos, float fRotation, int iColor1,
+ int iColor2, int iRespawnDelay, bool bAddSiren)
 {
 	// Store the spawn info.
 	m_SpawnInfo.iVehicleType = iModel;
@@ -25,6 +24,8 @@ CVehicle::CVehicle( int iModel, VECTOR *vecPos,
 	m_SpawnInfo.iColor2 = (iColor2 == -1) ? (rand() % 255) : (iColor2);
 	m_SpawnInfo.iRespawnDelay = iRespawnDelay;
 	m_SpawnInfo.iInterior = 0;
+
+	m_bHasSiren = (VehicleModelWithSiren(iModel) || bAddSiren) ? true : false;
 
 	m_bHasBeenOccupied = false;
 	m_dwLastRespawnedTick = GetTickCount();
@@ -119,6 +120,8 @@ void CVehicle::SpawnForPlayer(BYTE byteForPlayerID)
 	bsVehicleSpawn.Write(m_SpawnInfo.vecPos.Z);
 	bsVehicleSpawn.Write(m_SpawnInfo.fRotation);
 	bsVehicleSpawn.Write(m_SpawnInfo.iInterior);
+
+	bsVehicleSpawn.Write(m_bHasSiren);
 
 	bsVehicleSpawn.WriteBits((unsigned char*)&m_Windows, 4);
 	bsVehicleSpawn.WriteBits((unsigned char*)&m_Doors, 4);
@@ -311,8 +314,7 @@ void CVehicle::SetVirtualWorld(int iVirtualWorld)
 
 bool CVehicle::HandleSiren(unsigned char ucPlayerId, bool bSirenState)
 {
-	// TODO: Add custom siren set check here
-	if (VehicleModelWithSiren(m_SpawnInfo.iVehicleType)) {
+	if (m_bHasSiren) {
 		if (bOldSirenState != bSirenState) {
 			CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();
 			CGameMode* pGameMode = pNetGame->GetGameMode();

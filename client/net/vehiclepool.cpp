@@ -21,6 +21,7 @@ CVehiclePool::CVehiclePool()
 		m_iVirtualWorld[VehicleID] = 0;
 		m_Windows[VehicleID] = { 1,1,1,1 };
 		m_Doors[VehicleID] = { 0,0,0,0 };
+		m_bHasSiren[VehicleID] = false;
 	}
 }
 

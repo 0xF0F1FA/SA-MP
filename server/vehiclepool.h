@@ -27,7 +27,7 @@ public:
 	CVehiclePool();
 	~CVehiclePool();
 
-	VEHICLEID New(int iVehicleType, VECTOR * vecPos, float fRotation, int iColor1, int iColor2, int iRespawnDelay);
+	VEHICLEID New(int iVehicleType, VECTOR * vecPos, float fRotation, int iColor1, int iColor2, int iRespawnDelay, bool bAddSiren);
 
 	bool Delete(VEHICLEID VehicleID);	
 		

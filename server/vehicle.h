@@ -52,6 +52,7 @@ public:
 	DWORD					m_dwLastSeenOccupiedTick;
 	DWORD					m_dwLastRespawnedTick;
 	int						m_iVirtualWorld;
+	bool					m_bHasSiren;
 	VEHICLE_OPEN_CLOSE_FLAG m_Windows;
 	VEHICLE_OPEN_CLOSE_FLAG m_Doors;
 
@@ -65,8 +66,8 @@ public:
 
 	void Process(float fElapsedTime);
 
-	CVehicle(int iModel,VECTOR *vecPos,float fRotation,int iColor1,int iColor2, int iRespawnTime);
-	~CVehicle(){};
+	CVehicle(int iModel,VECTOR *vecPos,float fRotation,int iColor1,int iColor2, int iRespawnTime, bool bAddSiren);
+	//~CVehicle(){};
 
 	bool IsActive() { return m_bIsActive; };
 	bool IsWasted() { return m_bIsWasted; };

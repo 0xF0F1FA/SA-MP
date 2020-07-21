@@ -34,9 +34,8 @@ CVehiclePool::~CVehiclePool()
 
 //----------------------------------------------------
 
-VEHICLEID CVehiclePool::New(int iVehicleType,
-					   VECTOR * vecPos, float fRotation,
-					   int iColor1, int iColor2, int iRespawnDelay)
+VEHICLEID CVehiclePool::New(int iVehicleType, VECTOR * vecPos, float fRotation,
+	int iColor1, int iColor2, int iRespawnDelay, bool bAddSiren)
 {
 	VEHICLEID VehicleID;
 
@@ -50,7 +49,7 @@ VEHICLEID CVehiclePool::New(int iVehicleType,
 
 	if(VehicleID == MAX_VEHICLES) return 0xFFFF;		
 
-	m_pVehicles[VehicleID] = new CVehicle(iVehicleType,vecPos,fRotation,iColor1,iColor2,iRespawnDelay);
+	m_pVehicles[VehicleID] = new CVehicle(iVehicleType,vecPos,fRotation,iColor1,iColor2,iRespawnDelay, bAddSiren);
 
 	if(m_pVehicles[VehicleID])
 	{

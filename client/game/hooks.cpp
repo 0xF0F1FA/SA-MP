@@ -1205,6 +1205,33 @@ NUDE PaynSpray_Hook()
 	}
 }
 
+static bool VehiceHasSiren()
+{
+	if (pNetGame && pNetGame->GetVehiclePool()) {
+		VehicleID = pNetGame->GetVehiclePool()->FindIDFromGtaPtr(_pVehicle);
+		if (VehicleID != INVALID_VEHICLE_ID) {
+			return pNetGame->GetVehiclePool()->m_bHasSiren[VehicleID];
+		}
+	}
+	return false;
+}
+
+NUDE IsModelHasSiren_Hook()
+{
+	_asm mov _pVehicle, ecx
+	_asm pusha
+
+	if (VehiceHasSiren()) {
+		_asm popa
+		_asm xor al, al
+		_asm ret
+	} else {
+		_asm popa
+		_asm mov al, 1
+		_asm ret
+	}
+}
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1279,6 +1306,10 @@ void GameInstallHooks()
 	InstallMethodHook(0x871800,(DWORD)AllVehicles_ProcessControl_Hook); // truck
 	InstallMethodHook(0x871B10,(DWORD)AllVehicles_ProcessControl_Hook); // quad
 	InstallMethodHook(0x872398,(DWORD)AllVehicles_ProcessControl_Hook); // train
+
+	InstallCallHook(0x6E0954, (DWORD)IsModelHasSiren_Hook);
+	InstallCallHook(0x6B2BCB, (DWORD)IsModelHasSiren_Hook);
+	InstallCallHook(0x4F77DA, (DWORD)IsModelHasSiren_Hook);
 
 	// Radar and map hooks for gang zones
 	InstallCallHook(0x5869BF,(DWORD)ZoneOverlay_Hook);

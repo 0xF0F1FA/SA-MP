@@ -257,6 +257,7 @@ static cell n_AddPlayerClassEx(AMX *amx, cell *params)
 
 //----------------------------------------------------------------------------------
 
+// native AddStaticVehicle(modelid, Float:spawn_x, Float:spawn_y, Float:spawn_z, Float:z_angle, color1, color2)
 static cell n_AddStaticVehicle(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "AddStaticVehicle", 7);
@@ -267,16 +268,17 @@ static cell n_AddStaticVehicle(AMX *amx, cell *params)
 	vecPos.Z = amx_ctof(params[4]);
 
 	VEHICLEID ret = pNetGame->GetVehiclePool()->New((int)params[1], &vecPos, amx_ctof(params[5]),
-		(int)params[6], (int)params[7], 120000);
+		(int)params[6], (int)params[7], 120000, false);
 
 	return ret;
 }
 
 //----------------------------------------------------------------------------------
 
+// native AddStaticVehicleEx(modelid, Float:spawn_x, Float:spawn_y, Float:spawn_z, Float:z_angle, color1, color2, respawn_delay, addsiren=0)
 static cell n_AddStaticVehicleEx(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "AddStaticVehicleEx", 8);
+	CHECK_PARAMS(amx, "AddStaticVehicleEx", 9);
 
 	VECTOR vecPos;
 	vecPos.X = amx_ctof(params[2]);
@@ -284,7 +286,7 @@ static cell n_AddStaticVehicleEx(AMX *amx, cell *params)
 	vecPos.Z = amx_ctof(params[4]);
 
 	VEHICLEID ret = pNetGame->GetVehiclePool()->New((int)params[1], &vecPos, amx_ctof(params[5]),
-		(int)params[6], (int)params[7], ((int)params[8]) * 1000);
+		(int)params[6], (int)params[7], ((int)params[8]) * 1000, params[9] != 0);
 
 	return ret;
 }
@@ -2053,10 +2055,10 @@ static cell n_GetVehicleModelsUsed(AMX* amx, cell* params)
 	return ucModels;
 }
 
-// native CreateVehicle(vehicletype, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawndelay)
+// native CreateVehicle(vehicletype, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawndelay, addsiren=0)
 static cell n_CreateVehicle(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "CreateVehicle", 8);
+	CHECK_PARAMS(amx, "CreateVehicle", 9);
 
 	VECTOR vecPos;
 	vecPos.X = amx_ctof(params[2]);
@@ -2064,7 +2066,7 @@ static cell n_CreateVehicle(AMX *amx, cell *params)
 	vecPos.Z = amx_ctof(params[4]);
 
 	VEHICLEID VehicleID = pNetGame->GetVehiclePool()->New((int)params[1], &vecPos, 
-		amx_ctof(params[5]), (int)params[6], (int)params[7], ((int)params[8]) * 1000);
+		amx_ctof(params[5]), (int)params[6], (int)params[7], ((int)params[8]) * 1000, params[9] != 0);
 
 	if (VehicleID != 0xFFFF)
 	{
@@ -2462,11 +2464,7 @@ static cell n_GetVehicleParamsSirenState(AMX* amx, cell* params)
 	if (pNetGame->GetVehiclePool()) {
 		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
 		if (pVehicle != nullptr) {
-			// TODO: Add custom siren set check here
-			if (VehicleModelWithSiren(pVehicle->m_SpawnInfo.iVehicleType))
-				return pVehicle->bOldSirenState;
-			else
-				return -1;
+			return (pVehicle->m_bHasSiren) ? pVehicle->bOldSirenState : -1;
 		}
 	}
 	return 0;

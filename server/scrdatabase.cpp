@@ -18,8 +18,6 @@ typedef struct {
 static DataStructures::Map<int, DBHandle*> g_mapDBs;
 static DataStructures::Map<int, DBResult*> g_mapDBResults;
 
-int set_amxstring(AMX* amx, cell amx_addr, const char* source, int max);
-
 // native DB:db_open(name[])
 static cell n_db_open(AMX* amx, cell* params)
 {
@@ -172,8 +170,6 @@ static cell n_db_free_result(AMX* amx, cell* params)
 	sqlite3_free(dbresult->szErrMsg);
 	free(dbresult);
 
-	dbresult->amx = 0;
-
 	g_mapDBResults.Delete(key);
 
 	return 1;
@@ -250,7 +246,7 @@ static cell n_db_field_name(AMX* amx, cell* params)
 		return 0;
 	}
 
-	set_amxstring(amx, params[3], dbresult->pszResults[field], params[4]);
+	set_amxstring(amx, params[3], dbresult->pszResults[field] != NULL ? dbresult->pszResults[field] : "", params[4]);
 
 	return 1;
 }
@@ -275,7 +271,9 @@ static cell n_db_get_field(AMX* amx, cell* params)
 		return 0;
 	}
 
-	set_amxstring(amx, params[3], dbresult->pszResults[dbresult->iColumns * (dbresult->iCurrentRow + 1) + field], params[4]);
+	int index = dbresult->iColumns * (dbresult->iCurrentRow + 1) + field;
+
+	set_amxstring(amx, params[3], dbresult->pszResults[index] != NULL ? dbresult->pszResults[index] : "", params[4]);
 
 	return 1;
 }
@@ -313,7 +311,9 @@ static cell n_db_get_field_assoc(AMX* amx, cell* params)
 		return 0;
 	}
 
-	set_amxstring(amx, params[3], dbresult->pszResults[dbresult->iColumns * (dbresult->iCurrentRow + 1) + field], params[4]);
+	int index = dbresult->iColumns * (dbresult->iCurrentRow + 1) + field;
+
+	set_amxstring(amx, params[3], (dbresult->pszResults[index] != NULL) ? dbresult->pszResults[index] : "", params[4]);
 
 	return 1;
 }
@@ -517,22 +517,18 @@ int amx_sampDbInit(AMX* amx)
 
 int amx_sampDbCleanup(AMX* amx)
 {
-	unsigned idx = 0;
-	for (; idx < g_mapDBs.Size(); idx++)
-	{
-		if (g_mapDBs[idx]->amx == amx)
-		{
+	unsigned int idx = g_mapDBs.Size();
+	while (idx--) {
+		if (g_mapDBs[idx]->amx == amx) {
 			sqlite3_close(g_mapDBs[idx]->handle);
 			delete g_mapDBs[idx];
 			g_mapDBs.RemoveAtIndex(idx);
 		}
 	}
 
-	idx = 0;
-	for (; idx < g_mapDBResults.Size(); idx++)
-	{
-		if (g_mapDBResults[idx]->amx == amx)
-		{
+	idx = g_mapDBResults.Size();
+	while (idx--) {
+		if (g_mapDBResults[idx]->amx == amx) {
 			sqlite3_free_table(g_mapDBResults[idx]->pszResults);
 			sqlite3_free(g_mapDBResults[idx]->szErrMsg);
 			free(g_mapDBResults[idx]);

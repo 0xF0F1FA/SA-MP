@@ -120,12 +120,8 @@ int CVariables::GetType(char* szVarName)
 
 char* CVariables::GetNameAtIndex(int iIndex)
 {
-	try {
-		if (iIndex < (int)m_Variables.size() && m_Variables[iIndex]) {
-			return m_Variables[iIndex]->szName;
-		}
-	} catch(...) {
-		return NULL;
+	if (iIndex >= 0 && iIndex < (int)m_Variables.size()) {
+		return m_Variables[iIndex]->szName;
 	}
 	return NULL;
 }

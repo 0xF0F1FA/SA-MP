@@ -4338,7 +4338,7 @@ bool RakPeer::RunUpdateCycle( void )
 			while ( bitSize > 0 )
 			{
 				// These types are for internal use and should never arrive from a network packet
-				if (data[0]==ID_CONNECTION_ATTEMPT_FAILED && data[0]==ID_MODIFIED_PACKET)
+				if (data[0]==ID_CONNECTION_ATTEMPT_FAILED || data[0]==ID_MODIFIED_PACKET)
 				{
 					RakAssert(0);
 					continue;

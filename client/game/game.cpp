@@ -43,6 +43,8 @@ CGame::CGame()
 	m_fRaceCheckpointSize = 0.0f;
 	m_vecCheckpointPos = m_vecCheckpointExtent = m_vecRaceCheckpointPos = m_vecRaceCheckpointNext = { 0.0f, 0.0f, 0.0f };
 	m_bDisableVehMapIcons = false;
+	m_bMissionAudioLoaded = false;
+	m_bDisableInteriorAmbient = false;
 }
 
 //-----------------------------------------------------------
@@ -434,11 +436,56 @@ void CGame::DisplayGameText(char *szStr,int iTime,int iSize)
 	_asm add esp, 12
 }
 
+void CGame::PlayAmbientSound(int iSound)
+{
+	DWORD dwFunc = 0x4D6D50;
+	DWORD dwThis = 0x8AC15C;
+	_asm {
+		push iSound
+		mov ecx, dwThis
+		call dwFunc
+		add esp, 4
+	};
+}
+
+void CGame::StopAmbientSound()
+{
+	DWORD dwFunc = 0x4D6D60;
+	DWORD dwThis = 0x8AC15C;
+	_asm {
+		mov ecx, dwThis
+		call dwFunc
+	}
+}
+
 //-----------------------------------------------------------
 
-void CGame::PlaySound(int iSound, float fX, float fY, float fZ)
+void CGame::PlaySoundFX(int iSound, float fX, float fY, float fZ)
 {
-	ScriptCommand(&play_sound, fX, fY, fZ, iSound);
+	if (iSound) {
+		if (iSound == 1) {
+			m_bDisableInteriorAmbient = true;
+		} else if (iSound >= 1000) {
+			if (iSound >= 2000) {
+				ScriptCommand(&clear_mission_audio, 1);
+				ScriptCommand(&load_mission_audio, 1, iSound);
+				ScriptCommand(&set_mission_audio_position, 1, fX, fY, fZ);
+				m_bMissionAudioLoaded = true;
+			}
+			else {
+				ScriptCommand(&play_sound, fX, fY, fZ, iSound);
+			}
+		} else {
+			CGame::PlayAmbientSound(iSound);
+		}
+	} else {
+		if (m_bMissionAudioLoaded) {
+			ScriptCommand(&clear_mission_audio, 1);
+			m_bMissionAudioLoaded = false;
+		}
+		CGame::StopAmbientSound();
+		m_bDisableInteriorAmbient = false;
+	}
 }
 
 //-----------------------------------------------------------

@@ -1232,6 +1232,30 @@ NUDE IsModelHasSiren_Hook()
 	}
 }
 
+DWORD dwArg1, dwArg2, dwCurrentArea;
+NUDE CAmbientAuidoTrack_Process_Hook()
+{
+	_asm {
+		mov edx, [esp+4]
+		mov dwArg1, edx
+		mov edx, [esp+8]
+		mov dwArg2, edx
+	}
+	dwCurrentArea = *(DWORD*)0xB72914;
+	if (pGame && pGame->m_bDisableInteriorAmbient) {
+		*(DWORD*)0xB72914 = 1;
+	}
+	_asm {
+		push dwArg2
+		push dwArg1
+		mov edx, 0x505A00
+		call edx
+	}
+	*(DWORD*)0xB72914 = dwCurrentArea;
+	_asm retn 8
+}
+
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1367,6 +1391,8 @@ void GameInstallHooks()
 	InstallHook(0x6A0050, (DWORD)GetText_Hook, 0x6A0043, GetText_HookJmpCode, sizeof (GetText_HookJmpCode));
 
 	InstallCallHook(0x44B125, (DWORD)PaynSpray_Hook, 0xE9);
+
+	InstallMethodHook(0x872A74, (DWORD)CAmbientAuidoTrack_Process_Hook);
 }
 
 //-----------------------------------------------------------

@@ -310,3 +310,7 @@ const SCRIPT_COMMAND set_car_visibility					= { 0x338, "ii" };
 const SCRIPT_COMMAND scale_object						= { 0x08D2, "if" };
 
 const SCRIPT_COMMAND add_sprite_blip_for_coord			= { 0x02A8, "fffiv" };
+
+const SCRIPT_COMMAND clear_mission_audio = { 0x040D, "i" };
+const SCRIPT_COMMAND load_mission_audio = { 0x03CF, "ii" };
+const SCRIPT_COMMAND set_mission_audio_position = { 0x03D7, "ifff" };

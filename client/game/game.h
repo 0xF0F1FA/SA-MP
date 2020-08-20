@@ -59,9 +59,11 @@ private:
 	bool			m_bRaceCheckpointsEnabled;
 	DWORD			m_dwRaceCheckpointMarker;
 	DWORD			m_dwRaceCheckpointHandle;
+	bool			m_bMissionAudioLoaded;
 
 public:
 	bool m_bDisableVehMapIcons;
+	bool m_bDisableInteriorAmbient;
 
 	CPlayerPed *NewPlayer(int iPlayerID, int iSkin,float fPosX,float fPosY,float fPosZ,float fRotation,BYTE byteCreateMarker = 1);
 	CVehicle *NewVehicle(int iType,float fPosX,float fPosY,float fPosZ,float fRotation, PCHAR szNumberPlate);
@@ -93,7 +95,9 @@ public:
 	static void ReleaseAnimation(char *szAnimFile);
 	void	ToggleRadar(int iToggle);
 	void	DisplayGameText(char *szStr,int iTime,int iSize);
-	void	PlaySound(int iSound, float fX, float fY, float fZ);
+	static void PlayAmbientSound(int iSound);
+	static void StopAmbientSound();
+	void	PlaySoundFX(int iSound, float fX, float fY, float fZ);
 	void	SetGravity(float fGravity);
 	void	EnableClock(BYTE byteClock);
 	void	EnableZoneNames(BYTE byteEnable);

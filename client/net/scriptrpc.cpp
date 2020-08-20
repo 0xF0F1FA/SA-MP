@@ -393,7 +393,7 @@ void ScrPlaySound(RPCParameters *rpcParams)
 	bsData.Read(fY);
 	bsData.Read(fZ);
 
-	pGame->PlaySound(iSound, fX, fY, fZ);
+	pGame->PlaySoundFX(iSound, fX, fY, fZ);
 }
 
 //----------------------------------------------------

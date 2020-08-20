@@ -1291,7 +1291,7 @@ void CLocalPlayer::ProcessClassSelection()
 			if(m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
 			else m_iSelectedClass--;		
 			
-			pGame->PlaySound(1053,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
+			pGame->PlaySoundFX(1053,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
 			RequestClass(m_iSelectedClass);
 		}
 		// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
@@ -1303,7 +1303,7 @@ void CLocalPlayer::ProcessClassSelection()
 			if(m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
 			else m_iSelectedClass++;
 
-			pGame->PlaySound(1052,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
+			pGame->PlaySoundFX(1052,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
 			RequestClass(m_iSelectedClass);
 		}
 	}

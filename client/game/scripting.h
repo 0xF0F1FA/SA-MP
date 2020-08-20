@@ -308,3 +308,5 @@ const SCRIPT_COMMAND create_property_pickup				= { 0x518, "i" };
 const SCRIPT_COMMAND set_car_extra_parts_angle_to		= { 0x8A4, "if" };
 const SCRIPT_COMMAND set_car_visibility					= { 0x338, "ii" };
 const SCRIPT_COMMAND scale_object						= { 0x08D2, "if" };
+
+const SCRIPT_COMMAND add_sprite_blip_for_coord			= { 0x02A8, "fffiv" };

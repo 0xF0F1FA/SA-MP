@@ -3985,10 +3985,10 @@ static cell n_SetPlayerMarkerForPlayer(AMX *amx, cell *params)
 }
 
 //-----------------------------------------------------
-// native SetPlayerMapIcon(playerid, iconid, Float:x, Float:y, Float:z, icontype, color)
+// native SetPlayerMapIcon(playerid, iconid, Float:x, Float:y, Float:z, markertype, color, style)
 static cell n_SetPlayerMapIcon(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "SetPlayerMapIcon", 7); // Playerid,
+	CHECK_PARAMS(amx, "SetPlayerMapIcon", 8);
 	if ((BYTE)params[2] >= MAX_MAP_ICON) return 0;
 	
 	//CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt((BYTE)params[1]);
@@ -4009,6 +4009,7 @@ static cell n_SetPlayerMapIcon(AMX *amx, cell *params)
 	bsIcon.Write(amx_ctof(params[5])); //fPos[2]);
 	bsIcon.Write((BYTE)params[6]);
 	bsIcon.Write((BYTE)params[7]);
+	bsIcon.Write((unsigned char)params[8]);
 
 	RakServerInterface* pRak = pNetGame->GetRakServer();
 	pRak->RPC(RPC_ScrSetMapIcon , &bsIcon, HIGH_PRIORITY, 

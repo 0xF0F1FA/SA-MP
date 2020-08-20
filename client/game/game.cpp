@@ -561,12 +561,26 @@ void CGame::UpdateCheckpoints()
 
 //-----------------------------------------------------------
 
-DWORD CGame::CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor)
+DWORD CGame::CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor, int iStyle)
 {
-	DWORD dwMarkerID;
-	ScriptCommand(&create_radar_marker_without_sphere, fX, fY, fZ, iMarkerType, &dwMarkerID);
-	ScriptCommand(&set_marker_color,dwMarkerID,iColor);
-	ScriptCommand(&show_on_radar,dwMarkerID,3);
+	DWORD dwMarkerID = 0;
+	switch (iStyle) {
+	case 1:
+		ScriptCommand(&add_sprite_blip_for_coord, fX, fY, fZ, iMarkerType, &dwMarkerID);
+		break;
+	case 2:
+		ScriptCommand(&create_radar_marker_icon, fX, fY, fZ, iMarkerType, &dwMarkerID);
+		break;
+	case 3:
+		ScriptCommand(&create_icon_marker_sphere, fX, fY, fZ, iMarkerType, &dwMarkerID);
+		break;
+	default:
+		ScriptCommand(&create_radar_marker_without_sphere, fX, fY, fZ, iMarkerType, &dwMarkerID);
+	}
+	if (dwMarkerID) {
+		ScriptCommand(&set_marker_color, dwMarkerID, iColor);
+		ScriptCommand(&show_on_radar, dwMarkerID, (iColor >= 1004) ? 3 : 2);
+	}
 	return dwMarkerID;
 }
 

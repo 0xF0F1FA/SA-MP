@@ -95,6 +95,11 @@
 #define KEY_LEFT 				(-128)
 #define KEY_RIGHT 				(128)
 
+#define MAPICON_LOCAL 				(0)
+#define MAPICON_GLOBAL			 	(1)
+#define MAPICON_LOCAL_CHECKPOINT 	(2)
+#define MAPICON_GLOBAL_CHECKPOINT	(3)
+
 native GetPlayerCount();
 native GetPlayerIDFromName(const name[]);
 native SetSpawnInfo(playerid, teamid, skinid, Float:x, Float:y, Float:z, Float:a, weap1, ammo1, weap2, ammo2, weap3, ammo3);
@@ -164,7 +169,7 @@ native SetPlayerWorldBounds(playerid, Float:maxx, Float:maxy, Float:minx, Float:
 native GetPlayerWorldBounds(playerid, &Float:maxx, &Float:maxy, &Float:minx, &Float:miny);
 native SetPlayerMarkerForPlayer(playerid, forplayerid, color);
 native ShowPlayerNameTagForPlayer(forplayerid, playerid, show);
-native SetPlayerMapIcon(playerid, iconid, Float:x, Float:y, Float:z, typeid, color);
+native SetPlayerMapIcon(playerid, iconid, Float:x, Float:y, Float:z, markertype, color, style);
 native RemovePlayerMapIcon(playerid, iconid);
 native AllowPlayerTeleport(playerid, allow);
 native SetPlayerCameraPos(playerid, Float:x, Float:y, Float:z, Float:rx=0.0, Float:ry=0.0, Float:rz=0.0);

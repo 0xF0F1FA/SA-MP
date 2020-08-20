@@ -550,6 +550,7 @@ void ScrSetMapIcon(RPCParameters *rpcParams)
 	BYTE byteIcon;
 	DWORD byteColor;
 	float fPos[3];
+	unsigned char ucStyle;
 
 	bsData.Read(byteIndex);
 	bsData.Read(fPos[0]);
@@ -557,8 +558,9 @@ void ScrSetMapIcon(RPCParameters *rpcParams)
 	bsData.Read(fPos[2]);
 	bsData.Read(byteIcon);
 	bsData.Read(byteColor);
+	bsData.Read(ucStyle);
 
-	pNetGame->SetMapIcon(byteIndex, fPos[0], fPos[1], fPos[2], byteIcon, byteColor);
+	pNetGame->SetMapIcon(byteIndex, fPos[0], fPos[1], fPos[2], byteIcon, byteColor, ucStyle);
 }
 
 void ScrDisableMapIcon(RPCParameters *rpcParams)

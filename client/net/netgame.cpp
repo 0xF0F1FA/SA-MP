@@ -856,12 +856,12 @@ void CNetGame::ResetGangZonePool()
 //-----------------------------------------------------------
 // Puts a personal marker using any of the radar icons on the map
 
-void CNetGame::SetMapIcon(BYTE byteIndex, float fX, float fY, float fZ, BYTE byteIcon, DWORD dwColor)
+void CNetGame::SetMapIcon(BYTE byteIndex, float fX, float fY, float fZ, BYTE byteIcon, DWORD dwColor, BYTE byteStyle)
 {
 	if (byteIndex >= MAX_MAP_ICON) return;
 	if (m_dwMapIcon[byteIndex] != NULL) DisableMapIcon(byteIndex);
 	//ScriptCommand(&create_radar_marker_without_sphere, fX, fY, fZ, byteIcon, &m_dwMapIcon);
-	m_dwMapIcon[byteIndex] = pGame->CreateRadarMarkerIcon(byteIcon, fX, fY, fZ, dwColor);
+	m_dwMapIcon[byteIndex] = pGame->CreateRadarMarkerIcon(byteIcon, fX, fY, fZ, dwColor, byteStyle);
 }
 
 //-----------------------------------------------------------

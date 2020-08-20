@@ -111,7 +111,7 @@ public:
 	void   ToggleRaceCheckpoints(bool bEnabled){ m_bRaceCheckpointsEnabled = bEnabled; };
 	void   SetRaceCheckpointInformation(BYTE byteType, VECTOR *pos, VECTOR *next, float fSize);
 	
-	DWORD	CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor = 201);
+	DWORD	CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor = 201, int iStyle = 0);
 	void	DisableMarker(DWORD dwMarkerID);
 
 	void   AddToLocalMoney(int iAmount);

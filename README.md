@@ -1,6 +1,8 @@
 # San Andreas Multiplayer (Extended)
 SAMPE (originally was named *San Andreas Multiplayer Custom* or *SAMPC*) is a SA-MP like multiplayer modification for PC version of GTA San Andreas, which makes playing the game with mutiple persons locally or even online as simple as possible. 
 
+Feel free to checkout **The Project's Progress**: https://docs.google.com/spreadsheets/d/1iMv8OprvI1SP4Gkxf4iM34ah-W3hNOl11qoFfuqxsoE/
+
 ### Screenshot(s)
 ![Screenshot 1](https://github.com/dashr9230/SAMPC/blob/master/images/sa-mp-002.jpg "SetVehicleFeature test")
 ![Screenshot 2](https://github.com/dashr9230/SAMPC/blob/master/images/sa-mp-000.jpg "SetPlayerCameraPos rotation test")

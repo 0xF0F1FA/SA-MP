@@ -144,10 +144,7 @@ public:
 		_asm call eax
 	};
 		
-	CPlayerPed  *FindPlayerPed() {
-		if(m_pGamePlayer==NULL)	m_pGamePlayer = new CPlayerPed();
-		return m_pGamePlayer;
-	};
+	CPlayerPed* FindPlayerPed();
 
 	DWORD CreatePickup(int iModel, int iType, float fX, float fY, float fZ);
 	DWORD CreateWeaponPickup(int iModel, DWORD dwAmmo, float fX, float fY, float fZ);

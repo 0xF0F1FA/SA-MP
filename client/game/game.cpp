@@ -74,6 +74,14 @@ CObject *CGame::NewObject(int iModel, float fPosX, float fPosY,
 	return pObjectNew;
 }
 
+CPlayerPed* CGame::FindPlayerPed()
+{
+	if (m_pGamePlayer == NULL)
+		m_pGamePlayer = new CPlayerPed();
+
+	return m_pGamePlayer;
+};
+
 //-----------------------------------------------------------
 
 int CGame::GetWeaponModelIDFromWeapon(int iWeaponID)

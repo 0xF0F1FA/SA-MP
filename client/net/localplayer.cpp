@@ -1036,6 +1036,8 @@ bool CLocalPlayer::Spawn()
 	m_pPlayerPed->ClearAllWeapons();
 	m_pPlayerPed->ResetDamageEntity();
 
+	SetTeam(m_SpawnInfo.byteTeam);
+
 	if(m_SpawnInfo.iSpawnWeapons[2] != (-1))
 		m_pPlayerPed->GiveWeapon(m_SpawnInfo.iSpawnWeapons[2],
 		m_SpawnInfo.iSpawnWeaponsAmmo[2]);

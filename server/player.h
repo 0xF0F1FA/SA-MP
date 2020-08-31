@@ -62,7 +62,7 @@ public:
 	int						m_iScore;
 	bool					m_bTyping;
 	RakNet::Time			m_nLastPingUpdate;
-
+	unsigned char			m_ucTeam;
 	unsigned char			m_ucFightingStyle;
 	unsigned char			m_ucFightingMove;
 
@@ -160,7 +160,8 @@ public:
 
 	bool IsInCheckpoint() { return m_bInCheckpoint; };
 	bool IsInRaceCheckpoint() { return m_bInRaceCheckpoint; };
-	BYTE GetTeam() { return m_SpawnInfo.byteTeam; };
+	BYTE GetTeam() { return m_ucTeam; };
+	void SetTeam(unsigned char ucTeam);
 	unsigned char GetCurrentWeapon() {
 		if (m_byteState == PLAYER_STATE_PASSENGER)
 			return m_psSync.byteCurrentWeapon;

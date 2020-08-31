@@ -981,14 +981,13 @@ static cell n_GetPlayerTeam(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerTeam", 1);
 
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-
-	if(pPlayerPool->GetSlotState(params[1]))
-	{
-		return pPlayerPool->GetAt(params[1])->GetTeam();
-	} else {
-		return -1;
+	if (pNetGame->GetPlayerPool()) {
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer) {
+			return pPlayer->GetTeam();
+		}
 	}
+	return -1;
 }
 
 //----------------------------------------------------------------------------------
@@ -1694,21 +1693,14 @@ static cell n_SetPlayerTeam(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "SetPlayerTeam", 2);
 
-	//CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-
-	if(pNetGame->GetPlayerPool()->GetSlotState(params[1]))
-	{
-		//pPlayerPool->SetTeam(params[1], params[2]);
-
-		RakNet::BitStream bsParams;
-		bsParams.Write((BYTE)params[1]); // playerid
-		bsParams.Write((BYTE)params[2]); // team id
-		RakServerInterface* pRak = pNetGame->GetRakServer();
-		pRak->RPC(RPC_ScrSetPlayerTeam , &bsParams, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
-		return 1;
-	} else {
-		return 0;
+	if (pNetGame->GetPlayerPool()) {
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer && (params[2] >= 0 && params[2] <= NO_TEAM)) {
+			pPlayer->SetTeam(params[2]);
+			return 1;
+		}
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------------

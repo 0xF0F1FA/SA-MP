@@ -72,6 +72,7 @@ CPlayer::CPlayer()
 	m_byteWantedLevel = 0;
 	m_bCanTeleport = false;
 	//byteCurWeap = 0;
+	m_ucTeam = NO_TEAM;
 
 	m_bCheckpointEnabled = false;
 	m_bRaceCheckpointEnabled = false;
@@ -890,6 +891,17 @@ void CPlayer::SpawnForWorld(BYTE byteTeam, int iSkin, VECTOR * vecPos, float fRo
 	pNetGame->GetRakServer()->RPC(RPC_Spawn,&bsPlayerSpawn,
 		HIGH_PRIORITY,RELIABLE,0,playerid,true,false);
 
+	// Letting other player know that he changed team too
+	if (m_ucTeam != byteTeam) {
+		bsPlayerSpawn.Reset();
+
+		bsPlayerSpawn.Write(m_bytePlayerID);
+		bsPlayerSpawn.Write(byteTeam);
+		pNetGame->SendToAll(RPC_ScrSetPlayerTeam, &bsPlayerSpawn);
+
+		m_ucTeam = byteTeam;
+	}
+
 	SetState(PLAYER_STATE_SPAWNED);
 
 	// Set their initial sync position to their spawn position.
@@ -1168,6 +1180,16 @@ unsigned long CPlayer::GetCurrentWeaponAmmo()
 		}
 	}
 	return 0;
+}
+
+void CPlayer::SetTeam(unsigned char ucTeam)
+{
+	m_ucTeam = ucTeam;
+
+	RakNet::BitStream bsParams;
+	bsParams.Write(m_bytePlayerID); // playerid
+	bsParams.Write(ucTeam); // team id
+	pNetGame->SendToAll(RPC_ScrSetPlayerTeam, &bsParams);
 }
 
 //----------------------------------------------------

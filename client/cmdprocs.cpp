@@ -1375,6 +1375,22 @@ static void cmdToggleChatTimeStamp(PCHAR szCmd)
 		pChatWindow->ToggleTimeStamp();
 }
 
+static void cmdTeamTest(PCHAR szCmd)
+{
+	(void)szCmd;
+	if (pNetGame) {
+		CLocalPlayer* pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
+		pChatWindow->AddDebugMessage("Your team = %d", pLocalPlayer->GetTeam());
+		for (size_t i = 0; i < MAX_PLAYERS; i++) {
+			CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
+			if (pRemotePlayer) {
+				pChatWindow->AddDebugMessage("ID: %d Name: %s Team: %d", 
+					pRemotePlayer->GetID(), pRemotePlayer->GetName(), pRemotePlayer->GetTeam());
+			}
+		}
+	}
+}
+
 void SetupCommands()
 {
 	// RELEASE COMMANDS
@@ -1480,6 +1496,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("bench",cmdBench);
 	pCmdWindow->AddCmdProc("disenex",cmdDisableEnEx);
 	pCmdWindow->AddCmdProc("dbgpiss",cmdStartPiss);
+	pCmdWindow->AddCmdProc("teamtest", cmdTeamTest);
 
 	pCmdWindow->AddCmdProc("showmyvw",cmdShowMyVirtualWorld);
 	pCmdWindow->AddCmdProc("showplayervw",cmdShowPlayerVirtualWorld);

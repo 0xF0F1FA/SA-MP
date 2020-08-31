@@ -60,7 +60,7 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion)
 		RakNet::BitStream bsSend;
 		bsSend.Write(bytePlayerID);
 		//size_t uiNameLen = strlen(szPlayerName);
-		bsSend.Write(len);
+		bsSend.Write((unsigned char)len);
 		bsSend.Write(szPlayerName, len);
 		bsSend.Write(m_pPlayers[bytePlayerID]->m_iScore);
 
@@ -194,11 +194,11 @@ void CPlayerPool::InitPlayersForPlayer(BYTE bytePlayerID)
 
 	while(lp!=MAX_PLAYERS) {
 		if((GetSlotState(lp) == true) && (lp != bytePlayerID)) {
-			size_t uiNameLen = (unsigned int)m_pPlayers[lp]->GetNameLength();
+			unsigned char ucNameLen = m_pPlayers[lp]->GetNameLength();
 
 			bsExistingClient.Write(lp);
-			bsExistingClient.Write(uiNameLen); // TODO: change it to 'unsigned char' type
-			bsExistingClient.Write(m_pPlayers[lp]->GetName(), uiNameLen);
+			bsExistingClient.Write(ucNameLen);
+			bsExistingClient.Write(m_pPlayers[lp]->GetName(), ucNameLen);
 			bsExistingClient.Write(m_pPlayers[lp]->m_iScore);
 
 			pNetGame->GetRakServer()->RPC(RPC_ServerJoin,&bsExistingClient,HIGH_PRIORITY,RELIABLE,0,Player,false,false);

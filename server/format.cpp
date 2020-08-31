@@ -140,24 +140,22 @@ void AddInt(U **buf_p, size_t &maxlen, int val, int width, int flags)
 {
 	U		text[32];
 	int		digits;
-	int		signedVal;
+	unsigned int uiVal;
 	U		*buf;
 
 	digits = 0;
-	signedVal = val;
-	if (val < 0)
-		val = -val;
+	uiVal = (val < 0) ? (val * -1) : val;
 	do {
-		text[digits++] = '0' + val % 10;
-		val /= 10;
-	} while (val);
+		text[digits++] = '0' + uiVal % 10;
+		uiVal /= 10;
+	} while (uiVal);
 
 	//if (signedVal < 0)
 		//text[digits++] = '-';
 		
 	buf = *buf_p;
 
-	if (signedVal < 0)
+	if (val < 0)
 	{
 		if (flags & ZEROPAD)
 		{
@@ -199,7 +197,7 @@ void AddInt(U **buf_p, size_t &maxlen, int val, int width, int flags)
 }
 
 template <typename U>
-void AddHex(U **buf_p, size_t &maxlen, int val, int width, int flags)
+void AddHex(U **buf_p, size_t &maxlen, unsigned int val, int width, int flags)
 {
 	U		text[32];
 	int		digits;

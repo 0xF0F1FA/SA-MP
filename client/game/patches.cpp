@@ -668,6 +668,9 @@ void ApplyInGamePatches()
 	memset((void*)0x5F80C0, 0x90, 10);
 	memset((void*)0x5FBA47, 0x90, 10);
 
+	// NOP out idle cam
+	memset((void*)0x52457D, 0x90, 10);
+
 	// Rest of the stuff
 	RelocateScanListHack();
 	

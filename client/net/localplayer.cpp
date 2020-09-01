@@ -558,9 +558,7 @@ void CLocalPlayer::UpdateSurfing()
 
 	if(!Contact) {
 		m_bSurfingMode = false;
-		m_vecLockedSurfingOffsets.X = 0.0f;
-		m_vecLockedSurfingOffsets.Y = 0.0f;
-		m_vecLockedSurfingOffsets.Z = 0.0f;
+		m_vecLockedSurfingOffsets = 0.0f;
 		m_SurfingID = INVALID_VEHICLE_ID;
 		return;
 	}
@@ -578,7 +576,7 @@ void CLocalPlayer::UpdateSurfing()
 			VECTOR vecTurn;
 			MATRIX4X4 matPlayer;
 			MATRIX4X4 matVehicle;
-			VECTOR vecVehiclePlane = {0.0f,0.0f,0.0f};
+			VECTOR vecVehiclePlane;
 			WORD lr, ud;
 
 			pVehicle->GetMatrix(&matVehicle);
@@ -591,12 +589,8 @@ void CLocalPlayer::UpdateSurfing()
 			m_vecLockedSurfingOffsets.Y = matPlayer.pos.Y - matVehicle.pos.Y;
 			m_vecLockedSurfingOffsets.Z = matPlayer.pos.Z - matVehicle.pos.Z;
 
-			vecSpeed.X = Contact->entity.vecMoveSpeed.X;
-			vecSpeed.Y = Contact->entity.vecMoveSpeed.Y;
-			vecSpeed.Z = Contact->entity.vecMoveSpeed.Z;
-			vecTurn.X = Contact->entity.vecTurnSpeed.X;
-			vecTurn.Y = Contact->entity.vecTurnSpeed.Y;
-			vecTurn.Z = Contact->entity.vecTurnSpeed.Z;
+			vecSpeed = Contact->entity.vecMoveSpeed;
+			vecTurn = Contact->entity.vecTurnSpeed;
 
 			m_pPlayerPed->GetKeys(&lr,&ud);
 
@@ -611,9 +605,7 @@ void CLocalPlayer::UpdateSurfing()
 		}
 	}
 	m_bSurfingMode = false;
-	m_vecLockedSurfingOffsets.X = 0.0f;
-	m_vecLockedSurfingOffsets.Y = 0.0f;
-	m_vecLockedSurfingOffsets.Z = 0.0f;
+	m_vecLockedSurfingOffsets = 0.0f;
 	m_SurfingID = INVALID_VEHICLE_ID;
 }
 
@@ -636,9 +628,7 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	ofSync.lrAnalog = lrAnalog;
 	ofSync.udAnalog = udAnalog;
 	ofSync.uiKeys = uiKeys;
-	ofSync.vecPos.X = matPlayer.pos.X;
-	ofSync.vecPos.Y = matPlayer.pos.Y;
-	ofSync.vecPos.Z = matPlayer.pos.Z;
+	ofSync.vecPos = matPlayer.pos;
 
 	// Rotation stuff
 	ofSync.fRotation = m_pPlayerPed->GetTargetRotation();
@@ -648,9 +638,7 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	ofSync.byteCurrentWeapon = m_pPlayerPed->GetCurrentWeapon();
 	ofSync.byteSpecialAction = GetSpecialAction();
 		
-	ofSync.vecMoveSpeed.X = vecMoveSpeed.X;
-	ofSync.vecMoveSpeed.Y = vecMoveSpeed.Y;
-	ofSync.vecMoveSpeed.Z = vecMoveSpeed.Z;
+	ofSync.vecMoveSpeed = vecMoveSpeed;
 
 	// For vehicle surfing
 	VEHICLE_TYPE* vehContact = m_pPlayerPed->GetGtaContactVehicle();
@@ -658,14 +646,10 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	CVehicle* pVehicle = NULL;
 
 	if ( m_bSurfingMode ) {
-		ofSync.vecSurfOffsets.X = m_vecLockedSurfingOffsets.X;
-		ofSync.vecSurfOffsets.Y = m_vecLockedSurfingOffsets.Y;
-		ofSync.vecSurfOffsets.Z = m_vecLockedSurfingOffsets.Z;
+		ofSync.vecSurfOffsets = m_vecLockedSurfingOffsets;
 		ofSync.SurfVehicleId = m_SurfingID;
 	} else {
-		ofSync.vecSurfOffsets.X = 0.0f;
-		ofSync.vecSurfOffsets.Y = 0.0f;
-		ofSync.vecSurfOffsets.Z = 0.0f;
+		ofSync.vecSurfOffsets = 0.0f;
 		ofSync.SurfVehicleId = 0;
 	}
 
@@ -746,15 +730,11 @@ void CLocalPlayer::SendInCarFullSyncData()
 		CompressNormalVector(&matPlayer.right,&icSync.cvecRoll);
 		CompressNormalVector(&matPlayer.up,&icSync.cvecDirection);
 
-		icSync.vecPos.X = matPlayer.pos.X;
-		icSync.vecPos.Y = matPlayer.pos.Y;
-		icSync.vecPos.Z = matPlayer.pos.Z;
+		icSync.vecPos = matPlayer.pos;
 			
 		pGameVehicle->GetMoveSpeedVector(&vecMoveSpeed);
 
-		icSync.vecMoveSpeed.X = vecMoveSpeed.X;
-		icSync.vecMoveSpeed.Y = vecMoveSpeed.Y;
-		icSync.vecMoveSpeed.Z = vecMoveSpeed.Z;
+		icSync.vecMoveSpeed = vecMoveSpeed;
 
 		icSync.fCarHealth = pGameVehicle->GetHealth();
 		icSync.bytePlayerHealth = (BYTE)m_pPlayerPed->GetHealth();
@@ -850,9 +830,7 @@ void CLocalPlayer::SendInCarFullSyncData()
 				CompressNormalVector(&matTrailer.right,&trSync.cvecRoll);
 				CompressNormalVector(&matTrailer.up,&trSync.cvecDirection);
 				
-				trSync.vecPos.X = matTrailer.pos.X;
-				trSync.vecPos.Y = matTrailer.pos.Y;
-				trSync.vecPos.Z = matTrailer.pos.Z;
+				trSync.vecPos = matTrailer.pos;
 				
 				pTrailer->GetMoveSpeedVector(&trSync.vecMoveSpeed);
 				
@@ -893,9 +871,7 @@ void CLocalPlayer::SendPassengerFullSyncData()
 	psSync.byteCurrentWeapon = m_pPlayerPed->GetCurrentWeapon();
 
 	m_pPlayerPed->GetMatrix(&mat);
-	psSync.vecPos.X = mat.pos.X;
-	psSync.vecPos.Y = mat.pos.Y;
-	psSync.vecPos.Z = mat.pos.Z;
+	psSync.vecPos = mat.pos;
 
 	bsPassengerSync.Write((BYTE)ID_PASSENGER_SYNC);
 	bsPassengerSync.Write((PCHAR)&psSync,sizeof(PASSENGER_SYNC_DATA));
@@ -1444,9 +1420,7 @@ void CLocalPlayer::ProcessSpectating()
 
 	if(!pPlayerPool || !pVehiclePool) return;
 	
-	spSync.vecPos.X = matPos.pos.X;
-	spSync.vecPos.Y = matPos.pos.Y;
-	spSync.vecPos.Z = matPos.pos.Z;
+	spSync.vecPos = matPos.pos;
 	spSync.lrAnalog = lrAnalog;
 	spSync.udAnalog = udAnalog;
 	spSync.uiKeys = uiKeys;

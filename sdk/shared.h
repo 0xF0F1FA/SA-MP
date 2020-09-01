@@ -172,8 +172,44 @@ typedef struct {
 	// short X,Y,Z;
 } C_VECTOR1;
 
-typedef struct {
+typedef struct VECTOR {
 	float X, Y, Z;
+
+	VECTOR()
+	{
+		X = Y = Z = 0.0f;
+	}
+
+	VECTOR(float f)
+	{
+		X = Y = Z = f;
+	}
+
+	VECTOR(float x, float y, float z)
+	{
+		X = x;
+		Y = y;
+		Z = z;
+	}
+
+	inline void operator=(const VECTOR& r)
+	{
+		X = r.X;
+		Y = r.Y;
+		Z = r.Z;
+	}
+
+	inline void operator=(const VECTOR* r)
+	{
+		X = r->X;
+		Y = r->Y;
+		Z = r->Z;
+	}
+
+	inline void operator=(const float f)
+	{
+		X = Y = Z = f;
+	}
 } VECTOR, *PVECTOR;
 
 typedef struct {

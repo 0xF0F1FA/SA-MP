@@ -41,7 +41,6 @@ CGame::CGame()
 	m_dwCheckpointMarker = 0;
 	m_dwRaceCheckpointMarker = 0;
 	m_fRaceCheckpointSize = 0.0f;
-	m_vecCheckpointPos = m_vecCheckpointExtent = m_vecRaceCheckpointPos = m_vecRaceCheckpointNext = { 0.0f, 0.0f, 0.0f };
 	m_bDisableVehMapIcons = false;
 	m_bMissionAudioLoaded = false;
 	m_bDisableInteriorAmbient = false;

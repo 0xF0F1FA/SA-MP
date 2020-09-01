@@ -61,9 +61,6 @@ CPlayer::CPlayer()
 	m_dwColor = 0;
 	m_uiLastKeys = 0;
 
-	m_vecPos.X = 0.0f;
-	m_vecPos.Y = 0.0f;
-	m_vecPos.Z = 0.0f;
 	m_fRotation = 0.0f;
 	m_fHealth = 0.0f;
 	m_fArmour = 0.0f;
@@ -856,12 +853,8 @@ void CPlayer::Spawn()
 		if(pGameMode) pGameMode->OnPlayerSpawn((cell)m_bytePlayerID);
 
 		// Reset all their sync attributes.
-		m_ofSync.vecPos.X = m_SpawnInfo.vecPos.X;
-		m_ofSync.vecPos.Y = m_SpawnInfo.vecPos.Y;
-		m_ofSync.vecPos.Z = m_SpawnInfo.vecPos.Z;
-		m_vecPos.X = m_SpawnInfo.vecPos.X;
-		m_vecPos.Y = m_SpawnInfo.vecPos.Y;
-		m_vecPos.Z = m_SpawnInfo.vecPos.Z;
+		m_ofSync.vecPos = m_SpawnInfo.vecPos;
+		m_vecPos = m_SpawnInfo.vecPos;
 		m_ofSync.fRotation = m_SpawnInfo.fRotation;
 		m_VehicleID=0;
 		
@@ -905,9 +898,7 @@ void CPlayer::SpawnForWorld(BYTE byteTeam, int iSkin, VECTOR * vecPos, float fRo
 	SetState(PLAYER_STATE_SPAWNED);
 
 	// Set their initial sync position to their spawn position.
-	m_ofSync.vecPos.X = vecPos->X;
-	m_ofSync.vecPos.Y = vecPos->Y;
-	m_ofSync.vecPos.Z = vecPos->Z;
+	m_ofSync.vecPos = vecPos;
 }
 
 //----------------------------------------------------

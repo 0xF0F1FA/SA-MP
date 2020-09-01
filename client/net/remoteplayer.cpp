@@ -149,14 +149,10 @@ void CRemotePlayer::Process(int iLocalWorld)
 				DecompressNormalVector(&matVehicle.right,&m_icSync.cvecRoll);
 				DecompressNormalVector(&matVehicle.up,&m_icSync.cvecDirection);
 
-				matVehicle.pos.X = m_icSync.vecPos.X;
-				matVehicle.pos.Y = m_icSync.vecPos.Y;
-				matVehicle.pos.Z = m_icSync.vecPos.Z;
+				matVehicle.pos = m_icSync.vecPos;
 
 				// MOVE SPEED
-				vecMoveSpeed.X = m_icSync.vecMoveSpeed.X;
-				vecMoveSpeed.Y = m_icSync.vecMoveSpeed.Y;
-				vecMoveSpeed.Z = m_icSync.vecMoveSpeed.Z;
+				vecMoveSpeed = m_icSync.vecMoveSpeed;
 
 				// Note: Train Speed and Tire Popping values are mutually exclusive, which means
 				//       if one is set, the other one will be affected.
@@ -296,7 +292,7 @@ void CRemotePlayer::Process(int iLocalWorld)
 				}
 
 				if(m_iIsInAModShop)	{
-					VECTOR vec = {0.0f,0.0f,0.0f};
+					VECTOR vec;
 					m_pPlayerPed->SetKeys(0,0,0);
 					if(m_pCurrentVehicle) m_pCurrentVehicle->SetMoveSpeedVector(vec);
 				} else {
@@ -372,6 +368,14 @@ void CRemotePlayer::HandlePlayerPedStreaming()
 
 //----------------------------------------------------
 
+/*
+	BUGS:
+		- Player teleports on top of the vehicle when shot out of the vehicle
+		- Player teleports in-out of the vehicle when enter or exits from the vehicle
+	NOTE:
+		- Sprint car jacking kill issue looks like its not related to this function.
+		- Removing this function will cause players just simply standing outside when they actually in a vehicle
+*/
 void CRemotePlayer::HandleVehicleEntryExit()
 {
 	CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
@@ -553,9 +557,7 @@ void CRemotePlayer::UpdateOnfootTargetPosition()
 	m_pPlayerPed->GetMatrix(&matEnt);
 
 	if(!m_pPlayerPed->IsAdded() || !m_pPlayerPed->IsOnGround()) {
-        matEnt.pos.X = m_vecOnfootTargetPos.X;
-		matEnt.pos.Y = m_vecOnfootTargetPos.Y;
-		matEnt.pos.Z = m_vecOnfootTargetPos.Z;
+        matEnt.pos = m_vecOnfootTargetPos;
 		m_pPlayerPed->SetMatrix(matEnt);
 	}
 
@@ -577,10 +579,7 @@ void CRemotePlayer::UpdateOnfootTargetPosition()
 		(m_vecPositionInaccuracy.Y > 2.5f) ||
 		(m_vecPositionInaccuracy.Z > 1.0f) ) {
 
-		matEnt.pos.X = m_vecOnfootTargetPos.X;
-		matEnt.pos.Y = m_vecOnfootTargetPos.Y;
-		matEnt.pos.Z = m_vecOnfootTargetPos.Z;
-
+		matEnt.pos = m_vecOnfootTargetPos;
 		m_pPlayerPed->SetMatrix(matEnt);
 
 		return;
@@ -626,13 +625,8 @@ void CRemotePlayer::UpdateOnFootPositionAndSpeed(VECTOR * vecPos, VECTOR * vecMo
 		//m_vecOnfootTargetPos.Z += (vecMove->Z * fEstimateFramesPassed);
 	}*/
     
-    m_vecOnfootTargetPos.X = vecPos->X;
-	m_vecOnfootTargetPos.Y = vecPos->Y;
-	m_vecOnfootTargetPos.Z = vecPos->Z;
-    m_vecOnfootTargetSpeed.X = vecMove->X;
-	m_vecOnfootTargetSpeed.Y = vecMove->Y;
-	m_vecOnfootTargetSpeed.Z = vecMove->Z;
-
+    m_vecOnfootTargetPos = vecPos;
+    m_vecOnfootTargetSpeed = vecMove;
 	m_pPlayerPed->SetMoveSpeedVector(m_vecOnfootTargetSpeed);
 }
 
@@ -641,15 +635,13 @@ void CRemotePlayer::UpdateOnFootPositionAndSpeed(VECTOR * vecPos, VECTOR * vecMo
 void CRemotePlayer::UpdateIncarTargetPosition()
 {
 	MATRIX4X4 matEnt;
-	VECTOR vec = {0.0f,0.0f,0.0f};
+	VECTOR vec;
 
 	if(!m_pCurrentVehicle) return;
 	m_pCurrentVehicle->GetMatrix(&matEnt);
 
 	if(!m_pCurrentVehicle->IsAdded()) {
-		matEnt.pos.X = m_vecIncarTargetPos.X;
-		matEnt.pos.Y = m_vecIncarTargetPos.Y;
-		matEnt.pos.Z = m_vecIncarTargetPos.Z;
+		matEnt.pos = m_vecIncarTargetPos;
 		m_pCurrentVehicle->SetMatrix(matEnt);
         //m_pCurrentVehicle->SetMoveSpeedVector(vec);
 		return;
@@ -663,12 +655,12 @@ void CRemotePlayer::UpdateIncarTargetPosition()
 		m_icSync.udAnalog = 0;
 		m_icSync.lrAnalog = 0;
 		m_icSync.uiKeys = 0;
-		m_icSync.vecMoveSpeed.X = 0.0f;
-		m_icSync.vecMoveSpeed.Y = 0.0f;
-		m_icSync.vecMoveSpeed.Z = 0.0f;
+		m_icSync.vecMoveSpeed = 0.0f;
 		return;
 	}
 	
+	// BUG: When player in a vehicle, the vehicle will jump/shaking around, sliding updside down,
+	// or the vehicle slowly shifting in some direction when player just idling
 	m_vecPositionInaccuracy.X = FloatOffset(m_vecIncarTargetPos.X,matEnt.pos.X);
 	m_vecPositionInaccuracy.Y = FloatOffset(m_vecIncarTargetPos.Y,matEnt.pos.Y);
     m_vecPositionInaccuracy.Z = FloatOffset(m_vecIncarTargetPos.Z,matEnt.pos.Z);
@@ -696,10 +688,7 @@ void CRemotePlayer::UpdateIncarTargetPosition()
 		(m_vecPositionInaccuracy.Y > 8.0f) ||
 		(m_vecPositionInaccuracy.Z > fTestZInaccuracy) )
 	{
-		matEnt.pos.X = m_vecIncarTargetPos.X;
-		matEnt.pos.Y = m_vecIncarTargetPos.Y;
-		matEnt.pos.Z = m_vecIncarTargetPos.Z;
-
+		matEnt.pos = m_vecIncarTargetPos;
 		m_pCurrentVehicle->SetMatrix(matEnt);
         m_pCurrentVehicle->SetMoveSpeedVector(m_vecIncarTargetSpeed);
 
@@ -740,21 +729,10 @@ void CRemotePlayer::UpdateInCarMatrixAndSpeed(MATRIX4X4 mat, VECTOR vecMove)
 	MATRIX4X4 matEnt;
 	m_pCurrentVehicle->GetMatrix(&matEnt);
 
-	matEnt.right.X = mat.right.X;
-	matEnt.right.Y = mat.right.Y;
-	matEnt.right.Z = mat.right.Z;
-
-	matEnt.up.X = mat.up.X;
-	matEnt.up.Y = mat.up.Y;
-	matEnt.up.Z = mat.up.Z;
-
-	m_vecIncarTargetPos.X = mat.pos.X;
-	m_vecIncarTargetPos.Y = mat.pos.Y;
-	m_vecIncarTargetPos.Z = mat.pos.Z;
-
-	m_vecIncarTargetSpeed.X = vecMove.X;
-	m_vecIncarTargetSpeed.Y = vecMove.Y;
-	m_vecIncarTargetSpeed.Z = vecMove.Z;
+	matEnt.right = mat.right;
+	matEnt.up = mat.up;
+	m_vecIncarTargetPos = mat.pos;
+	m_vecIncarTargetSpeed = vecMove;
 
 	m_pCurrentVehicle->SetMatrix(matEnt);
 	m_pCurrentVehicle->SetMoveSpeedVector(vecMove);
@@ -790,9 +768,7 @@ void CRemotePlayer::UpdateTrainDriverMatrixAndSpeed(MATRIX4X4 *matWorld,VECTOR *
 	if(bTeleport) m_pCurrentVehicle->TeleportTo(matWorld->pos.X,matWorld->pos.Y,matWorld->pos.Z);
 	
 	m_pCurrentVehicle->GetMoveSpeedVector(&vecInternalMoveSpeed);
-	vecInternalMoveSpeed.X = vecMoveSpeed->X;
-	vecInternalMoveSpeed.Y = vecMoveSpeed->Y;
-	vecInternalMoveSpeed.Z = vecMoveSpeed->Z;
+	vecInternalMoveSpeed = vecMoveSpeed;
 	m_pCurrentVehicle->SetMoveSpeedVector(vecInternalMoveSpeed);
 	m_pCurrentVehicle->SetTrainSpeed(fTrainSpeed);
 }

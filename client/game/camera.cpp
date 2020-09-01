@@ -51,21 +51,10 @@ void CCamera::Fade(int iInOut)
 
 void CCamera::GetMatrix(PMATRIX4X4 Matrix)
 {
-	Matrix->right.X = m_matPos->right.X;
-	Matrix->right.Y = m_matPos->right.Y;
-	Matrix->right.Z = m_matPos->right.Z;
-
-	Matrix->up.X = m_matPos->up.X;
-	Matrix->up.Y = m_matPos->up.Y;
-	Matrix->up.Z = m_matPos->up.Z;
-
-	Matrix->at.X = m_matPos->at.X;
-	Matrix->at.Y = m_matPos->at.Y;
-	Matrix->at.Z = m_matPos->at.Z;
-
-	Matrix->pos.X = m_matPos->pos.X;
-	Matrix->pos.Y = m_matPos->pos.Y;
-	Matrix->pos.Z = m_matPos->pos.Z;
+	Matrix->right = m_matPos->right;
+	Matrix->up = m_matPos->up;
+	Matrix->at = m_matPos->at;
+	Matrix->pos = m_matPos->pos;
 }
 
 void CCamera::InterpolateCameraPos(VECTOR* from, VECTOR* to, FLOAT time, BYTE mode)

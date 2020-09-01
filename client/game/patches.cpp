@@ -661,7 +661,13 @@ void ApplyInGamePatches()
 	*(DWORD*)0x5817CC = (DWORD)&g_pVehicleColor;
 	*(DWORD*)0x582176 = (DWORD)&g_pVehicleColor;
 	*(DWORD*)0x6A6FFA = (DWORD)&g_pVehicleColor;
-	
+
+	// NOPping out spawning with cigars and bottles
+	memset((void*)0x4217F4, 0x90, 21);
+	memset((void*)0x4218D8, 0x90, 17);
+	memset((void*)0x5F80C0, 0x90, 10);
+	memset((void*)0x5FBA47, 0x90, 10);
+
 	// Rest of the stuff
 	RelocateScanListHack();
 	

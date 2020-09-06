@@ -82,6 +82,7 @@ CLocalPlayer::CLocalPlayer()
 		m_dwLastAmmo[i] = 0;
 	}
 	m_byteTeam = NO_TEAM;
+	m_bAllowedClass = false;
 }
 
 //----------------------------------------------------------
@@ -316,7 +317,6 @@ bool CLocalPlayer::Process()
 			// TIMING FOR ONFOOT AIM SENDS
 			WORD lrAnalog,udAnalog;
 			UINT uiKeys = m_pPlayerPed->GetKeys(&lrAnalog,&udAnalog);
-			BYTE bytePlayerCount = pNetGame->GetPlayerPool()->GetCount();
 			
 			// Not targeting or firing. We need a very slow rate to sync the head.
 			if(!IS_TARGETING(uiKeys) && !IS_FIRING(uiKeys)) {
@@ -395,8 +395,7 @@ bool CLocalPlayer::Process()
 	if(m_bIsWasted && (m_pPlayerPed->GetActionTrigger() != ACTION_WASTED) &&
 		(m_pPlayerPed->GetActionTrigger() != ACTION_DEATH) )
 	{
-		if( IsClearedToSpawn() && 
-			!m_bWantsAnotherClass &&
+		if( !m_bWantsAnotherClass &&
 			pNetGame->GetGameState() == GAMESTATE_CONNECTED ) {
 
 			//pGame->ToggleKeyInputsDisabled(TRUE);
@@ -919,8 +918,6 @@ int CLocalPlayer::GetOptimumInCarSendRate(int iPlayersEffected)
 int CLocalPlayer::GetOptimumOnFootSendRate(int iPlayersEffected)
 {	
 	VECTOR	 vecMoveSpeed;
-	BYTE	 bytePlayerCount = pNetGame->GetPlayerPool()->GetCount();
-
 	WORD lrAnalog,udAnalog;
 	UINT uiKeys = m_pPlayerPed->GetKeys(&lrAnalog,&udAnalog);
 
@@ -1217,19 +1214,21 @@ void CLocalPlayer::SendStatsUpdate()
 void CLocalPlayer::ProcessClassSelection()
 {
 	DWORD			dwTicksSinceLastSelection;
+	DWORD			dwTickNow;
 	MATRIX4X4		matPlayer;
 	char			szMsg[1024];
 	char			szClassInfo[256];
 
+	dwTickNow = GetTickCount();
 	pGame->DisplayHud(false);
 
 	// DONT ALLOW ANY ACTIONS IF WE'RE STILL FADING OR WAITING.
-	if((GetTickCount() - m_dwInitialSelectionTick) < 2000) return;
+	if((dwTickNow - m_dwInitialSelectionTick) < 2000) return;
 
 	//ApplySpawnAnim(m_iCurSpawnAnimIndex);
 
 	if( !m_bWaitingForSpawnRequestReply &&
-		m_bClearedToSpawn && 
+		m_bAllowedClass &&
 		(GetAsyncKeyState(VK_SHIFT)&0x8000) &&
 		!pCmdWindow->isEnabled() )
 	{
@@ -1238,10 +1237,10 @@ void CLocalPlayer::ProcessClassSelection()
 		m_bWaitingForSpawnRequestReply = true;
 		return;
 	}
-	else if(m_bClearedToSpawn) // WE ARE CLEARED TO SPAWN OR SELECT ANOTHER CLASS
+	else
 	{
 		// SHOW INFO ABOUT THE SELECTED CLASS..
-		if(pChatWindow) {
+		if(pChatWindow) { // pChatWindow?
 			szMsg[0] = '\0';
 			strcat_s(szMsg,"Use left and right arrow keys to select class.\n");
 			strcat_s(szMsg,"Press SHIFT when ready to spawn.\n\n");
@@ -1258,31 +1257,31 @@ void CLocalPlayer::ProcessClassSelection()
 
 		// GRAB PLAYER MATRIX FOR SOUND POSITION
 		m_pPlayerPed->GetMatrix(&matPlayer);
-		dwTicksSinceLastSelection = GetTickCount() - m_dwLastSpawnSelectionTick; // used to delay reselection.
+		dwTicksSinceLastSelection = dwTickNow - m_dwLastSpawnSelectionTick; // used to delay reselection.
 
-		// ALLOW ANOTHER SELECTION WITH THE LEFT KEY
-		if((GetAsyncKeyState(VK_LEFT)&0x8000) && (dwTicksSinceLastSelection > 250)) { // LEFT ARROW
-				
-			m_bClearedToSpawn = false;
-			m_dwLastSpawnSelectionTick = GetTickCount();
-				
-			if(m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
-			else m_iSelectedClass--;		
-			
-			pGame->PlaySoundFX(1053,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
-			RequestClass(m_iSelectedClass);
-		}
-		// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
-		else if((GetAsyncKeyState(VK_RIGHT)&0x8000) && (dwTicksSinceLastSelection > 250)) { // RIGHT ARROW
-			
-			m_bClearedToSpawn = false;
-			m_dwLastSpawnSelectionTick = GetTickCount();
-				
-			if(m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
-			else m_iSelectedClass++;
+		if (dwTicksSinceLastSelection > 250) {
+			// ALLOW ANOTHER SELECTION WITH THE LEFT KEY
+			if ((GetAsyncKeyState(VK_LEFT) & 0x8000)) { // LEFT ARROW
+				m_dwLastSpawnSelectionTick = dwTickNow;
 
-			pGame->PlaySoundFX(1052,matPlayer.pos.X,matPlayer.pos.Y,matPlayer.pos.Z);
-			RequestClass(m_iSelectedClass);
+				if (m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
+				else m_iSelectedClass--;
+
+				pGame->PlaySoundFX(1053, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
+				RequestClass(m_iSelectedClass);
+				m_bAllowedClass = true;
+			}
+			// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
+			else if ((GetAsyncKeyState(VK_RIGHT) & 0x8000)) { // RIGHT ARROW
+				m_dwLastSpawnSelectionTick = dwTickNow;
+
+				if (m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
+				else m_iSelectedClass++;
+
+				pGame->PlaySoundFX(1052, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
+				RequestClass(m_iSelectedClass);
+				m_bAllowedClass = true;
+			}
 		}
 	}
 }
@@ -1291,15 +1290,13 @@ void CLocalPlayer::ProcessClassSelection()
 
 void CLocalPlayer::HandleClassSelection()
 {
-	m_bClearedToSpawn = false;
 	if(m_pPlayerPed) {
 		m_pPlayerPed->SetInitialState();
 		m_pPlayerPed->SetHealth(100.0f);
 		m_pPlayerPed->TogglePlayerControllable(0);
 	}
 	RequestClass(m_iSelectedClass);
-	m_dwInitialSelectionTick = GetTickCount();
-	m_dwLastSpawnSelectionTick = GetTickCount();
+	m_dwInitialSelectionTick = m_dwLastSpawnSelectionTick = GetTickCount();
 }
 
 //----------------------------------------------------------
@@ -1311,8 +1308,10 @@ void CLocalPlayer::HandleClassSelectionOutcome(bool bOutcome)
 			m_pPlayerPed->ClearAllWeapons();
 			m_pPlayerPed->SetModelIndex(m_SpawnInfo.iSkin);
 		}
-		m_bClearedToSpawn = true;
+		m_bAllowedClass = true;
 	}
+	else
+		m_bAllowedClass = false;
 }
 
 //-----------------------------------------------------------

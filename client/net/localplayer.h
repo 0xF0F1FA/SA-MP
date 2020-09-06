@@ -57,7 +57,7 @@ private:
 	bool					m_bInRCMode;
 
 	// SPAWNING STUFF
-	bool					m_bClearedToSpawn;
+	bool					m_bAllowedClass;
 	DWORD					m_dwLastSpawnSelectionTick;// delays left and right selection
 	DWORD					m_dwInitialSelectionTick;// delays initial selection
 	bool					m_bIsSpectating;
@@ -131,7 +131,6 @@ public:
 	void HandleClassSelectionOutcome(bool bOutcome);
 	void HandleClassSelection();
 	void ProcessClassSelection();
-	bool IsClearedToSpawn() { return m_bClearedToSpawn; };
 	
 	void CheckWeapons();
 	void SetVirtualWorld(int iWorld) { m_iVirtualWorld = iWorld; };

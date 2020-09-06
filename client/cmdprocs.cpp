@@ -208,9 +208,62 @@ void cmdSavePos(PCHAR szCmd)
 	fprintf(fileOut,"AddPlayerClass(%u,%.4f,%.4f,%.4f,%.4f,0,0,0,0,0,0); // %s\n",pPlayer->GetModelIndex(),
 		pActor->entity.mat->pos.X,pActor->entity.mat->pos.Y,pActor->entity.mat->pos.Z,fZAngle,szCmd);
 
-	pChatWindow->AddDebugMessage("-> Class pos saved");
+	pChatWindow->AddDebugMessage("-> OnFoot position saved");
 
 	fclose(fileOut);
+}
+
+static void cmdRawSave(PCHAR szCmd)
+{
+	CPlayerPed* pPlayerPed;
+	FILE* f;
+	VEHICLE_TYPE* pVehicle;
+	PED_TYPE* pPed;
+	DWORD dwVehicleId;
+	float fZAngle;
+
+	pPlayerPed = pGame->FindPlayerPed();
+	if (pPlayerPed->IsInVehicle()) {
+		fopen_s(&f, "rawvehicles.txt", "a");
+		if (f) {
+			pVehicle = pPlayerPed->GetGtaVehicle();
+			dwVehicleId = GamePool_Vehicle_GetIndex(pVehicle);
+			ScriptCommand(&get_car_z_angle, dwVehicleId, &fZAngle);
+
+			fprintf_s(f,
+				"%u,%.4f,%.4f,%.4f,%.4f,%u,%u ; %s\n",
+				pVehicle->entity.nModelIndex,
+				pVehicle->entity.mat->pos.X,
+				pVehicle->entity.mat->pos.Y,
+				pVehicle->entity.mat->pos.Z,
+				fZAngle,
+				pVehicle->byteColor1,
+				pVehicle->byteColor2,
+				(szCmd) ? szCmd : "");
+			fclose(f);
+
+			pChatWindow->AddDebugMessage("-> InCar pos saved");
+		} else
+			pChatWindow->AddDebugMessage("I can't open the rawvehicles.txt file for append.");
+	} else {
+		fopen_s(&f, "rawpositions.txt", "a");
+		if (f) {
+			pPed = pPlayerPed->GetGtaActor();
+			ScriptCommand(&get_actor_z_angle, pPlayerPed->m_dwGTAId, &fZAngle);
+
+			fprintf_s(f,
+				"%.4f,%.4f,%.4f,%.4f ; %s\n",
+				pPed->entity.mat->pos.X,
+				pPed->entity.mat->pos.Y,
+				pPed->entity.mat->pos.Z,
+				fZAngle,
+				(szCmd) ? szCmd : "");
+			fclose(f);
+
+			pChatWindow->AddDebugMessage("-> OnFoot pos saved");
+		} else
+			pChatWindow->AddDebugMessage("I can't open the rawpositions.txt file for append.");
+	}
 }
 
 //----------------------------------------------------
@@ -1398,6 +1451,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("quit",cmdQuit);
 	pCmdWindow->AddCmdProc("q",cmdQuit);
 	pCmdWindow->AddCmdProc("save",cmdSavePos);
+	pCmdWindow->AddCmdProc("rs", cmdRawSave);
 	pCmdWindow->AddCmdProc("rcon",cmdRcon);
 
 	pCmdWindow->AddCmdProc("pagesize", cmdSetChatPageSize);

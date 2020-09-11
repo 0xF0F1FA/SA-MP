@@ -60,6 +60,8 @@ public:
 	{
 		return m_usVehicleModelsUsed[iId];
 	}
+
+	unsigned int GetNumberOfModels();
 };
 
 //----------------------------------------------------

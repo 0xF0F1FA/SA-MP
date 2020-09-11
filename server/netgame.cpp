@@ -418,6 +418,8 @@ void CNetGame::Init(bool bFirst = false)
 	// Start the gamemode script.
 	m_pGameMode->Load(szGameModeFile);
 
+	logprintf("Number of vehicle models: %d", m_pVehiclePool->GetNumberOfModels());
+
 	// Flag we're in a running state.
 	m_iGameState = GAMESTATE_RUNNING;
 }

@@ -132,6 +132,18 @@ void CVehiclePool::InitForPlayer(BYTE bytePlayerID)
 	}
 }
 
+unsigned int CVehiclePool::GetNumberOfModels()
+{
+	unsigned int uiIndex, uiCount;
+
+	uiCount = 0;
+	for (uiIndex = 0; uiIndex < 212; uiIndex++) {
+		if (m_usVehicleModelsUsed[uiIndex])
+			uiCount++;
+	}
+	return uiCount;
+}
+
 //----------------------------------------------------
 
 /*void CVehiclePool::SetVehicleVirtualWorld(VEHICLEID VehicleID, BYTE byteVirtualWorld)

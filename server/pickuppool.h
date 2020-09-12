@@ -21,12 +21,9 @@
 #ifndef SAMPSRV_PICKUPPOOL_H
 #define SAMPSRV_PICKUPPOOL_H
 
-//----------------------------------------------------
-
 class CPickupPool
 {
 private:
-
 	PICKUP  m_Pickups[MAX_PICKUPS];
 	int		m_iPickupCount;
 	BYTE	m_bActive[MAX_PICKUPS];
@@ -34,45 +31,22 @@ private:
 	int		m_iVirtualWorld[MAX_PICKUPS];
 
 public:
-	
-	CPickupPool() {
-		m_iPickupCount = 0;
-		m_sLastPickupID = -1;
-		for (int i = 0; i < MAX_PICKUPS; i++)
-		{
-			m_bActive[i] = false;
-			m_iVirtualWorld[i] = 0;
-		}
-	};
-
-	~CPickupPool() {};
+	CPickupPool();
 
 	int New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp, int iVirtualWorld);
 	int Destroy(int iPickup);
-	void InitForPlayer(BYTE bytePlayerID);
 	bool IsValid(int iPickupId);
 	bool IsStatic(int iPickupId);
 	void ProcessLastID();
 	void StreamIn(int iPickupID, BYTE bytePlayerID);
 	void StreamOut(int iPickupID, BYTE bytePlayerID);
-	bool IsActive(int iPickupID) {
-		return m_bActive[iPickupID] != 0;
-	}
-	inline PICKUP Get(int iPickupId)
-	{
-		return m_Pickups[iPickupId];
-	}
-	inline int GetCount() {
-		return m_iPickupCount;
-	}
-	inline int GetLastID() {
-		return m_sLastPickupID;
-	}
 	int GetVirtualWorld(int iPickupID);
-	bool SetVirtualWorld(int iPickupID, int iVirtualWorld);
-};
 
-//----------------------------------------------------
+	inline bool IsActive(int iPickupID) { return m_bActive[iPickupID] != 0; }
+	inline PICKUP Get(int iPickupId) { return m_Pickups[iPickupId]; }
+	inline int GetCount() { return m_iPickupCount; }
+	inline int GetLastID() { return m_sLastPickupID; }
+};
 
 #endif
 

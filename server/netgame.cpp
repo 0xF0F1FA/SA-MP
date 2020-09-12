@@ -490,7 +490,6 @@ void CNetGame::ReInitWhenRestarting()
 	while(bytePlayerID != MAX_PLAYERS) {
 		if(m_pPlayerPool->GetSlotState(bytePlayerID)) {
 			m_pVehiclePool->InitForPlayer(bytePlayerID); // give them all the existing vehicles
-			m_pPickupPool->InitForPlayer(bytePlayerID);
 			m_pObjectPool->InitForPlayer(bytePlayerID);
 			InitGameForPlayer(bytePlayerID);
 			m_pFilterScripts->OnPlayerConnect(bytePlayerID);
@@ -1204,11 +1203,9 @@ void CNetGame::Packet_InGameRcon(Packet* packet)
 
 void CNetGame::ProcessClientJoin(BYTE bytePlayerID)
 {
-
 	// Perform all init operations.
 	if(GetGameState() == GAMESTATE_RUNNING) {
 		m_pVehiclePool->InitForPlayer(bytePlayerID); // give them all the existing vehicles
-		m_pPickupPool->InitForPlayer(bytePlayerID); // give them all the existing pickups
 		m_pObjectPool->InitForPlayer(bytePlayerID); // give them all the existing map objects
 		InitGameForPlayer(bytePlayerID);
 		m_pPlayerPool->InitPlayersForPlayer(bytePlayerID); // let them know who's on the server

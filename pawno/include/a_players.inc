@@ -100,6 +100,7 @@
 #define MAPICON_LOCAL_CHECKPOINT 	(2)
 #define MAPICON_GLOBAL_CHECKPOINT	(3)
 
+native IsPickupStreamedIn(pickupid, forplayerid);
 native GetPlayerCount();
 native GetPlayerIDFromName(const name[]);
 native SetSpawnInfo(playerid, teamid, skinid, Float:x, Float:y, Float:z, Float:a, weap1, ammo1, weap2, ammo2, weap3, ammo3);

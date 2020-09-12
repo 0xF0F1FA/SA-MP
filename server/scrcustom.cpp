@@ -877,6 +877,19 @@ static cell n_SetPlayerAdmin(AMX* amx, cell* params)
 	return 0;
 }
 
+// native IsPickupStreamedIn(pickupid, forplayerid)
+static cell n_IsPickupStreamedIn(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "IsPickupStreamedIn", 2);
+	if (pNetGame->GetPlayerPool() && pNetGame->GetPickupPool()) {
+		CPlayer* pForPlayer = pNetGame->GetPlayerPool()->GetAt(params[2]);
+		if (pForPlayer && pNetGame->GetPickupPool()->IsValid(params[1])) {
+			return pForPlayer->IsPickupStreamedIn(params[1]);
+		}
+	}
+	return 0;
+}
+
 static cell n_GetPlayerIDFromName(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPlayerIDFromName", 1);
@@ -6629,6 +6642,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetNetworkStats),
 
 	// Player
+	DEFINE_NATIVE(IsPickupStreamedIn),
 	{ "GetPlayerIDFromName", n_GetPlayerIDFromName },
 	{ "GetPlayerCount", n_GetPlayerCount},
 	{"GetPlayerPoolSize", n_GetPlayerPoolSize },

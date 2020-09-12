@@ -354,8 +354,8 @@ native AddPlayerClass(skinid, Float:x, Float:y, Float:z, Float:a, weap1, ammo1, 
 native AddPlayerClassEx(teamid, skinid, Float:x, Float:y, Float:z, Float:a, weap1, ammo1, weap2, ammo2, weap3, ammo3);
 native AddStaticVehicle(modelid, Float:x, Float:y, Float:z, Float:a, color1, color2);
 native AddStaticVehicleEx(modelid, Float:x, Float:y, Float:z, Float:a, color1, color2, respawndelay, addsiren=0);
-native AddStaticPickup(modelid, typeid, Float:x, Float:y, Float:z);
-native CreatePickup(modelid, typeid, Float:x, Float:y, Float:z);
+native AddStaticPickup(modelid, typeid, Float:x, Float:y, Float:z, virtualworld);
+native CreatePickup(modelid, typeid, Float:x, Float:y, Float:z, virtualworld);
 native DestroyPickup(pickupid);
 native DestroyAllPickups();
 native IsValidPickup(pickupid);

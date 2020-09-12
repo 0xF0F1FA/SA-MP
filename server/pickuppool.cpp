@@ -11,7 +11,7 @@
 
 //----------------------------------------------------
 
-int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp)
+int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp, int iVirtualWorld)
 {
 	if (m_iPickupCount >= MAX_PICKUPS) return -1;
 
@@ -24,6 +24,7 @@ int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE s
 			m_Pickups[i].fX = fX;
 			m_Pickups[i].fY = fY;	
 			m_Pickups[i].fZ = fZ;
+			m_iVirtualWorld[i] = iVirtualWorld;
 			if (staticp)
 			{
 				// Static, can't be destroyed
@@ -145,4 +146,9 @@ void CPickupPool::StreamOut(int iPickupID, BYTE bytePlayerID)
 		bsPickup.Write(iPickupID);
 		pNetGame->SendToPlayer(bytePlayerID, RPC_DestroyPickup, &bsPickup);
 	}
+}
+
+int CPickupPool::GetVirtualWorld(int iPickupID)
+{
+	return m_iVirtualWorld[iPickupID];
 }

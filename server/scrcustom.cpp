@@ -552,32 +552,32 @@ static cell n_GetVehiclePaintjob(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
-// native AddStaticPickup(model,type,Float:X,Float:Y,Float:Z);
+// native AddStaticPickup(model,type,Float:X,Float:Y,Float:Z,virtualworld);
 
 static cell n_AddStaticPickup(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "AddStaticPickup", 5);
+	CHECK_PARAMS(amx, "AddStaticPickup", 6);
 	VECTOR vecPos;
 	vecPos.X = amx_ctof(params[3]);
 	vecPos.Y = amx_ctof(params[4]);
 	vecPos.Z = amx_ctof(params[5]);
 
-	if (pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,1) != -1) return 1;
+	if (pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,1,params[6]) != -1) return 1;
 	return 0;
 }
 
 //----------------------------------------------------------------------------------
-// native CreatePickup(model, type, Float:X, Float:Y, Float:Z);
+// native CreatePickup(model, type, Float:X, Float:Y, Float:Z, virtualworld);
 
 static cell n_CreatePickup(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "CreatePickup", 5);
+	CHECK_PARAMS(amx, "CreatePickup", 6);
 	VECTOR vecPos;
 	vecPos.X = amx_ctof(params[3]);
 	vecPos.Y = amx_ctof(params[4]);
 	vecPos.Z = amx_ctof(params[5]);
 
-	return pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z);
+	return pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,0,params[6]);
 }
 
 //----------------------------------------------------------------------------------

@@ -31,6 +31,7 @@ private:
 	int		m_iPickupCount;
 	BYTE	m_bActive[MAX_PICKUPS];
 	short	m_sLastPickupID;
+	int		m_iVirtualWorld[MAX_PICKUPS];
 
 public:
 	
@@ -40,12 +41,13 @@ public:
 		for (int i = 0; i < MAX_PICKUPS; i++)
 		{
 			m_bActive[i] = false;
+			m_iVirtualWorld[i] = 0;
 		}
 	};
 
 	~CPickupPool() {};
 
-	int New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp = 0);
+	int New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp, int iVirtualWorld);
 	int Destroy(int iPickup);
 	void InitForPlayer(BYTE bytePlayerID);
 	bool IsValid(int iPickupId);
@@ -66,6 +68,8 @@ public:
 	inline int GetLastID() {
 		return m_sLastPickupID;
 	}
+	int GetVirtualWorld(int iPickupID);
+	bool SetVirtualWorld(int iPickupID, int iVirtualWorld);
 };
 
 //----------------------------------------------------

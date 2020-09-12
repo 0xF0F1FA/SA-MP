@@ -30,11 +30,13 @@ private:
 	PICKUP  m_Pickups[MAX_PICKUPS];
 	int		m_iPickupCount;
 	BYTE	m_bActive[MAX_PICKUPS];
+	short	m_sLastPickupID;
 
 public:
 	
 	CPickupPool() {
 		m_iPickupCount = 0;
+		m_sLastPickupID = -1;
 		for (int i = 0; i < MAX_PICKUPS; i++)
 		{
 			m_bActive[i] = false;
@@ -48,12 +50,16 @@ public:
 	void InitForPlayer(BYTE bytePlayerID);
 	bool IsValid(int iPickupId);
 	bool IsStatic(int iPickupId);
+	void ProcessLastID();
 	inline PICKUP Get(int iPickupId)
 	{
 		return m_Pickups[iPickupId];
 	}
 	inline int GetCount() {
 		return m_iPickupCount;
+	}
+	inline int GetLastID() {
+		return m_sLastPickupID;
 	}
 };
 

@@ -608,11 +608,19 @@ static cell n_IsValidPickup(AMX* amx, cell* params)
 }
 
 // native IsStaticPickup(pickupid);
-static cell n_IsPickupStatic(AMX* amx, cell* params)
+static cell n_IsStaticPickup(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "IsStaticPickup", 1);
 
 	return (cell)pNetGame->GetPickupPool()->IsStatic(params[1]);
+}
+
+// native GetPickupPoolSize();
+static cell n_GetPickupPoolSize(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetPickupPoolSize", 0);
+
+	return (cell)pNetGame->GetPickupPool()->GetLastID();
 }
 
 // native GetPickupPos(pickupid, &Float:x, &Float:y, &Float:z);
@@ -6526,16 +6534,20 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "AddPlayerClassEx",		n_AddPlayerClassEx },
 	{ "AddStaticVehicle",		n_AddStaticVehicle },
 	{ "AddStaticVehicleEx",		n_AddStaticVehicleEx },
-	{ "AddStaticPickup",		n_AddStaticPickup },
-	{ "CreatePickup",			n_CreatePickup },
-	{ "DestroyPickup",			n_DestroyPickup },
-	{"DestroyAllPickups", n_DestroyAllPickups},
-	{"IsValidPickup", n_IsValidPickup},
-	{"IsStaticPickup", n_IsPickupStatic},
-	{"GetPickupPos", n_GetPickupPos},
-	{"GetPickupModel", n_GetPickupModel},
-	{"GetPickupType", n_GetPickupType},
-	{"GetPickupCount", n_GetPickupCount},
+
+	// Pickups
+	DEFINE_NATIVE(AddStaticPickup),
+	DEFINE_NATIVE(CreatePickup),
+	DEFINE_NATIVE(DestroyPickup),
+	DEFINE_NATIVE(DestroyAllPickups),
+	DEFINE_NATIVE(IsValidPickup),
+	DEFINE_NATIVE(IsStaticPickup),
+	DEFINE_NATIVE(GetPickupPoolSize),
+	DEFINE_NATIVE(GetPickupPos),
+	DEFINE_NATIVE(GetPickupModel),
+	DEFINE_NATIVE(GetPickupType),
+	DEFINE_NATIVE(GetPickupCount),
+
 	DEFINE_NATIVE(GetPlayerWorldBounds),
 	DEFINE_NATIVE(SetPlayerWorldBounds),
 	{ "ShowNameTags",			n_ShowNameTags },

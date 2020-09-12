@@ -42,6 +42,8 @@ int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE s
 			bsPickup.Write(i);
 			bsPickup.Write((PCHAR)&m_Pickups[i], sizeof (PICKUP));
 			pNetGame->GetRakServer()->RPC(RPC_Pickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+			
+			ProcessLastID();
 			return i;
 		}
 	}
@@ -57,10 +59,20 @@ int CPickupPool::Destroy(int iPickup)
 		RakNet::BitStream bsPickup;
 		bsPickup.Write(iPickup);
 		pNetGame->GetRakServer()->RPC(RPC_DestroyPickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+		ProcessLastID();
 		return 1;
 		
 	}
 	return 0;
+}
+
+void CPickupPool::ProcessLastID()
+{
+	m_sLastPickupID = -1;
+	for (int i = 0; i < MAX_PICKUPS; i++) {
+		if (m_bActive[i])
+			m_sLastPickupID = i;
+	}
 }
 
 //----------------------------------------------------

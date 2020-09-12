@@ -364,6 +364,7 @@ native GetPickupPos(pickupid, &Float:x, &Float:y, &Float:z);
 native GetPickupModel(pickupid);
 native GetPickupType(pickupid);
 native GetPickupCount();
+native GetPickupPoolSize();
 native ShowNameTags(show);
 native ShowPlayerMarkers(show);
 native DisableNameTagLOS();

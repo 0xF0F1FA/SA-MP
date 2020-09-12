@@ -51,6 +51,11 @@ public:
 	bool IsValid(int iPickupId);
 	bool IsStatic(int iPickupId);
 	void ProcessLastID();
+	void StreamIn(int iPickupID, BYTE bytePlayerID);
+	void StreamOut(int iPickupID, BYTE bytePlayerID);
+	bool IsActive(int iPickupID) {
+		return m_bActive[iPickupID] != 0;
+	}
 	inline PICKUP Get(int iPickupId)
 	{
 		return m_Pickups[iPickupId];

@@ -30,6 +30,9 @@ bool		bGameModeFinished=false;
 
 unsigned int _uiRndSrvChallenge;
 
+float g_fStreamDistance = 200.f;
+int g_iStreamRate = 1000;
+
 bool g_bDBLogging = true;
 bool g_bDBLogQueries = true;
 
@@ -173,6 +176,18 @@ static void ServerPlayerPerIPChanged()
 	int iNewVal = pConsole->GetIntVariable("maxplayerperip");
 	if (iNewVal < 1)
 		pConsole->SetIntVariable("maxplayerperip", 1);
+}
+
+static void ServerStreamRateChanged()
+{
+	int iRate = pConsole->GetIntVariable("stream_rate");
+	pConsole->SetIntVariable("stream_rate", (iRate < 500) ? 500 : (iRate > 5000) ? 5000 : iRate);
+}
+
+static void ServerStreamDistanceChanged()
+{
+	float fDistance = pConsole->GetFloatVariable("stream_distance");
+	pConsole->SetFloatVariable("stream_distance", (fDistance < 50.f) ? 50.f : (fDistance > 400.f) ? 400.f : fDistance);
 }
 
 //----------------------------------------------------
@@ -386,6 +401,8 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("onfoot_rate", CON_VARTYPE_INT, 0, &iOnFootRate);
 	pConsole->AddVariable("incar_rate", CON_VARTYPE_INT, 0, &iInCarRate);
 	pConsole->AddVariable("maxplayerperip", CON_VARTYPE_INT, 0, &iMaxPlayerPerIP, ServerPlayerPerIPChanged);
+	pConsole->AddVariable("stream_rate", CON_VARTYPE_INT, 0, &g_iStreamRate, ServerStreamRateChanged);
+	pConsole->AddVariable("stream_distance", CON_VARTYPE_FLOAT, 0, &g_fStreamDistance, ServerStreamDistanceChanged);
 
 	// Add 16 gamemode variables.
 	int x=0;

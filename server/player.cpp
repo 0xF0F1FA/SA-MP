@@ -109,6 +109,9 @@ CPlayer::CPlayer()
 		m_byteSlotWeapon[i] = 0;
 		m_dwSlotAmmo[i] = 0;
 	}
+
+	m_tmLastStreamRateTick = 0;
+	m_usPickupLimitCount = 0;
 }
 
 CPlayer::~CPlayer()
@@ -144,6 +147,12 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 	m_vecPos.X = x; 
 	m_vecPos.Y = y; 
 	m_vecPos.Z = z;
+
+	RakNet::Time tmNow = RakNet::GetTime();
+	if (tmNow - m_tmLastStreamRateTick > g_iStreamRate) {
+		ProcessStreaming();
+		m_tmLastStreamRateTick = tmNow;
+	}
 
 	if (m_bCheckpointEnabled)
 	{
@@ -193,6 +202,52 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 				if(pGameMode) pGameMode->OnPlayerLeaveRaceCheckpoint((cell)m_bytePlayerID);
 			}
 		}
+	}
+}
+
+void CPlayer::ProcessStreaming()
+{
+	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	float fDistance;
+	size_t i;
+
+	fDistance = g_fStreamDistance * g_fStreamDistance;
+
+	if (pPickupPool) {
+		for (i = 0; i <= pPickupPool->GetLastID(); i++) {
+			if (pPickupPool->IsActive(i) &&
+				// In SA-MP, pickups are handled in 2D dimension, not sure why tho?
+				GetSquaredDistanceFrom3DPoint(pPickupPool->Get(i).fX, pPickupPool->Get(i).fY, pPickupPool->Get(i).fZ) <= fDistance)
+			{
+
+			} else if (m_bStreamedInPickup[i]) {
+				StreamPickupOut(i);
+			}
+		}
+	}
+}
+
+bool CPlayer::IsPickupStreamedIn(int iPickupID)
+{
+	return m_bStreamedInPickup[iPickupID];
+}
+
+void CPlayer::StreamPickupIn(int iPickupID)
+{
+	// Apperently in SA-MP 0.3.7DL-R1, theres a 11477 variable that counts created pickups, but not used anywhere?
+	if (pNetGame->GetPickupPool() && m_usPickupLimitCount <= 200) {
+		pNetGame->GetPickupPool()->StreamIn(iPickupID, m_bytePlayerID);
+		m_bStreamedInPickup[iPickupID] = true;
+		m_usPickupLimitCount++;
+	}
+}
+
+void CPlayer::StreamPickupOut(int iPickupID)
+{
+	if (pNetGame->GetPickupPool()) {
+		pNetGame->GetPickupPool()->StreamOut(iPickupID, m_bytePlayerID);
+		m_bStreamedInPickup[iPickupID] = false;
+		m_usPickupLimitCount--;
 	}
 }
 
@@ -972,6 +1027,25 @@ float CPlayer::GetDistanceFromPoint(float fX, float fY, float fZ)
 		z = m_vecPos.Z - fZ;
 
 	return sqrtf(z * z + y * y + x * x);
+}
+
+float CPlayer::GetSquaredDistanceFrom3DPoint(float fX, float fY, float fZ)
+{
+	float
+		fDX = m_vecPos.X - fX,
+		fDY = m_vecPos.Y - fY,
+		fDZ = m_vecPos.Z - fZ;
+
+	return fDZ * fDZ + fDY * fDY + fDX * fDX;
+}
+
+float CPlayer::GetSquaredDistanceFrom2DPoint(float fX, float fY)
+{
+	float
+		fDX = m_vecPos.X - fX,
+		fDY = m_vecPos.Y - fY;
+
+	return fDY * fDY + fDX * fDX;
 }
 
 //----------------------------------------------------

@@ -45,6 +45,10 @@ private:
 	BYTE					m_byteRaceCheckpointType;
 	float					m_fRaceCheckpointSize;
 	bool					m_bInRaceCheckpoint;
+
+	bool m_bStreamedInPickup[MAX_PICKUPS];
+	unsigned short m_usPickupLimitCount;
+
 public:
 	CVariables* m_pVariables;
 	PLAYER_SPAWN_INFO		m_SpawnInfo;
@@ -75,6 +79,8 @@ public:
 
 	BYTE					m_byteSpectateType;
 	DWORD					m_SpectateID; // Vehicle or player id
+
+	RakNet::Time			m_tmLastStreamRateTick;
 
 	char m_szClientVersion[12];
 	unsigned int m_uiRconAttempt;
@@ -122,7 +128,12 @@ public:
 		m_fArmour = 0.0f;
 	};
 
+	bool IsPickupStreamedIn(int iPickupID);
+	void StreamPickupIn(int iPickupID);
+	void StreamPickupOut(int iPickupID);
+
 	void UpdatePosition(float x, float y, float z);
+	void ProcessStreaming();
 
 	// Process this player during the server loop.
 	void Process(float fElapsedTime);
@@ -149,6 +160,8 @@ public:
 	void ExitVehicle(VEHICLEID VehicleID);
 
 	float GetDistanceFromPoint(float fX, float fY, float fZ);
+	float GetSquaredDistanceFrom3DPoint(float fX, float fY, float fZ);
+	float GetSquaredDistanceFrom2DPoint(float fX, float fY);
 
 	void SetPlayerColor(DWORD dwColor);
 	DWORD GetPlayerColor() { return m_dwColor; };

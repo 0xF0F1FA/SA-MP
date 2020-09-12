@@ -37,11 +37,11 @@ int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE s
 			m_iPickupCount++;
 			
 			// Broadcast to existing players:
-			
-			RakNet::BitStream bsPickup;
+			// No longer needed. Handled by streaming..
+			/*RakNet::BitStream bsPickup;
 			bsPickup.Write(i);
 			bsPickup.Write((PCHAR)&m_Pickups[i], sizeof (PICKUP));
-			pNetGame->GetRakServer()->RPC(RPC_Pickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+			pNetGame->GetRakServer()->RPC(RPC_Pickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);*/
 			
 			ProcessLastID();
 			return i;
@@ -52,13 +52,20 @@ int CPickupPool::New(int iModel, int iType, float fX, float fY, float fZ, BYTE s
 
 int CPickupPool::Destroy(int iPickup)
 {
-	if (iPickup >= 0 && iPickup < MAX_PICKUPS && m_bActive[iPickup] == 1)
+	if (iPickup >= 0 && iPickup < MAX_PICKUPS && m_bActive[iPickup] == 1 && pNetGame->GetPlayerPool())
 	{
+		// Destroying the given pickup for all player who has that pickup streamed in
+		for (BYTE i = 0; i < MAX_PLAYERS; i++) {
+			CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(i);
+			if (pPlayer && pPlayer->IsPickupStreamedIn(iPickup)) {
+				StreamOut(iPickup, i); // a.k.a. destroy it...
+			}
+		}
 		m_bActive[iPickup] = 0;
 		m_iPickupCount--;
-		RakNet::BitStream bsPickup;
+		/*RakNet::BitStream bsPickup;
 		bsPickup.Write(iPickup);
-		pNetGame->GetRakServer()->RPC(RPC_DestroyPickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+		pNetGame->GetRakServer()->RPC(RPC_DestroyPickup, &bsPickup, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);*/
 		ProcessLastID();
 		return 1;
 		
@@ -77,9 +84,10 @@ void CPickupPool::ProcessLastID()
 
 //----------------------------------------------------
 
+// No longer needed, since handled by internal streaming (TODO)
 void CPickupPool::InitForPlayer(BYTE bytePlayerID)
 {	
-	RakNet::BitStream *pbsPickup;
+	/*RakNet::BitStream *pbsPickup;
 
 	int x=0;
 
@@ -101,7 +109,7 @@ void CPickupPool::InitForPlayer(BYTE bytePlayerID)
 		x++;
 	}
 
-	delete pbsPickup;
+	delete pbsPickup;*/
 }
 
 bool CPickupPool::IsValid(int iPickupId)
@@ -118,4 +126,23 @@ bool CPickupPool::IsStatic(int iPickupId)
 		return true;
 
 	return false;
+}
+
+void CPickupPool::StreamIn(int iPickupID, BYTE bytePlayerID)
+{
+	if (IsValid(iPickupID)) {
+		RakNet::BitStream bsPickup;
+		bsPickup.Write(iPickupID);
+		bsPickup.Write((PCHAR)&m_Pickups[iPickupID], sizeof(PICKUP));
+		pNetGame->SendToPlayer(bytePlayerID, RPC_Pickup, &bsPickup);
+	}
+}
+
+void CPickupPool::StreamOut(int iPickupID, BYTE bytePlayerID)
+{
+	if (IsValid(iPickupID)) {
+		RakNet::BitStream bsPickup;	
+		bsPickup.Write(iPickupID);
+		pNetGame->SendToPlayer(bytePlayerID, RPC_DestroyPickup, &bsPickup);
+	}
 }

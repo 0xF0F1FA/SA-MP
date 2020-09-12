@@ -154,6 +154,8 @@ extern bool g_bDBLogQueries;
 extern bool bGameModeFinished;
 extern bool	bQuitApp;
 extern unsigned int _uiRndSrvChallenge;
+extern float g_fStreamDistance;
+extern int g_iStreamRate;
 
 // -------------------
 // FUNCTION PROTOTYPES

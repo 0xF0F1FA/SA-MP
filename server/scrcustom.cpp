@@ -671,6 +671,16 @@ static cell n_GetPickupCount(AMX* amx, cell* params)
 	return pNetGame->GetPickupPool()->GetCount();
 }
 
+// native GetPickupVirtualWorld(pickupid)
+static cell n_GetPickupVirtualWorld(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetPickupVirtualWorld", 1);
+	if (pNetGame->GetPickupPool() && pNetGame->GetPickupPool()->IsValid(params[1])) {
+		return pNetGame->GetPickupPool()->GetVirtualWorld(params[1]);
+	}
+	return 0;
+}
+
 // native GetPlayerWorldBounds(playerid,&Float:x_max,&Float:y_max,&Float:x_min,&Float:y_min);
 static cell n_GetPlayerWorldBounds(AMX* amx, cell* params)
 {
@@ -6547,6 +6557,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetPickupModel),
 	DEFINE_NATIVE(GetPickupType),
 	DEFINE_NATIVE(GetPickupCount),
+	DEFINE_NATIVE(GetPickupVirtualWorld),
 
 	DEFINE_NATIVE(GetPlayerWorldBounds),
 	DEFINE_NATIVE(SetPlayerWorldBounds),

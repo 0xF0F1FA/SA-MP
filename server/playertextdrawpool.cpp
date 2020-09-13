@@ -124,3 +124,8 @@ void CPlayerTextDrawPool::SetFont(int iID, unsigned char ucFont)
 {
 	m_pTextDraws[iID]->byteStyle = ucFont;
 }
+
+void CPlayerTextDrawPool::SetOutline(int iID, unsigned char ucOutline)
+{
+	m_pTextDraws[iID]->byteOutline = ucOutline;
+}

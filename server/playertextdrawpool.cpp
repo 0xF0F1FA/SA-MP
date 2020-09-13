@@ -25,6 +25,11 @@ CPlayerTextDrawPool::~CPlayerTextDrawPool()
 	}
 }
 
+bool CPlayerTextDrawPool::IsValid(int iID)
+{
+	return ((iID >= 0 && iID < MAX_PLAYER_TEXT_DRAWS) && m_pTextDraws[iID] != NULL);
+}
+
 int CPlayerTextDrawPool::New(float fX, float fY, char* szText)
 {
 	// Find unused slot for new textdraw
@@ -62,4 +67,10 @@ int CPlayerTextDrawPool::New(float fX, float fY, char* szText)
 		}
 	}
 	return INVALID_PLAYER_TEXT_DRAW;
+}
+
+void CPlayerTextDrawPool::SetLetterSize(int iID, float fWidth, float fHeight)
+{
+	m_pTextDraws[iID]->fLetterWidth = fWidth;
+	m_pTextDraws[iID]->fLetterHeight = fHeight;
 }

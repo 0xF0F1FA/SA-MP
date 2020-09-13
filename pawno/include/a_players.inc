@@ -223,3 +223,7 @@ native DeletePVar(playerid, varname[]);
 native GetPVarType(playerid, varname[]);
 native GetPVarNameAtIndex(playerid, index, ret_varname[], ret_len);
 native GetPVarsUpperIndex(playerid);
+
+// Per-player TextDraws
+native PlayerText:CreatePlayerTextDraw(playerid, Float:x, Float:y, text[]);
+native PlayerTextDrawLetterSize(playerid, PlayerText:text, Float:x, Float:y);

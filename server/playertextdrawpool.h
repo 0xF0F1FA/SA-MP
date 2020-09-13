@@ -13,7 +13,11 @@ public:
 	CPlayerTextDrawPool();
 	~CPlayerTextDrawPool();
 
+	bool IsValid(int iID);
+
 	int New(float fX, float fY, char* szText);
+	void SetLetterSize(int iID, float fWidth, float fHeight);
+	
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

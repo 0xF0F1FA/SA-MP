@@ -17,7 +17,7 @@ public:
 
 	int New(float fX, float fY, char* szText);
 	void SetLetterSize(int iID, float fWidth, float fHeight);
-	
+	void SetTextSize(int iID, float fWidth, float fHeight);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

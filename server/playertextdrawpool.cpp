@@ -74,3 +74,9 @@ void CPlayerTextDrawPool::SetLetterSize(int iID, float fWidth, float fHeight)
 	m_pTextDraws[iID]->fLetterWidth = fWidth;
 	m_pTextDraws[iID]->fLetterHeight = fHeight;
 }
+
+void CPlayerTextDrawPool::SetTextSize(int iID, float fWidth, float fHeight)
+{
+	m_pTextDraws[iID]->fLineWidth = fWidth;
+	m_pTextDraws[iID]->fLineHeight = fHeight;
+}

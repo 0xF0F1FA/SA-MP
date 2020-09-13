@@ -129,3 +129,8 @@ void CPlayerTextDrawPool::SetOutline(int iID, unsigned char ucOutline)
 {
 	m_pTextDraws[iID]->byteOutline = ucOutline;
 }
+
+void CPlayerTextDrawPool::SetProportional(int iID, int iProp)
+{
+	m_pTextDraws[iID]->byteProportional = (iProp != 0) ? 1 : 0;
+}

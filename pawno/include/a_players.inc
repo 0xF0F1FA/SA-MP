@@ -235,3 +235,5 @@ native PlayerTextDrawUseBox(playerid, PlayerText:text, use);
 native PlayerTextDrawSetShadow(playerid, PlayerText:text, size);
 native PlayerTextDrawFont(playerid, PlayerText:text, font);
 native PlayerTextDrawSetOutline(playerid, PlayerText:text, size);
+native PlayerTextDrawSetProportional(playerid, PlayerText:text, set);
+

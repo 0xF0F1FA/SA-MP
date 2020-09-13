@@ -28,6 +28,7 @@ public:
 	void SetShadow(int iID, unsigned char ucShadow);
 	void SetFont(int iID, unsigned char ucFont);
 	void SetOutline(int iID, unsigned char ucOutline);
+	void SetProportional(int iID, int iProp);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

@@ -6026,6 +6026,20 @@ static cell n_PlayerTextDrawBackgroundColor(AMX* amx, cell* params)
 	return 0;
 }
 
+// native PlayerTextDrawUseBox(playerid, PlayerText:text, use)
+static cell n_PlayerTextDrawUseBox(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayerTextDrawUseBox", 3);
+	if (pNetGame->GetPlayerPool()) {
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer && pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->IsValid(params[2])) {
+			pPlayer->m_pTextDraw->SetUseBox(params[2], params[3]);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static cell n_GangZoneCreate(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GangZoneCreate", 4);
@@ -6980,6 +6994,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(PlayerTextDrawColor),
 	DEFINE_NATIVE(PlayerTextDrawBoxColor),
 	DEFINE_NATIVE(PlayerTextDrawBackgroundColor),
+	DEFINE_NATIVE(PlayerTextDrawUseBox),
 
 	// Objects
 	{ "CreateObject",			n_CreateObject },

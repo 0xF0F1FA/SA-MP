@@ -109,3 +109,8 @@ void CPlayerTextDrawPool::SetBackgroundColor(int iID, unsigned long ulColor)
 {
 	m_pTextDraws[iID]->dwBackgroundColor = RGBA_ABGR(ulColor);
 }
+
+void CPlayerTextDrawPool::SetUseBox(int iID, int iUse)
+{
+	m_pTextDraws[iID]->byteBox = (iUse != 0) ? 1 : 0;
+}

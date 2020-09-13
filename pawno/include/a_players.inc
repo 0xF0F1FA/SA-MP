@@ -231,3 +231,4 @@ native PlayerTextDrawAlignment(playerid, PlayerText:text, alignment);
 native PlayerTextDrawColor(playerid, PlayerText:text, color);
 native PlayerTextDrawBoxColor(playerid, PlayerText:text, color);
 native PlayerTextDrawBackgroundColor(playerid, PlayerText:text, color);
+native PlayerTextDrawUseBox(playerid, PlayerText:text, use);

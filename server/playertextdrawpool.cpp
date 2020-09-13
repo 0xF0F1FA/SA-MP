@@ -104,3 +104,8 @@ void CPlayerTextDrawPool::SetBoxColor(int iID, unsigned long ulColor)
 {
 	m_pTextDraws[iID]->dwBoxColor = RGBA_ABGR(ulColor);
 }
+
+void CPlayerTextDrawPool::SetBackgroundColor(int iID, unsigned long ulColor)
+{
+	m_pTextDraws[iID]->dwBackgroundColor = RGBA_ABGR(ulColor);
+}

@@ -230,3 +230,4 @@ native PlayerTextDrawLetterSize(playerid, PlayerText:text, Float:x, Float:y);
 native PlayerTextDrawAlignment(playerid, PlayerText:text, alignment);
 native PlayerTextDrawColor(playerid, PlayerText:text, color);
 native PlayerTextDrawBoxColor(playerid, PlayerText:text, color);
+native PlayerTextDrawBackgroundColor(playerid, PlayerText:text, color);

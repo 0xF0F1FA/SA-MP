@@ -23,6 +23,7 @@ public:
 	void SetAlignment(int iID, int iAlignment);
 	void SetColor(int iID, unsigned long ulColor);
 	void SetBoxColor(int iID, unsigned long ulColor);
+	void SetBackgroundColor(int iID, unsigned long ulColor);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

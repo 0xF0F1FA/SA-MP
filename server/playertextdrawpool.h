@@ -22,6 +22,7 @@ public:
 	void SetTextSize(int iID, float fWidth, float fHeight);
 	void SetAlignment(int iID, int iAlignment);
 	void SetColor(int iID, unsigned long ulColor);
+	void SetBoxColor(int iID, unsigned long ulColor);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

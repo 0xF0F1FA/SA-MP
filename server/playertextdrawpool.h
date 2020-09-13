@@ -25,6 +25,7 @@ public:
 	void SetBoxColor(int iID, unsigned long ulColor);
 	void SetBackgroundColor(int iID, unsigned long ulColor);
 	void SetUseBox(int iID, int iUse);
+	void SetShadow(int iID, unsigned char ucShadow);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

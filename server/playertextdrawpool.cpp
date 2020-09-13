@@ -114,3 +114,8 @@ void CPlayerTextDrawPool::SetUseBox(int iID, int iUse)
 {
 	m_pTextDraws[iID]->byteBox = (iUse != 0) ? 1 : 0;
 }
+
+void CPlayerTextDrawPool::SetShadow(int iID, unsigned char ucShadow)
+{
+	m_pTextDraws[iID]->byteShadow = ucShadow;
+}

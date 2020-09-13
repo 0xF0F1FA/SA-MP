@@ -119,3 +119,8 @@ void CPlayerTextDrawPool::SetShadow(int iID, unsigned char ucShadow)
 {
 	m_pTextDraws[iID]->byteShadow = ucShadow;
 }
+
+void CPlayerTextDrawPool::SetFont(int iID, unsigned char ucFont)
+{
+	m_pTextDraws[iID]->byteStyle = ucFont;
+}

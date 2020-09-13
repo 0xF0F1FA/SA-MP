@@ -233,3 +233,4 @@ native PlayerTextDrawBoxColor(playerid, PlayerText:text, color);
 native PlayerTextDrawBackgroundColor(playerid, PlayerText:text, color);
 native PlayerTextDrawUseBox(playerid, PlayerText:text, use);
 native PlayerTextDrawSetShadow(playerid, PlayerText:text, size);
+native PlayerTextDrawFont(playerid, PlayerText:text, font);

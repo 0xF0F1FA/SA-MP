@@ -88,6 +88,7 @@ CPlayer::CPlayer()
 	m_ucFightingMove = 0;
 
 	m_pVariables = new CVariables;
+	m_pTextDraw = new CPlayerTextDrawPool;
 
 	m_bInCheckpoint = false;
 	m_bInRaceCheckpoint = false;
@@ -117,6 +118,7 @@ CPlayer::CPlayer()
 CPlayer::~CPlayer()
 {
 	SAFE_DELETE(m_pVariables);
+	SAFE_DELETE(m_pTextDraw);
 }
 
 void CPlayer::SetName(const char* szName, unsigned char ucLength)

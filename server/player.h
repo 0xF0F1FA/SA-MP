@@ -51,6 +51,7 @@ private:
 
 public:
 	CVariables* m_pVariables;
+	CPlayerTextDrawPool* m_pTextDraw;
 	PLAYER_SPAWN_INFO		m_SpawnInfo;
 	bool					m_bHasSpawnInfo;
 	BYTE					m_byteWantedLevel;

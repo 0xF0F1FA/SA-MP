@@ -118,6 +118,7 @@ typedef struct _SERVER_SETTINGS {
 #include "gamemodes.h"
 #include "filterscripts.h"
 #include "netrpc.h"
+#include "playertextdrawpool.h"
 #include "player.h"
 #include "playerpool.h"
 #include "vehicle.h"

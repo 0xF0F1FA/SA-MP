@@ -193,6 +193,7 @@
     <ClCompile Include="..\sdk\sha2\sha256.cpp">
       <Filter>sdk\sha2</Filter>
     </ClCompile>
+    <ClCompile Include="playertextdrawpool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h" />
@@ -479,6 +480,7 @@
     <ClInclude Include="..\sdk\sha2\sha256.h">
       <Filter>sdk\sha2</Filter>
     </ClInclude>
+    <ClInclude Include="playertextdrawpool.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sdk">

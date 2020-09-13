@@ -214,6 +214,7 @@
     <ClCompile Include="pickuppool.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="playerpool.cpp" />
+    <ClCompile Include="playertextdrawpool.cpp" />
     <ClCompile Include="plugins.cpp" />
     <ClCompile Include="query.cpp" />
     <ClCompile Include="runutil.cpp" />
@@ -328,6 +329,7 @@
     <ClInclude Include="pickuppool.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="playerpool.h" />
+    <ClInclude Include="playertextdrawpool.h" />
     <ClInclude Include="plugincommon.h" />
     <ClInclude Include="plugininternal.h" />
     <ClInclude Include="plugins.h" />

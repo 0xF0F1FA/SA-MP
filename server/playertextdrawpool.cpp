@@ -94,3 +94,9 @@ void CPlayerTextDrawPool::SetAlignment(int iID, int iAlignment)
 	else if (iAlignment == 3)
 		m_pTextDraws[iID]->byteRight = 1;
 }
+
+void CPlayerTextDrawPool::SetColor(int iID, unsigned long ulColor)
+{
+	m_pTextDraws[iID]->dwLetterColor = RGBA_ABGR(ulColor);
+}
+

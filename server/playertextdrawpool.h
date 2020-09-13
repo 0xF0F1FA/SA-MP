@@ -2,6 +2,8 @@
 #ifndef _PLAYERTEXTDRAWPOOL_H
 #define _PLAYERTEXTDRAWPOOL_H
 
+#define RGBA_ABGR(n) (((n >> 24) & 0x000000FF) | ((n >> 8) & 0x0000FF00) | ((n << 8) & 0x00FF0000) | ((n << 24) & 0xFF000000))
+
 class CPlayerTextDrawPool
 {
 private:
@@ -19,6 +21,7 @@ public:
 	void SetLetterSize(int iID, float fWidth, float fHeight);
 	void SetTextSize(int iID, float fWidth, float fHeight);
 	void SetAlignment(int iID, int iAlignment);
+	void SetColor(int iID, unsigned long ulColor);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

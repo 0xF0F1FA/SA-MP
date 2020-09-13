@@ -80,3 +80,17 @@ void CPlayerTextDrawPool::SetTextSize(int iID, float fWidth, float fHeight)
 	m_pTextDraws[iID]->fLineWidth = fWidth;
 	m_pTextDraws[iID]->fLineHeight = fHeight;
 }
+
+void CPlayerTextDrawPool::SetAlignment(int iID, int iAlignment)
+{
+	m_pTextDraws[iID]->byteLeft = 0;
+	m_pTextDraws[iID]->byteCenter = 0;
+	m_pTextDraws[iID]->byteRight = 0;
+
+	if (iAlignment == 1)
+		m_pTextDraws[iID]->byteLeft = 1;
+	else if (iAlignment == 2)
+		m_pTextDraws[iID]->byteCenter = 1;
+	else if (iAlignment == 3)
+		m_pTextDraws[iID]->byteRight = 1;
+}

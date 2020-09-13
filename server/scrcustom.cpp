@@ -5969,6 +5969,21 @@ static cell n_PlayerTextDrawTextSize(AMX* amx, cell* params)
 	return 0;
 }
 
+// native PlayerTextDrawAlignment(playerid, PlayerText:text, alignment)
+static cell n_PlayerTextDrawAlignment(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayerTextDrawAlignment", 3);
+
+	if (pNetGame->GetPlayerPool()) {
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer && pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->IsValid(params[2])) {
+			pPlayer->m_pTextDraw->SetAlignment(params[2], params[3]);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static cell n_GangZoneCreate(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GangZoneCreate", 4);
@@ -6919,6 +6934,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(CreatePlayerTextDraw),
 	DEFINE_NATIVE(PlayerTextDrawLetterSize),
 	DEFINE_NATIVE(PlayerTextDrawTextSize),
+	DEFINE_NATIVE(PlayerTextDrawAlignment),
 
 	// Objects
 	{ "CreateObject",			n_CreateObject },

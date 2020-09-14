@@ -238,3 +238,5 @@ native PlayerTextDrawSetOutline(playerid, PlayerText:text, size);
 native PlayerTextDrawSetProportional(playerid, PlayerText:text, set);
 native PlayerTextDrawShow(playerid, PlayerText:text);
 native PlayerTextDrawHide(playerid, PlayerText:text);
+native PlayerTextDrawSetString(playerid, PlayerText:text, string[]);
+

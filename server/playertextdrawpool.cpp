@@ -70,6 +70,19 @@ int CPlayerTextDrawPool::New(float fX, float fY, char* szText)
 	return INVALID_PLAYER_TEXT_DRAW;
 }
 
+void CPlayerTextDrawPool::SetTextString(int iID, char* szText)
+{
+	if (m_szFontText[iID]) {
+		strcpy_s(m_szFontText[iID], MAX_TEXT_DRAW_LINE, szText);
+
+		RakNet::BitStream bs;
+		bs.Write((unsigned short)(iID + MAX_TEXT_DRAWS));
+		bs.Write(szText, MAX_TEXT_DRAW_LINE);
+		if (m_bHasText[iID])
+			pNetGame->SendToPlayer(m_ucPlayerID, RPC_ScrEditTextDraw, &bs);
+	}
+}
+
 void CPlayerTextDrawPool::SetLetterSize(int iID, float fWidth, float fHeight)
 {
 	m_pTextDraws[iID]->fLetterWidth = fWidth;

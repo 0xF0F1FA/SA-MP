@@ -1492,24 +1492,29 @@ static void ScrSetPlayer(RPCParameters* rpcParams)
 
 static void ScrVehicleVelocity(RPCParameters* rpcParams)
 {
-	RakNet::BitStream in(rpcParams);
+	VEHICLEID nVehicleID;
+	CVehicle* pVehicle;
+	float fX, fY, fZ;
 
-	int iVehicleId = -1;
-	float fX = 0.0f, fY = 0.0f, fZ = 0.0f;
+	if (rpcParams->numberOfBitsOfData == 113 && pNetGame->GetVehiclePool()) {
+		RakNet::BitStream in(rpcParams);
 
-	if (!in.Read(iVehicleId) && iVehicleId < 0)
-		return;
+		in.Read(nVehicleID);
 
-	CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(iVehicleId);
-	if (pVehicle == NULL && in.GetNumberOfUnreadBits() < 96)
-		return;
-	
-	in.Read(fX);
-	in.Read(fY);
-	in.Read(fZ);
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(nVehicleID);
+		if (pVehicle) {
+			in.Read(fX);
+			in.Read(fY);
+			in.Read(fZ);
 
-	pVehicle->SetMoveSpeedVector({ fX, fY, fZ });
-	pVehicle->ApplyMoveSpeed();
+			if (in.ReadBit())
+				pVehicle->SetTurnSpeedVector({ fX, fY, fZ });
+			else
+				pVehicle->SetMoveSpeedVector({ fX, fY, fZ });
+
+			pVehicle->ApplyMoveSpeed();
+		}
+	}
 }
 
 static void ScrPlayerVelocity(RPCParameters* rpcParams)

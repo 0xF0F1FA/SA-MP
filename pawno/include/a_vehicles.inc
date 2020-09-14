@@ -79,6 +79,7 @@ native ToggleTaxiLight(vehicleid, toggle);
 native SetVehicleEngineState(vehicleid, engine_state);
 native SetVehicleVelocity(vehicleid, Float:X, Float:Y, Float:Z);
 native GetVehicleVelocity(vehicleid, &Float:x, &Float:y, &Float:z);
+native SetVehicleAngularVelocity(vehicleid, Float:X, Float:Y, Float:Z);
 native IsVehicleOnItsSide(vehicleid);
 native IsVehicleUpsideDown(vehicleid);
 native GetVehicleSirenState(vehicle);

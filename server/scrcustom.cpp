@@ -1624,27 +1624,43 @@ static cell n_SetVehicleVelocity(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SetVehicleVelocity", 4);
 
-	CVehiclePool* pPool = pNetGame->GetVehiclePool();
-	if (pPool != NULL && pPool->GetSlotState(params[1]))
-	{
-		RakNet::BitStream out;
-		float fX, fY, fZ;
+	if (pNetGame->GetVehiclePool()) {
+		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle && pVehicle->m_byteDriverID != INVALID_ID) {
+			RakNet::BitStream bs;
 
-		fX = amx_ctof(params[2]);
-		fY = amx_ctof(params[3]);
-		fZ = amx_ctof(params[4]);
+			bs.Write(pVehicle->m_VehicleID);
+			bs.Write(amx_ctof(params[2]));
+			bs.Write(amx_ctof(params[3]));
+			bs.Write(amx_ctof(params[4]));
+			bs.Write0();
 
-		out.Write(params[1]);
-		out.Write(fX);
-		out.Write(fY);
-		out.Write(fZ);
+			pNetGame->SendToPlayer(pVehicle->m_byteDriverID, RPC_ScrVehicleVelocity, &bs);
+			return 1;
+		}
+	}
+	return 0;
+}
 
-		bool bRet = false;
-		if (pNetGame->GetRakServer())
-			bRet = pNetGame->GetRakServer()->RPC(RPC_ScrVehicleVelocity, &out,
-				HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+// native SetVehicleAngularVelocity(vehicleid, Float:X, Float:Y, Float:Z)
+static cell n_SetVehicleAngularVelocity(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "SetVehicleAngularVelocity", 4);
 
-		return bRet;
+	if (pNetGame->GetVehiclePool()) {
+		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle && pVehicle->m_byteDriverID != INVALID_ID) {
+			RakNet::BitStream bs;
+
+			bs.Write(pVehicle->m_VehicleID);
+			bs.Write(amx_ctof(params[2]));
+			bs.Write(amx_ctof(params[3]));
+			bs.Write(amx_ctof(params[4]));
+			bs.Write1();
+
+			pNetGame->SendToPlayer(pVehicle->m_byteDriverID, RPC_ScrVehicleVelocity, &bs);
+			return 1;
+		}
 	}
 	return 0;
 }

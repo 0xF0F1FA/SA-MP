@@ -14,7 +14,7 @@ Version: $Id: textdrawpool.cpp,v 1.4 2008-02-18 00:43:49 kyecvs Exp $
 CTextDrawPool::CTextDrawPool()
 {
 	int x=0;
-	while(x!=MAX_TEXT_DRAWS) {
+	while(x!=MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS) {
 		m_pTextDraw[x] = NULL;
 		m_bSlotState[x] = false;
 		x++;
@@ -26,7 +26,7 @@ CTextDrawPool::CTextDrawPool()
 CTextDrawPool::~CTextDrawPool()
 {
 	int x=0;
-	while(x != MAX_TEXT_DRAWS) {
+	while(x != MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS) {
 		if(m_pTextDraw[x]) {
 			delete m_pTextDraw[x];
 			m_pTextDraw[x] = NULL;
@@ -74,7 +74,7 @@ void CTextDrawPool::Draw()
 
 	if(GetAsyncKeyState(VK_TAB)) return;
 
-	while(x != MAX_TEXT_DRAWS) {
+	while(x != MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS) {
 		if(m_bSlotState[x]) m_pTextDraw[x]->Draw();
 		x++;
 	}

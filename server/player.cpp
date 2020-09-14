@@ -88,7 +88,7 @@ CPlayer::CPlayer()
 	m_ucFightingMove = 0;
 
 	m_pVariables = new CVariables;
-	m_pTextDraw = new CPlayerTextDrawPool;
+	m_pTextDraw = new CPlayerTextDrawPool(m_bytePlayerID);
 
 	m_bInCheckpoint = false;
 	m_bInRaceCheckpoint = false;

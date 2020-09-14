@@ -15,8 +15,8 @@ class CTextDrawPool
 {
 private:
 
-	CTextDraw		*m_pTextDraw[MAX_TEXT_DRAWS];
-	bool			m_bSlotState[MAX_TEXT_DRAWS];
+	CTextDraw		*m_pTextDraw[MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS];
+	bool			m_bSlotState[MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS];
 
 public:
 	CTextDrawPool();
@@ -27,7 +27,7 @@ public:
 	void Draw();
 
 	CTextDraw * GetAt(WORD wText) {
-		if (wText >= MAX_TEXT_DRAWS) return NULL;
+		if (wText >= MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS) return NULL;
 		if (!m_bSlotState[wText]) return NULL;
 		return m_pTextDraw[wText];
 	};

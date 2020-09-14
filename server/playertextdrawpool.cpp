@@ -1,8 +1,9 @@
 
 #include "main.h"
 
-CPlayerTextDrawPool::CPlayerTextDrawPool()
+CPlayerTextDrawPool::CPlayerTextDrawPool(unsigned char ucPlayerID)
 {
+	m_ucPlayerID = ucPlayerID;
 	for (int i = 0; i < MAX_PLAYER_TEXT_DRAWS; i++) {
 		m_pTextDraws[i] = NULL;
 		m_szFontText[i] = NULL;
@@ -133,4 +134,13 @@ void CPlayerTextDrawPool::SetOutline(int iID, unsigned char ucOutline)
 void CPlayerTextDrawPool::SetProportional(int iID, int iProp)
 {
 	m_pTextDraws[iID]->byteProportional = (iProp != 0) ? 1 : 0;
+}
+
+void CPlayerTextDrawPool::Hide(int iID)
+{
+	RakNet::BitStream bs;
+	bs.Write((unsigned short)iID + MAX_TEXT_DRAWS);
+	if (m_bHasText[iID])
+		pNetGame->SendToPlayer(m_ucPlayerID, RPC_ScrHideTextDraw, &bs);
+	m_bHasText[iID] = false;
 }

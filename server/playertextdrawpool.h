@@ -7,12 +7,13 @@
 class CPlayerTextDrawPool
 {
 private:
+	unsigned char m_ucPlayerID;
 	TEXT_DRAW_TRANSMIT* m_pTextDraws[MAX_PLAYER_TEXT_DRAWS];
 	char* m_szFontText[MAX_PLAYER_TEXT_DRAWS];
 	bool m_bHasText[MAX_PLAYER_TEXT_DRAWS];
 
 public:
-	CPlayerTextDrawPool();
+	CPlayerTextDrawPool(unsigned char ucPlayerID);
 	~CPlayerTextDrawPool();
 
 	bool IsValid(int iID);
@@ -29,6 +30,7 @@ public:
 	void SetFont(int iID, unsigned char ucFont);
 	void SetOutline(int iID, unsigned char ucOutline);
 	void SetProportional(int iID, int iProp);
+	void Hide(int iID);
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

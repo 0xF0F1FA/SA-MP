@@ -30,6 +30,7 @@ public:
 	void SetFont(int iID, unsigned char ucFont);
 	void SetOutline(int iID, unsigned char ucOutline);
 	void SetProportional(int iID, int iProp);
+	void Show(int iID);
 	void Hide(int iID);
 };
 

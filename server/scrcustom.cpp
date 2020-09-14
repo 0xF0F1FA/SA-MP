@@ -6108,6 +6108,20 @@ static cell n_PlayerTextDrawSetProportional(AMX* amx, cell* params)
 	return 0;
 }
 
+// native PlayerTextDrawShow(playerid, PlayerText:text)
+static cell n_PlayerTextDrawShow(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayerTextDrawShow", 2);
+	if (pNetGame->GetPlayerPool()) {
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer && pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->IsValid(params[2])) {
+			pPlayer->m_pTextDraw->Show(params[2]);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // native PlayerTextDrawHide(playerid, PlayerText:text)
 static cell n_PlayerTextDrawHide(AMX* amx, cell* params)
 {
@@ -7081,6 +7095,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(PlayerTextDrawFont),
 	DEFINE_NATIVE(PlayerTextDrawSetOutline),
 	DEFINE_NATIVE(PlayerTextDrawSetProportional),
+	DEFINE_NATIVE(PlayerTextDrawShow),
 	DEFINE_NATIVE(PlayerTextDrawHide),
 
 	// Objects

@@ -136,10 +136,20 @@ void CPlayerTextDrawPool::SetProportional(int iID, int iProp)
 	m_pTextDraws[iID]->byteProportional = (iProp != 0) ? 1 : 0;
 }
 
+void CPlayerTextDrawPool::Show(int iID)
+{
+	RakNet::BitStream bs;
+	bs.Write((unsigned short)(iID + MAX_TEXT_DRAWS));
+	bs.Write((PCHAR)m_pTextDraws[iID], sizeof(TEXT_DRAW_TRANSMIT));
+	bs.Write(m_szFontText[iID], MAX_TEXT_DRAW_LINE);
+	pNetGame->SendToPlayer(m_ucPlayerID, RPC_ScrShowTextDraw, &bs);
+	m_bHasText[iID] = true;
+}
+
 void CPlayerTextDrawPool::Hide(int iID)
 {
 	RakNet::BitStream bs;
-	bs.Write((unsigned short)iID + MAX_TEXT_DRAWS);
+	bs.Write((unsigned short)(iID + MAX_TEXT_DRAWS));
 	if (m_bHasText[iID])
 		pNetGame->SendToPlayer(m_ucPlayerID, RPC_ScrHideTextDraw, &bs);
 	m_bHasText[iID] = false;

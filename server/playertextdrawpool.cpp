@@ -70,6 +70,21 @@ int CPlayerTextDrawPool::New(float fX, float fY, char* szText)
 	return INVALID_PLAYER_TEXT_DRAW;
 }
 
+void CPlayerTextDrawPool::Destroy(int iID)
+{
+	// Hiding the textdraw to not get stuck drawing on client until its gets replaced by a new one
+	Hide(iID);
+
+	if (m_pTextDraws[iID]) {
+		free(m_pTextDraws[iID]);
+		m_pTextDraws[iID] = NULL;
+	}
+	if (m_szFontText[iID]) {
+		free(m_szFontText[iID]);
+		m_szFontText[iID] = NULL;
+	}
+}
+
 void CPlayerTextDrawPool::SetTextString(int iID, char* szText)
 {
 	if (m_szFontText[iID]) {

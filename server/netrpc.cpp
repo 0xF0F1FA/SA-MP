@@ -690,8 +690,12 @@ void AdminMapTeleport(RPCParameters *rpcParams)
 	}
 }
 
+// VehicleDestroyed triggers, when a vehicle (exluding boats) fully sunk in water, or vehicle
+// health reported as 0.0f, and incoming from that player who used it as a driver last time.
 void VehicleDestroyed(RPCParameters *rpcParams)
 {
+	// TODO: Add checks for last driver maybe, that may could fix a backdoor,
+	// so player cannot make all vehicles dead in a single time.
 	PlayerID sender = rpcParams->sender;
 
 	RakNet::BitStream bsData(rpcParams);
@@ -711,7 +715,10 @@ void VehicleDestroyed(RPCParameters *rpcParams)
 	if(pVehiclePool->GetSlotState(VehicleID))
 	{
 		CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
-		if(pVehicle) pVehicle->SetDead();
+		if (pVehicle) {
+			pVehicle->SetDead();
+			pVehicle->m_ucKillerID = bytePlayerId;
+		}
 	}
 }
 

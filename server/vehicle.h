@@ -45,6 +45,7 @@ public:
 	VECTOR					m_vecTurnSpeed;
 	float					m_fHealth;
 	bool					m_bDead;
+	unsigned char			m_ucKillerID;
 	_CAR_MOD_INFO			m_CarModInfo;
 	CHAR					m_szNumberPlate[9];
 	bool					m_bDeathHasBeenNotified;

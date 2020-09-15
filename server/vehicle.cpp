@@ -44,6 +44,7 @@ CVehicle::CVehicle( int iModel, VECTOR *vecPos, float fRotation, int iColor1,
 	m_bIsActive = true;
 	m_bIsWasted = false;
 	m_byteDriverID = INVALID_ID;
+	m_ucKillerID = INVALID_ID;
 	m_fHealth = 1000.0f;
 	m_bDeathHasBeenNotified = false;
 	m_iVirtualWorld = 0;
@@ -208,8 +209,6 @@ void CVehicle::CheckForIdleRespawn()
 
 void CVehicle::Process(float fElapsedTime)
 {
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	
 	// Check for an idle vehicle.. but don't do this
 	// every ::Process because it would be too CPU intensive.
 	if(!m_bDeathHasBeenNotified && m_SpawnInfo.iRespawnDelay != (-1) && ((rand() % 20) == 0)) {
@@ -226,10 +225,11 @@ void CVehicle::Process(float fElapsedTime)
 			m_szNumberPlate[0] = 0;
 
 			if(pNetGame->GetGameMode() && pNetGame->GetFilterScripts()) {
-				pNetGame->GetFilterScripts()->OnVehicleDeath(m_VehicleID, 255);
-				pNetGame->GetGameMode()->OnVehicleDeath(m_VehicleID, 255);
+				pNetGame->GetFilterScripts()->OnVehicleDeath(m_VehicleID, m_ucKillerID);
+				pNetGame->GetGameMode()->OnVehicleDeath(m_VehicleID, m_ucKillerID);
 			}
 			m_dwLastSeenOccupiedTick = GetTickCount();
+			m_ucKillerID = INVALID_ID;
 		}
 		if(!(rand() % 20) && GetTickCount() - m_dwLastSeenOccupiedTick > 10000)
 		{

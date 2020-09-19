@@ -68,7 +68,7 @@ void CCmdWindow::Enable()
 	}
 	pGame->ToggleKeyInputsDisabled(TRUE);
 	pGame->DisableCamera(true);
-	pCursor->m_bVisible = true;
+	pCursor->m_ucShowForChatbox = true;
 
 	if (pNetGame) {
 		RakNet::BitStream out;
@@ -88,7 +88,7 @@ void CCmdWindow::Disable()
 	}
 	pGame->ToggleKeyInputsDisabled(FALSE);
 	pGame->DisableCamera(false);
-	pCursor->m_bVisible = false;
+	pCursor->m_ucShowForChatbox = false;
 
 	if (pNetGame) {
 		RakNet::BitStream out;

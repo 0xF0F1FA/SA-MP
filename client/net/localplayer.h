@@ -130,7 +130,7 @@ public:
 
 	void HandleClassSelectionOutcome(bool bOutcome);
 	void HandleClassSelection();
-	void ProcessClassSelection();
+	void ProcessClassSelection(int iControlID = 0);
 	
 	void CheckWeapons();
 	void SetVirtualWorld(int iWorld) { m_iVirtualWorld = iWorld; };

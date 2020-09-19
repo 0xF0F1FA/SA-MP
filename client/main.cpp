@@ -310,7 +310,7 @@ void DoInitStuff()
 
 		if(tSettings.bPlayOnline) {
 			pDeathWindow = new CDeathWindow(pD3DDevice);
-			pSpawnScreen = new CSpawnScreen(pD3DDevice);
+			pSpawnScreen = new CSpawnScreen;
 			//pPlayerTags = new CPlayerTags(pD3DDevice);
 			pPlayerTags = new CPlayerTags(pD3DDevice);
 			pScoreBoard = new CScoreBoard(pD3DDevice, FALSE);
@@ -549,9 +549,6 @@ void d3d9DestroyDeviceObjects()
 	if (pDefaultFont)
 		pDefaultFont->DeleteDeviceObjects();
 
-	if (pSpawnScreen)
-		pSpawnScreen->DeleteDeviceObjects();
-
 	if (pDeathWindow)
 		pDeathWindow->OnLostDevice();
 
@@ -577,9 +574,6 @@ void d3d9RestoreDeviceObjects()
 
 	if (pDefaultFont)
 		pDefaultFont->RestoreDeviceObjects();
-
-	if (pSpawnScreen)
-		pSpawnScreen->RestoreDeviceObjects();
 
 	if (pDeathWindow)
 		pDeathWindow->OnResetDevice();

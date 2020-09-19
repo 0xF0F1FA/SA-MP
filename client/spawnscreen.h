@@ -9,31 +9,23 @@
 
 //----------------------------------------------------
 
+#define ID_CONTROL_LEFT		1
+#define ID_CONTROL_RIGHT	2
+#define ID_CONTROL_SPAWN	3
+
 class CSpawnScreen
 {
 private:
-
-	BOOL				m_bEnabled;
-	CHAR				*m_szSpawnText;
-
-	CFontRender			*m_pFont;
-	IDirect3DDevice9	*m_pD3DDevice;
-	IDirect3DTexture9	*m_pTexture;
-
-	IDirect3DStateBlock9 *m_pStateBlockSaved;
-	IDirect3DStateBlock9 *m_pStateBlockDraw;
-
-	ID3DXSprite			*m_mySprite;
+	CDXUTDialog* m_pDialog;
 
 public:
+	void SetupUI();
+	void ToggleVisibility(bool bVisible);
+	void MsgProc(HWND hwnd, UINT uiMsg, WPARAM wParam, LPARAM lParam);
+	static VOID CALLBACK OnEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 	void Draw();
 
-	void RestoreDeviceObjects();
-	void DeleteDeviceObjects();
-
-	void SetSpawnText(CHAR* szSpawnText);
-
-	CSpawnScreen(IDirect3DDevice9 *pD3DDevice);
+	CSpawnScreen();
 	~CSpawnScreen();
 
 };

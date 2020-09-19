@@ -121,9 +121,6 @@ bool CLocalPlayer::Process()
 	{
 		// ACTIVE LOCAL PLAYER
 
-		// Clear any spawn text if any
-		pSpawnScreen->SetSpawnText(NULL);
-
 		/*
 		if(iTimesDataModified > 10)
 		{
@@ -1060,6 +1057,9 @@ bool CLocalPlayer::Spawn()
 		RELIABLE_SEQUENCED,0,false);
 
 	m_iDisplayZoneTick = GetTickCount() + 1000;
+
+	if (pSpawnScreen)
+		pSpawnScreen->ToggleVisibility(false);
 	
 	return true;
 }
@@ -1211,13 +1211,11 @@ void CLocalPlayer::SendStatsUpdate()
 
 //----------------------------------------------------------
 
-void CLocalPlayer::ProcessClassSelection()
+void CLocalPlayer::ProcessClassSelection(int iControlID)
 {
 	DWORD			dwTicksSinceLastSelection;
 	DWORD			dwTickNow;
 	MATRIX4X4		matPlayer;
-	char			szMsg[1024];
-	char			szClassInfo[256];
 
 	dwTickNow = GetTickCount();
 	pGame->DisplayHud(false);
@@ -1229,39 +1227,22 @@ void CLocalPlayer::ProcessClassSelection()
 
 	if( !m_bWaitingForSpawnRequestReply &&
 		m_bAllowedClass &&
-		(GetAsyncKeyState(VK_SHIFT)&0x8000) &&
+		((GetAsyncKeyState(VK_SHIFT)&0x8000) || iControlID == ID_CONTROL_SPAWN) &&
 		!pCmdWindow->isEnabled() )
 	{
-		pSpawnScreen->SetSpawnText(NULL);
 		RequestSpawn();
 		m_bWaitingForSpawnRequestReply = true;
 		return;
 	}
 	else
 	{
-		// SHOW INFO ABOUT THE SELECTED CLASS..
-		if(pChatWindow) { // pChatWindow?
-			szMsg[0] = '\0';
-			strcat_s(szMsg,"Use left and right arrow keys to select class.\n");
-			strcat_s(szMsg,"Press SHIFT when ready to spawn.\n\n");
-			
-			sprintf_s(szClassInfo,"Class %u Weapons:\n- %s\n- %s\n- %s",m_iSelectedClass,
-				GetWeaponName(m_SpawnInfo.iSpawnWeapons[0]),
-				GetWeaponName(m_SpawnInfo.iSpawnWeapons[1]),
-				GetWeaponName(m_SpawnInfo.iSpawnWeapons[2]));
-
-			strcat_s(szMsg, szClassInfo);
-		
-			pSpawnScreen->SetSpawnText(szMsg);
-		}
-
 		// GRAB PLAYER MATRIX FOR SOUND POSITION
 		m_pPlayerPed->GetMatrix(&matPlayer);
 		dwTicksSinceLastSelection = dwTickNow - m_dwLastSpawnSelectionTick; // used to delay reselection.
 
 		if (dwTicksSinceLastSelection > 250) {
 			// ALLOW ANOTHER SELECTION WITH THE LEFT KEY
-			if ((GetAsyncKeyState(VK_LEFT) & 0x8000)) { // LEFT ARROW
+			if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || iControlID == ID_CONTROL_LEFT) { // LEFT ARROW
 				m_dwLastSpawnSelectionTick = dwTickNow;
 
 				if (m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
@@ -1272,7 +1253,7 @@ void CLocalPlayer::ProcessClassSelection()
 				m_bAllowedClass = true;
 			}
 			// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
-			else if ((GetAsyncKeyState(VK_RIGHT) & 0x8000)) { // RIGHT ARROW
+			else if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) || iControlID == ID_CONTROL_RIGHT) { // RIGHT ARROW
 				m_dwLastSpawnSelectionTick = dwTickNow;
 
 				if (m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
@@ -1297,6 +1278,8 @@ void CLocalPlayer::HandleClassSelection()
 	}
 	RequestClass(m_iSelectedClass);
 	m_dwInitialSelectionTick = m_dwLastSpawnSelectionTick = GetTickCount();
+	if (pSpawnScreen)
+		pSpawnScreen->ToggleVisibility(true);
 }
 
 //----------------------------------------------------------

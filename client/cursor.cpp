@@ -3,7 +3,7 @@
 
 CCursor::CCursor()
 {
-	m_bVisible = false;
+	m_ucVisible = 0;
 	//m_pFont = NULL;
 	m_pTexture = NULL;
 	m_pSprite = NULL;
@@ -48,7 +48,7 @@ void CCursor::RestoreDeviceObjects()
 
 void CCursor::Process()
 {
-	if (!m_bVisible || !m_pSprite || !m_pTexture)
+	if (!m_ucVisible || !m_pSprite || !m_pTexture)
 		return;
 
 	D3DXMATRIX mat;

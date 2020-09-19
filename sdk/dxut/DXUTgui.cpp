@@ -403,16 +403,27 @@ HRESULT CDXUTDialog::OnRender( float fElapsedTime )
     // Set up a state block here and restore it when finished drawing all the controls
     m_pManager->m_pStateBlock->Capture();
 
-    pd3dDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
-    pd3dDevice->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-    pd3dDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-    pd3dDevice->SetRenderState( D3DRS_ALPHATESTENABLE, FALSE );
+    pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    pd3dDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    pd3dDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    pd3dDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+    pd3dDevice->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+    pd3dDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+    pd3dDevice->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_BLUE |
+        D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_RED);
+    pd3dDevice->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+    pd3dDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
+    pd3dDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+    pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+    pd3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
-    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG2 );
-    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
-
-    pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
-    pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE );
+    pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+    pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+    pd3dDevice->SetTextureStageState(0, D3DTSS_RESULTARG, D3DTA_CURRENT);
+    pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+    pd3dDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
     pd3dDevice->SetVertexShader( NULL );
     pd3dDevice->SetPixelShader( NULL );

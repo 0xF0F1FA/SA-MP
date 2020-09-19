@@ -246,6 +246,8 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 	if(pCmdWindow) {
 		pCmdWindow->MsgProc(uMsg,wParam,lParam);
 	}
+	if (pSpawnScreen)
+		pSpawnScreen->MsgProc(hwnd, uMsg, wParam, lParam);
 
 	switch(uMsg) {
 		case WM_SYSKEYUP:

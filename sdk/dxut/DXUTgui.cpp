@@ -6,8 +6,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 #include "dxstdafx.h"
-#include "DXUTgui.h"
-#include "DXUTsettingsDlg.h"
+
 #undef min // use __min instead
 #undef max // use __max instead
 

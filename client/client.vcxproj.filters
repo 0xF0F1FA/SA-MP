@@ -184,24 +184,6 @@
     <ClCompile Include="..\sdk\dxut\dxstdafx.cpp">
       <Filter>sdk\dxut</Filter>
     </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUT.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUTenum.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUTgui.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUTMesh.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUTmisc.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\dxut\DXUTSettingsDlg.cpp">
-      <Filter>sdk\dxut</Filter>
-    </ClCompile>
     <ClCompile Include="chatwindow.cpp" />
     <ClCompile Include="cmdprocs.cpp" />
     <ClCompile Include="cmdwindow.cpp" />
@@ -326,6 +308,18 @@
     <ClCompile Include="playertags.cpp" />
     <ClCompile Include="d3dhook.cpp" />
     <ClCompile Include="cursor.cpp" />
+    <ClCompile Include="..\sdk\dxut\DXUTgui.cpp">
+      <Filter>sdk\dxut</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\dxut\DXUTmisc.cpp">
+      <Filter>sdk\dxut</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\dxut\DXUT.cpp">
+      <Filter>sdk\dxut</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\dxut\DXUTenum.cpp">
+      <Filter>sdk\dxut</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -482,25 +476,7 @@
     <ClInclude Include="..\sdk\zlib\inffast.h">
       <Filter>sdk\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUTSettingsDlg.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
     <ClInclude Include="..\sdk\dxut\dxstdafx.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUT.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUTenum.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUTgui.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUTMesh.h">
-      <Filter>sdk\dxut</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\dxut\DXUTmisc.h">
       <Filter>sdk\dxut</Filter>
     </ClInclude>
     <ClInclude Include="chatwindow.h" />
@@ -735,6 +711,18 @@
       <Filter>sdk</Filter>
     </ClInclude>
     <ClInclude Include="cursor.h" />
+    <ClInclude Include="..\sdk\dxut\DXUTgui.h">
+      <Filter>sdk\dxut</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\dxut\DXUTmisc.h">
+      <Filter>sdk\dxut</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\dxut\DXUT.h">
+      <Filter>sdk\dxut</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\dxut\DXUTenum.h">
+      <Filter>sdk\dxut</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

@@ -129,9 +129,7 @@
     <ClCompile Include="..\sdk\dxut\DXUT.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUTenum.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUTgui.cpp" />
-    <ClCompile Include="..\sdk\dxut\DXUTMesh.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUTmisc.cpp" />
-    <ClCompile Include="..\sdk\dxut\DXUTSettingsDlg.cpp" />
     <ClCompile Include="..\sdk\md5\md5.cpp" />
     <ClCompile Include="..\sdk\raknet\BitStream.cpp" />
     <ClCompile Include="..\sdk\raknet\CheckSum.cpp" />
@@ -492,9 +490,7 @@
     <ClInclude Include="..\sdk\dxut\DXUT.h" />
     <ClInclude Include="..\sdk\dxut\DXUTenum.h" />
     <ClInclude Include="..\sdk\dxut\DXUTgui.h" />
-    <ClInclude Include="..\sdk\dxut\DXUTMesh.h" />
     <ClInclude Include="..\sdk\dxut\DXUTmisc.h" />
-    <ClInclude Include="..\sdk\dxut\DXUTSettingsDlg.h" />
     <ClInclude Include="..\sdk\md5\md5.h" />
     <ClInclude Include="..\sdk\raknet\BigTypes.h" />
     <ClInclude Include="..\sdk\raknet\BitStream.h" />

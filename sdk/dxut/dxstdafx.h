@@ -71,10 +71,10 @@ HRESULT WINAPI DXTraceWrapper( const char* strFile, DWORD dwLine, HRESULT hr, co
 #include "DXUT.h"
 #include "DXUTmisc.h"
 #include "DXUTenum.h"
-#include "DXUTmesh.h"
+//#include "DXUTmesh.h"
 #include "DXUTgui.h"
-#include "DXUTsettingsDlg.h"
-#include "DXUTSound.h"
+//#include "DXUTsettingsDlg.h"
+//#include "DXUTSound.h"
 
 #ifndef V
 	#define V(x)

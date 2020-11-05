@@ -151,7 +151,7 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 	m_vecPos.Z = z;
 
 	RakNet::Time tmNow = RakNet::GetTime();
-	if (tmNow - m_tmLastStreamRateTick > g_iStreamRate) {
+	if (tmNow - m_tmLastStreamRateTick > (RakNet::Time)g_iStreamRate) {
 		ProcessStreaming();
 		m_tmLastStreamRateTick = tmNow;
 	}
@@ -211,7 +211,7 @@ void CPlayer::ProcessStreaming()
 {
 	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
 	float fDistance;
-	size_t i;
+	int i;
 
 	fDistance = g_fStreamDistance * g_fStreamDistance;
 

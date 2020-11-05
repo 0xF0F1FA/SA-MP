@@ -29,6 +29,7 @@ public:
 	bool					m_bWantsAnotherClass;
 	int						m_iSelectedClass;
 	bool					m_bWaitingForSpawnRequestReply;
+	bool					m_bControlsVisible;
 	int						m_iVirtualWorld;
 	int						m_iScore;
 	unsigned short			m_usPing;

@@ -59,6 +59,7 @@ CLocalPlayer::CLocalPlayer()
 	m_dwLastStatsUpdateTick = m_dwLastSendTick;
 	m_bWantsAnotherClass = false;
 	m_bWaitingForSpawnRequestReply = false;
+	m_bControlsVisible = false;
 	m_iSelectedClass = 0;
 	m_iVirtualWorld = 0;
 	m_dwLastSpawnSelectionTick = GetTickCount();
@@ -1060,6 +1061,8 @@ bool CLocalPlayer::Spawn()
 
 	if (pSpawnScreen)
 		pSpawnScreen->ToggleVisibility(false);
+
+	m_bControlsVisible = false;
 	
 	return true;
 }
@@ -1224,46 +1227,55 @@ void CLocalPlayer::ProcessClassSelection(int iControlID)
 	if((dwTickNow - m_dwInitialSelectionTick) < 2000) return;
 
 	//ApplySpawnAnim(m_iCurSpawnAnimIndex);
-
-	if( !m_bWaitingForSpawnRequestReply &&
-		m_bAllowedClass &&
-		((GetAsyncKeyState(VK_SHIFT)&0x8000) || iControlID == ID_CONTROL_SPAWN) &&
-		!pCmdWindow->isEnabled() )
+	if (m_bControlsVisible)
 	{
-		RequestSpawn();
-		m_bWaitingForSpawnRequestReply = true;
-		return;
+		if (!m_bWaitingForSpawnRequestReply &&
+			m_bAllowedClass &&
+			((GetAsyncKeyState(VK_SHIFT) & 0x8000) || iControlID == ID_CONTROL_SPAWN) &&
+			!pCmdWindow->isEnabled())
+		{
+			RequestSpawn();
+			m_bWaitingForSpawnRequestReply = true;
+			return;
+		}
+		else
+		{
+			// GRAB PLAYER MATRIX FOR SOUND POSITION
+			m_pPlayerPed->GetMatrix(&matPlayer);
+			dwTicksSinceLastSelection = dwTickNow - m_dwLastSpawnSelectionTick; // used to delay reselection.
+
+			if (dwTicksSinceLastSelection > 250) {
+				// ALLOW ANOTHER SELECTION WITH THE LEFT KEY
+				if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || iControlID == ID_CONTROL_LEFT) { // LEFT ARROW
+					m_dwLastSpawnSelectionTick = dwTickNow;
+
+					if (m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
+					else m_iSelectedClass--;
+
+					pGame->PlaySoundFX(1053, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
+					RequestClass(m_iSelectedClass);
+					m_bAllowedClass = true;
+				}
+				// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
+				else if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) || iControlID == ID_CONTROL_RIGHT) { // RIGHT ARROW
+					m_dwLastSpawnSelectionTick = dwTickNow;
+
+					if (m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
+					else m_iSelectedClass++;
+
+					pGame->PlaySoundFX(1052, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
+					RequestClass(m_iSelectedClass);
+					m_bAllowedClass = true;
+				}
+			}
+		}
 	}
 	else
 	{
-		// GRAB PLAYER MATRIX FOR SOUND POSITION
-		m_pPlayerPed->GetMatrix(&matPlayer);
-		dwTicksSinceLastSelection = dwTickNow - m_dwLastSpawnSelectionTick; // used to delay reselection.
+		if (pSpawnScreen)
+			pSpawnScreen->ToggleVisibility(true);
 
-		if (dwTicksSinceLastSelection > 250) {
-			// ALLOW ANOTHER SELECTION WITH THE LEFT KEY
-			if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || iControlID == ID_CONTROL_LEFT) { // LEFT ARROW
-				m_dwLastSpawnSelectionTick = dwTickNow;
-
-				if (m_iSelectedClass == 0) m_iSelectedClass = (pNetGame->m_iSpawnsAvailable - 1);
-				else m_iSelectedClass--;
-
-				pGame->PlaySoundFX(1053, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
-				RequestClass(m_iSelectedClass);
-				m_bAllowedClass = true;
-			}
-			// ALLOW ANOTHER SELECTION WITH THE RIGHT KEY
-			else if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) || iControlID == ID_CONTROL_RIGHT) { // RIGHT ARROW
-				m_dwLastSpawnSelectionTick = dwTickNow;
-
-				if (m_iSelectedClass == (pNetGame->m_iSpawnsAvailable - 1)) m_iSelectedClass = 0;
-				else m_iSelectedClass++;
-
-				pGame->PlaySoundFX(1052, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
-				RequestClass(m_iSelectedClass);
-				m_bAllowedClass = true;
-			}
-		}
+		m_bControlsVisible = true;
 	}
 }
 
@@ -1278,8 +1290,6 @@ void CLocalPlayer::HandleClassSelection()
 	}
 	RequestClass(m_iSelectedClass);
 	m_dwInitialSelectionTick = m_dwLastSpawnSelectionTick = GetTickCount();
-	if (pSpawnScreen)
-		pSpawnScreen->ToggleVisibility(true);
 }
 
 //----------------------------------------------------------

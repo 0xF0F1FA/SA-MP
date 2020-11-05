@@ -3118,10 +3118,10 @@ static cell n_SetPlayerCameraPos(AMX *amx, cell *params)
 
 //----------------------------------------------------------------------------------
 
-// native SetPlayerCameraLookAt(playerid,x,y,z)
+// native SetPlayerCameraLookAt(playerid,x,y,z,cut)
 static cell n_SetPlayerCameraLookAt(AMX *amx, cell *params)
 {	
-	CHECK_PARAMS(amx, "SetPlayerCameraLookAt", 4);
+	CHECK_PARAMS(amx, "SetPlayerCameraLookAt", 5);
 	if (!pNetGame->GetPlayerPool()->GetSlotState(params[1])) return 0;
 	RakNet::BitStream bsParams;
 
@@ -3130,9 +3130,14 @@ static cell n_SetPlayerCameraLookAt(AMX *amx, cell *params)
 	vecPos.Y = amx_ctof(params[3]);
 	vecPos.Z = amx_ctof(params[4]);
 	
+	unsigned char ucCutStyle = params[5];
+	if (ucCutStyle < 1 || ucCutStyle > 2)
+		ucCutStyle = 2;
+
 	bsParams.Write(vecPos.X);
 	bsParams.Write(vecPos.Y);
 	bsParams.Write(vecPos.Z);
+	bsParams.Write(ucCutStyle);
 
 	pNetGame->GetRakServer()->RPC(RPC_ScrSetCameraLookAt , &bsParams, HIGH_PRIORITY, 
 		RELIABLE, 0, pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]), false, false);

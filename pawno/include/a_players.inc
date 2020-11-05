@@ -174,7 +174,7 @@ native SetPlayerMapIcon(playerid, iconid, Float:x, Float:y, Float:z, markertype,
 native RemovePlayerMapIcon(playerid, iconid);
 native AllowPlayerTeleport(playerid, allow);
 native SetPlayerCameraPos(playerid, Float:x, Float:y, Float:z, Float:rx=0.0, Float:ry=0.0, Float:rz=0.0);
-native SetPlayerCameraLookAt(playerid, Float:x, Float:y, Float:z);
+native SetPlayerCameraLookAt(playerid, Float:x, Float:y, Float:z, cut = CAMERA_CUT);
 native SetCameraBehindPlayer(playerid);
 native IsPlayerConnected(playerid);
 native IsPlayerInVehicle(playerid, vehicleid);

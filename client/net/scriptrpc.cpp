@@ -290,12 +290,21 @@ void ScrSetCameraPos(RPCParameters *rpcParams)
 
 void ScrSetCameraLookAt(RPCParameters *rpcParams)
 {
-	RakNet::BitStream bsData(rpcParams);
-	VECTOR vecPos;
-	bsData.Read(vecPos.X);
-	bsData.Read(vecPos.Y);
-	bsData.Read(vecPos.Z);
-	pGame->GetCamera()->LookAtPoint(vecPos.X,vecPos.Y,vecPos.Z,2);	
+	if (rpcParams->numberOfBitsOfData == 104) {
+		RakNet::BitStream bsData(rpcParams);
+		VECTOR vecPos;
+		unsigned char ucStyle;
+
+		bsData.Read(vecPos.X);
+		bsData.Read(vecPos.Y);
+		bsData.Read(vecPos.Z);
+		bsData.Read(ucStyle);
+
+		if (ucStyle < 1 || ucStyle > 2)
+			ucStyle = 2;
+
+		pGame->GetCamera()->LookAtPoint(vecPos.X, vecPos.Y, vecPos.Z, ucStyle);
+	}
 }
 
 //----------------------------------------------------

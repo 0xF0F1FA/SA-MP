@@ -1309,6 +1309,28 @@ static cell n_TogglePlayerWidescreen(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SetPlayerShopName(playerid, shopname[])
+static cell n_SetPlayerShopName(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "SetPlayerShopName", 2);
+
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool && pPlayerPool->GetSlotState(params[1]))
+	{
+		cell* pPhysAddr;
+		char szShopName[32];
+		amx_GetAddr(amx, params[2], &pPhysAddr);
+		amx_GetString(szShopName, pPhysAddr, 0, sizeof(szShopName));
+
+		RakNet::BitStream bsSend;
+		bsSend.Write(szShopName, sizeof(szShopName));
+
+		pNetGame->SendToPlayer(params[1], RPC_ScrSetShopName, &bsSend);
+		return 1;
+	}
+	return 0;
+}
+
 // native IsPlayerTyping(playerid)
 static cell n_IsPlayerTyping(AMX* amx, cell* params)
 {
@@ -7006,6 +7028,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SendClientCheck),
 	DEFINE_NATIVE(TogglePlayerChatbox),
 	DEFINE_NATIVE(TogglePlayerWidescreen),
+	DEFINE_NATIVE(SetPlayerShopName),
 
 	{ "SetPlayerVirtualWorld",		n_SetPlayerVirtualWorld },
 	{ "GetPlayerVirtualWorld",		n_GetPlayerVirtualWorld },

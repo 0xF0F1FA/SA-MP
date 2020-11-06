@@ -176,6 +176,9 @@ public:
 	unsigned char IsEnteringVehicle();
 	bool IsExitingVehicle();
 
+	void SetEntryExit(char* szSectionName);
+	void LoadShoppingData(char* szSectionName);
+
 	PED_TYPE    *m_pPed;
 	BYTE		m_bytePlayerNumber;
 	DWORD		m_dwMarkerID;

@@ -136,6 +136,7 @@ enum eRPCTable
 	RPC_ScrToggleChatbox,
 	RPC_ScrToggleWidescreen,
 	RPC_ScrSetScore,
+	RPC_ScrSetShopName,
 
 	MAX_RPC_ID_AVAILABLE
 };

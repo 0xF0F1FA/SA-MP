@@ -1645,6 +1645,27 @@ static void ScrSetScore(RPCParameters * rpcParams)
 	}
 }
 
+static void ScrSetShopName(RPCParameters* pParams)
+{
+	if (pParams->numberOfBitsOfData == 256)
+	{
+		char szSectionName[32];
+		RakNet::BitStream bsData(pParams);
+
+		bsData.Read(szSectionName);
+
+#ifdef _DEBUG
+		if (pChatWindow)
+			pChatWindow->AddDebugMessage("[DEBUG] Disabling interior script: %s", szSectionName);
+#endif
+
+		CPlayerPed* pPlayerPed = pGame->FindPlayerPed();
+		if (pPlayerPed) {
+			pPlayerPed->SetEntryExit(szSectionName);
+		}
+	}
+}
+
 //----------------------------------------------------
 
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
@@ -1731,6 +1752,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrToggleChatbox);
 	REGISTER_STATIC_RPC(pRakClient, ScrToggleWidescreen);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetScore);
+	REGISTER_STATIC_RPC(pRakClient, ScrSetShopName);
 }
 
 //----------------------------------------------------

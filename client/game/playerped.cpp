@@ -2040,3 +2040,32 @@ bool CPlayerPed::IsExitingVehicle()
 	}
 	return false;
 }
+
+/*
+	TODO: Needs further checking.
+
+	Bug in SA-MP:
+	Whatever you gave it to SetPlayerShopName, ("AMMUN1", "", " ", etc... Well, somehow 30 "x" did nothing..)
+	it disables every/whatever interior scripts the ped in. Resets after reentering the interior.
+	Apperently LoadShoppingData() deletes it, and ped + 1932 will not do anything.
+*/
+
+void CPlayerPed::SetEntryExit(char* szSectionName)
+{
+	if (!m_pPed) return;
+	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+
+	m_pPed->pEntryExit = NULL;
+
+	LoadShoppingData(szSectionName);
+}
+
+void CPlayerPed::LoadShoppingData(char* szSectionName)
+{
+	DWORD dwFunc = 0x49BBE0;
+	_asm {
+		push szSectionName
+		call dwFunc
+		add esp, 4
+	}
+}

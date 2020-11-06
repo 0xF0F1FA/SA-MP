@@ -212,6 +212,7 @@ native SendClientCheck(playerid, type, address, offset, count);
 native TogglePlayerChatbox(playerid, show);
 native IsPlayerTyping(playerid);
 native TogglePlayerWidescreen(playerid, on);
+native SetPlayerShopName(playerid, shopname[]);
 
 native SetPVarInt(playerid, varname[], int_value);
 native SetPVarString(playerid, varname[], string_value[]);

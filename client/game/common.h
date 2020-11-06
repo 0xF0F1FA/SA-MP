@@ -127,7 +127,9 @@ typedef struct _PED_TYPE
 	PADDING(_pad281,44); // 1844-1888
 	DWORD  dwWeaponUsed; // 1888-1892
 	PDWORD pdwDamageEntity; // 1892-1896
-	PADDING(_pad290,52); // 1896-1948
+	PADDING(_pad290, 36); // 1896-1932
+	DWORD* pEntryExit; // 1932-1936
+	PADDING(_pad291, 12); // 1936-1948
 	DWORD pTarget; // 1948
 	
 } PED_TYPE;

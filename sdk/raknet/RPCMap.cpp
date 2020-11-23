@@ -17,10 +17,11 @@
 #include "RPCMap.h"
 #include "RakAssert.h"
 
+#include <stdlib.h>
+
 RPCMap::RPCMap()
 {
-	for (short i = 0; i < MAX_RPC_ID_AVAILABLE; i++)
-		rpcSet[i] = NULL;
+	rpcNode = NULL;
 }
 
 RPCMap::~RPCMap()
@@ -30,51 +31,99 @@ RPCMap::~RPCMap()
 
 void RPCMap::Clear(void)
 {
-	short i;
-	for (i=0; i < MAX_RPC_ID_AVAILABLE; i++)
+	struct RPCNode* n;
+
+	while (rpcNode)
 	{
-		if (rpcSet[i] != NULL)
+		n = rpcNode->rpcNext;
+		free(rpcNode);
+		rpcNode = n;
+	}
+}
+
+RPCNode* RPCMap::GetNodeFromID(UniqueID uniqueIdentifier)
+{
+	struct RPCNode* n;
+	
+	n = rpcNode;
+	while (n)
+	{
+		if (n->uniqueIdentifier == uniqueIdentifier)
 		{
-			delete rpcSet[i];
-			rpcSet[i] = NULL;
+			return n;
+		}
+		n = n->rpcNext;
+	}
+	return NULL;
+}
+
+// Called from the user thread for the local system
+void RPCMap::AddIdentifierWithFunction(UniqueID uniqueIdentifier, void* functionPointer, bool isPointerToMember)
+{
+	RakAssert(functionPointer);
+
+	struct RPCNode* n1, * n2;
+
+	if (rpcNode == NULL)
+	{
+		rpcNode = (RPCNode*)malloc(sizeof(RPCNode));
+		if (rpcNode)
+		{
+			rpcNode->uniqueIdentifier = uniqueIdentifier;
+			rpcNode->functionPointer = functionPointer;
+			rpcNode->isPointerToMember = isPointerToMember;
+			rpcNode->rpcNext = NULL;
+		}
+	}
+	else
+	{
+		n1 = rpcNode;
+		while (n1->rpcNext != NULL)
+		{
+			if (n1->uniqueIdentifier == uniqueIdentifier)
+			{
+				n1->uniqueIdentifier = uniqueIdentifier;
+				n1->functionPointer = functionPointer;
+				n1->isPointerToMember = isPointerToMember;
+				return;
+			}
+			n1 = n1->rpcNext;
+		}
+
+		n2 = (RPCNode*)malloc(sizeof(RPCNode));
+		if (n2)
+		{
+			n2->uniqueIdentifier = uniqueIdentifier;
+			n2->functionPointer = functionPointer;
+			n2->isPointerToMember = isPointerToMember;
+			n2->rpcNext = NULL;
+			n1->rpcNext = n2;
 		}
 	}
 }
 
-RPCNode* RPCMap::GetNodeFromID(short uniqueIdentifier)
+void RPCMap::RemoveNode(UniqueID uniqueIdentifier)
 {
-	return rpcSet[uniqueIdentifier];
-}
+	struct RPCNode* n1, * n2;
 
-// Called from the user thread for the local system
-void RPCMap::AddIdentifierWithFunction(short uniqueIdentifier, void *functionPointer, bool isPointerToMember)
-{
-	if(rpcSet[uniqueIdentifier] != NULL)
+	n1 = rpcNode;
+	if (n1->uniqueIdentifier == uniqueIdentifier)
 	{
-		// Trying to insert an identifier at any free slot and that identifier already exists
-		// The user should not insert nodes that already exist in the list
-		RakAssert(0);
+		rpcNode = n1->rpcNext;
+		free(n1);
 		return;
 	}
 
-	RPCNode* node;
-	try {
-		node = new RPCNode;
-	} catch (...) {
-		return;
-	}
-
-	node->functionPointer = functionPointer;
-	node->isPointerToMember = isPointerToMember;
-
-	rpcSet[uniqueIdentifier] = node;	
-}
-
-void RPCMap::RemoveNode(short uniqueIdentifier)
-{
-	if (rpcSet[uniqueIdentifier] != NULL)
+	n2 = n1;
+	while (n1)
 	{
-		delete rpcSet[uniqueIdentifier];
-		rpcSet[uniqueIdentifier] = NULL;
+		if (n1->uniqueIdentifier == uniqueIdentifier)
+		{
+			n2->rpcNext = n1->rpcNext;
+			free(n1);
+			return;
+		}
+		n2 = n1;
+		n1 = n1->rpcNext;
 	}
 }

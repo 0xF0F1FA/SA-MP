@@ -21,11 +21,8 @@
 #define __RPC_MAP
 
 #include "RPCNode.h"
-#include "DS_List.h"
 #include "NetworkTypes.h"
 #include "Export.h"
-
-#include "SAMPRPC.h"
 
 /// \ingroup RAKNET_RPC 
 /// \internal
@@ -36,11 +33,11 @@ public:
 	RPCMap();
 	~RPCMap();
 	void Clear(void);
-	RPCNode* GetNodeFromID(short uniqueIdentifier);
-	void AddIdentifierWithFunction(short uniqueIdentifier, void *functionPointer, bool isPointerToMember);
-	void RemoveNode(short uniqueIdentifier);
+	RPCNode* GetNodeFromID(UniqueID uniqueIdentifier);
+	void AddIdentifierWithFunction(UniqueID uniqueIdentifier, void *functionPointer, bool isPointerToMember);
+	void RemoveNode(UniqueID uniqueIdentifier);
 protected:
-	RPCNode* rpcSet[eRPCTable::MAX_RPC_ID_AVAILABLE];
+	RPCNode* rpcNode;
 };
 
 #endif

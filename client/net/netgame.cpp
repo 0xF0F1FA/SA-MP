@@ -885,10 +885,10 @@ void CNetGame::ResetMapIcons()
 	}
 }
 
-bool CNetGame::Send(short sUniqueID, RakNet::BitStream* pBitStream)
+bool CNetGame::Send(UniqueID nUniqueID, RakNet::BitStream* pBitStream)
 {
 	if (m_pRakClient)
-		return m_pRakClient->RPC(sUniqueID, pBitStream, HIGH_PRIORITY, RELIABLE, 0, false);
+		return m_pRakClient->RPC(nUniqueID, pBitStream, HIGH_PRIORITY, RELIABLE, 0, false);
 
 	return false;
 }

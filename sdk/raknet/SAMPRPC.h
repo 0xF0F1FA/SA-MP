@@ -2,9 +2,17 @@
 #ifndef _SAMPRPC_H
 #define _SAMPRPC_H
 
-// TODO: Make RPCMap use only important IDs per side (client/server)
+#include <assert.h>
 
-enum eRPCTable
+// Warning: If you are planning to add RPC identifiers and register the RPC with REGISTER_STATIC_RPC(),
+// UNREGISTER_STATIC_RPC(), REGISTER_CLASS_MEMBER_RPC() or UNREGISTER_CLASS_MEMBER_RPC() function-like macros,
+// then the identifier name must be start with "RPC_", if not, the program compilation will fail!
+// See the macros in ./NetworkTypes.h
+
+// Note: Unique ID for RPCs must be between 0-255! Exceeding the range will cause integer overflow, and calls other unwanted registered function.
+// To change the range, modify UniqueID typedef in ./NetworkTypes.h from "unsigned char" (default data type) to "unsigned short" for 0-65535 range.
+
+enum
 {
 	RPC_ServerJoin,
 	RPC_ServerQuit,
@@ -30,13 +38,25 @@ enum eRPCTable
 	RPC_RequestClass,
 	RPC_RequestSpawn,
 	RPC_Spawn,
+	RPC_ClientJoin,
+	RPC_ServerCommand,
+	RPC_SetInteriorId,
+	RPC_AdminMapTeleport,
+	RPC_VehicleDestroyed,
+	RPC_PickedUpWeapon,
+	RPC_PickedUpPickup,
 	RPC_Death,
 	RPC_EnterVehicle,
 	RPC_ExitVehicle,
 	RPC_UpdatePings,
-	//RPC_SvrStats,
 	RPC_ScmEvent,
-	RPC_ScrSetSpawnInfo,
+	RPC_MenuSelect,
+	RPC_MenuQuit,
+	RPC_TypingEvent,
+	RPC_ClientCheck,
+	RPC_Click,
+
+	RPC_ScrSetSpawnInfo = 100,
 	RPC_ScrSetPlayerTeam,
 	RPC_ScrSetPlayerSkin,
 	RPC_ScrSetPlayerName,
@@ -111,34 +131,17 @@ enum eRPCTable
 	RPC_ScrSetPlayer,
 	RPC_ScrVehicleVelocity,
 	RPC_ScrPlayerVelocity,
-	RPC_ClientJoin,
-	RPC_ServerCommand,
-	RPC_SetInteriorId,
-	RPC_AdminMapTeleport,
-	RPC_VehicleDestroyed,
-	RPC_PickedUpWeapon,
-	RPC_PickedUpPickup,
-	RPC_MenuSelect,
-	RPC_MenuQuit,
-	//RPC_RconConnect,
-	//RPC_RconCommand,
-	//RPC_RconEvent,
-	//RPC_RconPlayerInfo,
-	//RPC_ACAuthRequest,
-	//RPC_ACAuthResponse,
-	//RPC_ACAuthEngineLoaded,
-	//RPC_ACServerProtected,
 	RPC_ScrInterpolateCamera,
-	RPC_TypingEvent,
 	RPC_ScrVehicleComponent,
 	RPC_ScrSetGameSpeed,
-	RPC_ClientCheck,
 	RPC_ScrToggleChatbox,
 	RPC_ScrToggleWidescreen,
 	RPC_ScrSetScore,
 	RPC_ScrSetShopName,
 
-	MAX_RPC_ID_AVAILABLE
+	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };
+
+static_assert((UniqueID)-1 >= MAX_RPC_UNIQUE_ID, "Unique ID limit reached. See the notes in SAMPRPC.h");
 
 #endif // _SAMPRPC_H

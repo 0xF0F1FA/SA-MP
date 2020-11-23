@@ -372,37 +372,30 @@ bool RakServer::DeleteCompressionLayer( bool inputLayer )
 	return RakPeer::DeleteCompressionLayer( inputLayer );
 }
 
-void RakServer::RegisterAsRemoteProcedureCall( short uniqueID, void ( *functionPointer ) ( RPCParameters *rpcParms ) )
+void RakServer::RegisterAsRemoteProcedureCall( UniqueID uniqueID, void ( *functionPointer ) ( RPCParameters *rpcParms ) )
 {
 	RakPeer::RegisterAsRemoteProcedureCall( uniqueID, functionPointer );
 }
 
-void RakServer::RegisterClassMemberRPC( short uniqueID, void *functionPointer )
+void RakServer::RegisterClassMemberRPC( UniqueID uniqueID, void *functionPointer )
 {
 	RakPeer::RegisterClassMemberRPC( uniqueID, functionPointer );
 }
 
-void RakServer::UnregisterAsRemoteProcedureCall( short uniqueID )
+void RakServer::UnregisterAsRemoteProcedureCall( UniqueID uniqueID )
 {
 	RakPeer::UnregisterAsRemoteProcedureCall( uniqueID );
 }
 
-bool RakServer::RPC( short uniqueID, const char *data, unsigned int bitLength, PacketPriority priority, PacketReliability reliability, char orderingChannel, PlayerID playerId, bool broadcast, bool shiftTimestamp, NetworkID networkID, RakNet::BitStream *replyFromTarget )
+bool RakServer::RPC( UniqueID uniqueID, const char *data, unsigned int bitLength, PacketPriority priority, PacketReliability reliability, char orderingChannel, PlayerID playerId, bool broadcast, bool shiftTimestamp, NetworkID networkID, RakNet::BitStream *replyFromTarget )
 {
 	return RakPeer::RPC( uniqueID, data, bitLength, priority, reliability, orderingChannel, playerId, broadcast, shiftTimestamp, networkID, replyFromTarget );
 }
 
-bool RakServer::RPC( short uniqueID, RakNet::BitStream *parameters, PacketPriority priority, PacketReliability reliability, char orderingChannel, PlayerID playerId, bool broadcast, bool shiftTimestamp, NetworkID networkID, RakNet::BitStream *replyFromTarget )
+bool RakServer::RPC( UniqueID uniqueID, RakNet::BitStream *parameters, PacketPriority priority, PacketReliability reliability, char orderingChannel, PlayerID playerId, bool broadcast, bool shiftTimestamp, NetworkID networkID, RakNet::BitStream *replyFromTarget )
 {
 	return RakPeer::RPC( uniqueID, parameters, priority, reliability, orderingChannel, playerId, broadcast, shiftTimestamp, networkID, replyFromTarget );
 }
-
-// SAMPSRV (adding this just as a tag for next RakNet upgrade)
-bool RakServer::RPC( short uniqueID, RakNet::BitStream *parameters, PacketPriority priority, PacketReliability reliability, char orderingChannel, PlayerID playerId, bool broadcast, bool shiftTimestamp)
-{
-	return RakPeer::RPC( uniqueID, parameters, priority, reliability, orderingChannel, playerId, broadcast, shiftTimestamp, UNASSIGNED_NETWORK_ID, 0 );
-}
-// SAMPSRV end
 
 void RakServer::SetTrackFrequencyTable( bool b )
 {

@@ -123,7 +123,7 @@ public:
 	void  SetMapIcon(BYTE byteIndex, float fX, float fY, float fZ, BYTE byteIcon, DWORD dwColor, BYTE byteStyle);
 	void  DisableMapIcon(BYTE byteIndex);
 
-	bool Send(short sUniqueID, RakNet::BitStream* pBitStream);
+	bool Send(UniqueID nUniqueID, RakNet::BitStream* pBitStream);
 };
 
 //----------------------------------------------------

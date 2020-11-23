@@ -36,8 +36,8 @@ class RakPeerInterface;
 /// 
 struct RAK_DLL_EXPORT RPCNode
 {
- 	/// String identifier of the RPC
-	//char *uniqueIdentifier;
+ 	/// Numeric identifier of the RPC
+	UniqueID uniqueIdentifier;
 
  /// Force casting of member functions to void *
 	union
@@ -54,6 +54,8 @@ struct RAK_DLL_EXPORT RPCNode
 	
 	/// Is this a member function pointer?  True if so.  If false it's a regular C function.
 	bool isPointerToMember;
+
+	struct RPCNode* rpcNext;
 };
 
 #endif

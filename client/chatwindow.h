@@ -62,6 +62,8 @@ private:
 	void AddToChatWindowBuffer(eChatMessageType eType,PCHAR szString,
 		PCHAR szNick,DWORD dwTextColor,DWORD dwChatColor);
 
+	void ChatLog(PCHAR szTimeStamp, PCHAR szString, PCHAR szNick, eChatMessageType eType);
+
 public:
 	void Draw();
 	void AddChatMessage(CHAR *szNick, DWORD dwNickColor, CHAR *szMessage);

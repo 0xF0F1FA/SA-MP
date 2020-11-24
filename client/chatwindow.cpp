@@ -319,6 +319,8 @@ void CChatWindow::AddToChatWindowBuffer(eChatMessageType eType,
 	snprintf(m_ChatWindowEntries[0].szTimeStamp, sizeof(m_ChatWindowEntries[0].szTimeStamp),
 		"[%02d:%02d:%02d]", time.wHour, time.wMinute, time.wSecond);
 
+	ChatLog(m_ChatWindowEntries[0].szTimeStamp, szString, szNick, eType);
+
 	if(m_ChatWindowEntries[0].eType == CHAT_TYPE_CHAT && strlen(szString) > MAX_LINE_LENGTH)
 	{
 		iBestLineLength = MAX_LINE_LENGTH;
@@ -360,6 +362,25 @@ void CChatWindow::AddToChatWindowBuffer(eChatMessageType eType,
 		m_ChatWindowEntries[0].szMessage[MAX_MESSAGE_LENGTH] = '\0';
 	}
 
+}
+
+//----------------------------------------------------
+
+void CChatWindow::ChatLog(PCHAR szTimeStamp, PCHAR szString,
+	PCHAR szNick, eChatMessageType eType)
+{
+	FILE *fileOut;
+
+	fopen_s(&fileOut, "chatlog.txt", "a");
+	if (fileOut == NULL)
+		return;
+
+	if (eType == CHAT_TYPE_CHAT)
+		fprintf(fileOut, "%s <%s> %s\r\n", szTimeStamp, szNick, szString);
+	else
+		fprintf(fileOut, "%s %s\r\n", szTimeStamp, szString);
+
+	fclose(fileOut);
 }
 
 //----------------------------------------------------

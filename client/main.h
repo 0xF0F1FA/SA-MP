@@ -29,6 +29,9 @@
 // Shared stuffs
 #include "shared.h"
 
+// BASS
+#include "bass/bass.h"
+
 typedef struct _GAME_SETTINGS {
 	BOOL bDebug;
 	BOOL bPlayOnline;
@@ -80,6 +83,7 @@ typedef struct _GAME_SETTINGS {
 #include "game/scripting.h"
 #include "d3dhook.h"
 #include "cursor.h"
+#include "audiostream.h"
 
 void QuitGame();
 
@@ -100,6 +104,7 @@ extern CNetStats* pNetStats;
 //extern CHelpDialog* pHelpDialog;
 extern CFileSystem* pFileSystem;
 extern CCursor* pCursor;
+extern CAudioStream* pAudioStream;
 
 extern CDXUTDialogResourceManager* pDialogResourceManager;
 extern CDXUTDialog* pGameUI;

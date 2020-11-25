@@ -161,6 +161,10 @@ public:
 	void SetMaxHealth(float fMax);
 	void SetBlurLevel(unsigned char ucLevel);
 
+	static void StartRadio(unsigned int uiStation);
+	static void StopRadio();
+	static float GetRadioVolume();
+
 	void SetGameSpeed(float fSpeed);
 	float GetGameSpeed();
 

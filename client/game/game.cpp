@@ -918,6 +918,39 @@ void CGame::SetBlurLevel(unsigned char ucLevel)
 	*(unsigned char*)0x8D5104 = ucLevel;
 }
 
+void CGame::StartRadio(unsigned int uiStation)
+{
+	DWORD dwThis = 0xB6BC90;
+	DWORD dwFunc = 0x507DC0;
+	_asm
+	{
+		push 0
+		push uiStation
+		mov ecx, dwThis
+		call dwFunc
+	}
+}
+
+void CGame::StopRadio()
+{
+	DWORD dwThis = 0xB6BC90;
+	DWORD dwFunc = 0x506F70;
+	_asm
+	{
+		push 0
+		push 0
+		mov ecx, dwThis
+		call dwFunc
+	}
+}
+
+float CGame::GetRadioVolume()
+{
+	// 0xBA6748 + 0x50 (CMenuRenderer.byteRadioVolume) [Range: 0-64]
+	// Game multiplies byteRadioVolume with 0.015625 to get in range with audio engine's volume control
+	return *(float*)0xB5F8B8 + 0x410; // [Range: 0.0-1.0]
+}
+
 void CGame::SetGameSpeed(float fSpeed)
 {
 	*(float*)0xB7CB64 = fSpeed;

@@ -28,6 +28,9 @@
     <Filter Include="sdk\dxut">
       <UniqueIdentifier>{f266aa84-3284-475e-a6db-33945eb864ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sdk\bass">
+      <UniqueIdentifier>{aefa8bea-bc19-4c7b-b6fe-e21a92dd8e3a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="net\gangzonepool.cpp">
@@ -320,6 +323,7 @@
     <ClCompile Include="..\sdk\dxut\DXUTenum.cpp">
       <Filter>sdk\dxut</Filter>
     </ClCompile>
+    <ClCompile Include="audiostream.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -723,6 +727,10 @@
     <ClInclude Include="..\sdk\dxut\DXUTenum.h">
       <Filter>sdk\dxut</Filter>
     </ClInclude>
+    <ClInclude Include="..\sdk\bass\bass.h">
+      <Filter>sdk\bass</Filter>
+    </ClInclude>
+    <ClInclude Include="audiostream.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">
@@ -730,6 +738,9 @@
     </Library>
     <Library Include="..\sdk\zlib\zlib.lib">
       <Filter>sdk\zlib</Filter>
+    </Library>
+    <Library Include="..\sdk\bass\bass.lib">
+      <Filter>sdk\bass</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

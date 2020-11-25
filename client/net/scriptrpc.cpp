@@ -1666,6 +1666,60 @@ static void ScrSetShopName(RPCParameters* pParams)
 	}
 }
 
+static void ScrAudioStream(RPCParameters* rpcParams)
+{
+	if (pAudioStream == NULL)
+		return;
+
+	unsigned int uiUrlLen = 0, uiBitSize;
+	float fX, fY, fZ, fDist;
+	char* szUrl;
+
+	if (19 <= rpcParams->numberOfBitsOfData)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.ReadCompressed(uiUrlLen);
+
+		uiBitSize = (uiUrlLen * 8) + 1;
+		if (uiBitSize > 16385 ||
+			bsData.GetNumberOfUnreadBits() != uiBitSize &&
+			bsData.GetNumberOfUnreadBits() != uiBitSize + 112)
+		{
+#ifdef _DEBUG
+			pChatWindow->AddDebugMessage("Error: Malformed audio stream packet size.");
+#endif
+			return;
+		}
+
+		szUrl = (char*)malloc(uiUrlLen + 1);
+		if (szUrl == NULL)
+		{
+#ifdef _DEBUG
+			pChatWindow->AddDebugMessage("Error: Allocation failed for audio stream url.");
+#endif
+			return;
+		}
+
+		bsData.Read(szUrl, uiUrlLen);
+		szUrl[uiUrlLen] = 0;
+
+		fX = fY = fZ = fDist = -1.0f;
+
+		if (bsData.ReadBit() && bsData.GetNumberOfUnreadBits() == 112)
+		{
+			bsData.ReadVector(fX, fY, fZ); // lossy, ~0.05f
+			bsData.Read(fDist);
+		}
+
+		pAudioStream->Play(szUrl, fX, fY, fZ, fDist);
+
+		//free(szUrl); // Freeing up when the url passed to the audio thread
+	}
+	else
+		pAudioStream->Stop();
+}
+
 //----------------------------------------------------
 
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
@@ -1753,6 +1807,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrToggleWidescreen);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetScore);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetShopName);
+	REGISTER_STATIC_RPC(pRakClient, ScrAudioStream);
 }
 
 //----------------------------------------------------

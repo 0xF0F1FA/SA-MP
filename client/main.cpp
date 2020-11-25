@@ -40,6 +40,7 @@ CLabel					*pLabel=NULL;
 CNetStats				*pNetStats=NULL;
 //CSvrNetStats			*pSvrNetStats=NULL;
 //CHelpDialog				*pHelpDialog=NULL;
+CAudioStream			*pAudioStream=NULL;
 
 bool					bShowDebugLabels = false;
 
@@ -317,6 +318,7 @@ void DoInitStuff()
 			pNetStats = new CNetStats(pD3DDevice);
 			//pSvrNetStats = new CSvrNetStats(pD3DDevice);
 			//pHelpDialog = new CHelpDialog(pD3DDevice);
+			pAudioStream = new CAudioStream;
 
 			pDeathWindow->CreateFonts();
 		}

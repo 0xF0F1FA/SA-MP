@@ -2935,6 +2935,69 @@ static cell n_SetPlayerDrunkLevel(AMX* amx, cell* params)
 	return 1;
 }
 
+// native PlayAudioStreamForPlayer(playerid, url[], Float:posX, Float:posY, Float:posZ, Float:distance, usepos)
+static cell n_PlayAudioStreamForPlayer(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayAudioStreamForPlayer", 7);
+
+	float fX, fY, fZ, fDist;
+	cell* cstr;
+	char* url;
+	int len;
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		amx_GetAddr(amx, params[2], &cstr);
+		amx_StrLen(cstr, &len);
+
+		if (len == 0 || 2048 < len || (url = (char*)alloca(len + 1)) == NULL)
+		{
+			// Empty string passed, too big for an url, or allocation failed
+			return 0;
+		}
+
+		RakNet::BitStream bsSend;
+
+		amx_GetString(url, cstr, 0, len + 1);
+
+		bsSend.WriteCompressed((unsigned int)len);
+		bsSend.Write(url, len);
+		
+		if (params[7] != 0) // usepos != 0
+		{
+			bsSend.Write1();
+
+			fX = amx_ctof(params[3]);
+			fY = amx_ctof(params[4]);
+			fZ = amx_ctof(params[5]);
+			fDist = amx_ctof(params[6]);
+
+			bsSend.WriteVector(fX, fY, fZ);
+			bsSend.Write(fDist);
+		}
+		else
+			bsSend.Write0();
+
+		return (cell)pNetGame->SendToPlayer(params[1], RPC_ScrAudioStream, &bsSend);
+	}
+	return 0;
+}
+
+// native StopAudioStreamForPlayer(playerid)
+static cell n_StopAudioStreamForPlayer(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "StopAudioStreamForPlayer", 1);
+	
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		// Simply sending 0 bit/byte long to client to stop the audio channel
+		return (cell)pNetGame->SendToPlayer(params[1], RPC_ScrAudioStream, NULL);
+	}
+	return 0;
+}
+
 // native SetPVarInt(playerid, varname[], int_value)
 static cell n_SetPVarInt(AMX* amx, cell* params)
 {
@@ -7046,6 +7109,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "GetPlayerSpecialAction", n_GetPlayerSpecialAction },
 	DEFINE_NATIVE(GetPlayerDrunkLevel),
 	DEFINE_NATIVE(SetPlayerDrunkLevel),
+	DEFINE_NATIVE(PlayAudioStreamForPlayer),
+	DEFINE_NATIVE(StopAudioStreamForPlayer),
 
 	// Player Variable
 	DEFINE_NATIVE(SetPVarInt),

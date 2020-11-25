@@ -138,6 +138,7 @@ enum
 	RPC_ScrToggleWidescreen,
 	RPC_ScrSetScore,
 	RPC_ScrSetShopName,
+	RPC_ScrAudioStream,
 
 	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };

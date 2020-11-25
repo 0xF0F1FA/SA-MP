@@ -60,7 +60,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>../sdk/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NOBASSOVERLOADS;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
@@ -100,7 +100,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>../sdk/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NOBASSOVERLOADS;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -185,6 +185,7 @@
     <ClCompile Include="archive\KeyPair.cpp" />
     <ClCompile Include="archive\Signer.cpp" />
     <ClCompile Include="archive\TinyEncrypt.cpp" />
+    <ClCompile Include="audiostream.cpp" />
     <ClCompile Include="chatwindow.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -485,6 +486,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\sdk\bass\bass.h" />
     <ClInclude Include="..\sdk\detours\detours.h" />
     <ClInclude Include="..\sdk\dxut\dxstdafx.h" />
     <ClInclude Include="..\sdk\dxut\DXUT.h" />
@@ -583,6 +585,7 @@
     <ClInclude Include="archive\Obfuscator.h" />
     <ClInclude Include="archive\Signer.h" />
     <ClInclude Include="archive\TinyEncrypt.h" />
+    <ClInclude Include="audiostream.h" />
     <ClInclude Include="chatwindow.h" />
     <ClInclude Include="cmdprocs.h" />
     <ClInclude Include="cmdwindow.h" />
@@ -634,6 +637,7 @@
     <ClInclude Include="spawnscreen.h" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\sdk\bass\bass.lib" />
     <Library Include="..\sdk\detours\detours.lib" />
     <Library Include="..\sdk\zlib\zlib.lib" />
   </ItemGroup>

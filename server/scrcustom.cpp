@@ -2961,7 +2961,7 @@ static cell n_PlayAudioStreamForPlayer(AMX* amx, cell* params)
 
 		amx_GetString(url, cstr, 0, len + 1);
 
-		bsSend.WriteCompressed((unsigned int)len);
+		bsSend.Write((unsigned short)len);
 		bsSend.Write(url, len);
 		
 		if (params[7] != 0) // usepos != 0
@@ -2973,7 +2973,10 @@ static cell n_PlayAudioStreamForPlayer(AMX* amx, cell* params)
 			fZ = amx_ctof(params[5]);
 			fDist = amx_ctof(params[6]);
 
-			bsSend.WriteVector(fX, fY, fZ);
+			bsSend.Write(fX);
+			bsSend.Write(fY);
+			bsSend.Write(fZ);
+
 			bsSend.Write(fDist);
 		}
 		else

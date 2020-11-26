@@ -1671,20 +1671,20 @@ static void ScrAudioStream(RPCParameters* rpcParams)
 	if (pAudioStream == NULL)
 		return;
 
-	unsigned int uiUrlLen = 0, uiBitSize;
+	unsigned short usUrlLen = 0, uiBitSize;
 	float fX, fY, fZ, fDist;
 	char* szUrl;
 
-	if (19 <= rpcParams->numberOfBitsOfData)
+	if (16 <= rpcParams->numberOfBitsOfData)
 	{
 		RakNet::BitStream bsData(rpcParams);
 
-		bsData.ReadCompressed(uiUrlLen);
+		bsData.Read(usUrlLen);
 
-		uiBitSize = (uiUrlLen * 8) + 1;
+		uiBitSize = (usUrlLen * 8) + 1;
 		if (uiBitSize > 16385 ||
-			bsData.GetNumberOfUnreadBits() != uiBitSize &&
-			bsData.GetNumberOfUnreadBits() != uiBitSize + 112)
+			(bsData.GetNumberOfUnreadBits() != uiBitSize &&
+			bsData.GetNumberOfUnreadBits() != uiBitSize + 128))
 		{
 #ifdef _DEBUG
 			pChatWindow->AddDebugMessage("Error: Malformed audio stream packet size.");
@@ -1692,7 +1692,7 @@ static void ScrAudioStream(RPCParameters* rpcParams)
 			return;
 		}
 
-		szUrl = (char*)malloc(uiUrlLen + 1);
+		szUrl = (char*)malloc(usUrlLen + 1);
 		if (szUrl == NULL)
 		{
 #ifdef _DEBUG
@@ -1701,14 +1701,17 @@ static void ScrAudioStream(RPCParameters* rpcParams)
 			return;
 		}
 
-		bsData.Read(szUrl, uiUrlLen);
-		szUrl[uiUrlLen] = 0;
+		bsData.Read(szUrl, usUrlLen);
+		szUrl[usUrlLen] = 0;
 
 		fX = fY = fZ = fDist = -1.0f;
 
-		if (bsData.ReadBit() && bsData.GetNumberOfUnreadBits() == 112)
+		if (bsData.ReadBit() && bsData.GetNumberOfUnreadBits() == 128)
 		{
-			bsData.ReadVector(fX, fY, fZ); // lossy, ~0.05f
+			bsData.Read(fX);
+			bsData.Read(fY);
+			bsData.Read(fZ);
+
 			bsData.Read(fDist);
 		}
 

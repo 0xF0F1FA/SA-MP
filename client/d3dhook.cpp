@@ -273,7 +273,6 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 		}
 
 		if (pCursor) pCursor->Process();
-		if (pAudioStream) pAudioStream->Process();
 
 #ifndef _DEBUG
 		if(tSettings.bDebug)
@@ -304,6 +303,8 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 			pNetGame->GetRakClient()->RPC(RPC_AdminMapTeleport,&bsSend,HIGH_PRIORITY,RELIABLE,0,false);
 		}
 	}
+
+	if (pAudioStream) pAudioStream->Process();
 
 	DoCheatDataStoring();
 

@@ -707,18 +707,18 @@ void CNetGame::UpdateNetwork()
 }
 
 bool CNetGame::SendToPlayer(unsigned int uiPlayerId,
-	short szUniqId, RakNet::BitStream* pBitStream)
+	UniqueID nUniqId, RakNet::BitStream* pBitStream)
 {
 	if (m_pRak == 0)
 		return false;
 
-	return m_pRak->RPC(szUniqId, pBitStream, HIGH_PRIORITY,
+	return m_pRak->RPC(nUniqId, pBitStream, HIGH_PRIORITY,
 		RELIABLE, 0, m_pRak->GetPlayerIDFromIndex(uiPlayerId), false, false);
 }
 
-bool CNetGame::SendToAll(short sUniqId, RakNet::BitStream* pBitStream)
+bool CNetGame::SendToAll(UniqueID nUniqId, RakNet::BitStream* pBitStream)
 {
-	return m_pRak->RPC(sUniqId, pBitStream, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+	return m_pRak->RPC(nUniqId, pBitStream, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
 }
 
 //----------------------------------------------------
@@ -812,7 +812,7 @@ void CNetGame::BroadcastData( RakNet::BitStream *bitStream,
 
 //--------------------------------------------------------
 
-void CNetGame::BroadcastDistanceRPC( short szUniqueID, 
+void CNetGame::BroadcastDistanceRPC( UniqueID nUniqueID, 
 									 RakNet::BitStream *bitStream,
 									 PacketReliability reliability,
 								     BYTE byteExcludedPlayer,
@@ -833,7 +833,7 @@ void CNetGame::BroadcastDistanceRPC( short szUniqueID,
 			if (pPlayer->GetVirtualWorld() == iExVW) {
 				fDistance = m_pPlayerPool->GetDistanceFromPlayerToPlayer(byteExcludedPlayer,x);
 				if(fDistance <= fUseDistance) {
-					m_pRak->RPC(szUniqueID,bitStream,HIGH_PRIORITY,reliability,
+					m_pRak->RPC(nUniqueID,bitStream,HIGH_PRIORITY,reliability,
 						0,m_pRak->GetPlayerIDFromIndex(x),false,false);
 				}
 			}
@@ -841,7 +841,7 @@ void CNetGame::BroadcastDistanceRPC( short szUniqueID,
 		x++;
 	}
 
-	m_pRak->RPC(szUniqueID,bitStream,HIGH_PRIORITY,reliability,
+	m_pRak->RPC(nUniqueID,bitStream,HIGH_PRIORITY,reliability,
 			0,m_pRak->GetPlayerIDFromIndex(byteExcludedPlayer),false,false);
 }
 

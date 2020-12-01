@@ -1093,6 +1093,36 @@ bool CPlayerPed::HasHandsUp()
 
 //-----------------------------------------------------------
 
+bool CPlayerPed::IsJumpTask()
+{
+	if (!m_pPed || IN_VEHICLE(m_pPed) || !m_pPed->Tasks)
+		return false;
+	
+	return GetTaskTypeFromTask(m_pPed->Tasks->pdwJumpJetPack) == 211;
+}
+
+//-----------------------------------------------------------
+
+bool CPlayerPed::IsTakeDamageFallTask()
+{
+	if (!m_pPed || IN_VEHICLE(m_pPed) || !m_pPed->Tasks)
+		return false;
+
+	return GetTaskTypeFromTask(m_pPed->Tasks->pdwDamage) == 208;
+}
+
+//-----------------------------------------------------------
+
+bool CPlayerPed::IsSwimTask()
+{
+	if (!m_pPed || IN_VEHICLE(m_pPed) || !m_pPed->Tasks)
+		return false;
+
+	return GetTaskTypeFromTask(m_pPed->Tasks->pdwSwimWasted) == 268;
+}
+
+//-----------------------------------------------------------
+
 void CPlayerPed::HoldItem(int iObject)
 {
 	if(!m_pPed) return;
@@ -1192,6 +1222,40 @@ bool CPlayerPed::StartPassengerDriveByMode()
 		return true;
 	}
 	return false;
+}
+
+//-----------------------------------------------------------
+
+bool CPlayerPed::PerformingDriveByFreeAimTask()
+{
+	if (!m_pPed) return false;
+	if (!GamePool_Ped_GetAt(m_dwGTAId)) return false;
+	if (!m_pPed->Tasks) return false;
+
+	return GetTaskTypeFromTask(m_pPed->Tasks->pdwJumpJetPack) == 1022;
+}
+
+//-----------------------------------------------------------
+
+void CPlayerPed::DestroyDriveByFreeAimTask()
+{
+	DWORD* pTask;
+
+	if (!m_pPed) return;
+	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+	if (!m_pPed->Tasks && !m_pPed->Tasks->pdwJumpJetPack) return;
+	
+	pTask = m_pPed->Tasks->pdwJumpJetPack;
+	if (GetTaskTypeFromTask(pTask) == 1022)
+	{
+		_asm {
+			mov ecx, pTask
+			mov edx, 0x6275E0
+			push 1
+			call edx
+		}
+		m_pPed->Tasks->pdwJumpJetPack = 0;
+	}
 }
 
 //-----------------------------------------------------------

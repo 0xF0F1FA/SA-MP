@@ -842,3 +842,21 @@ int GetTaskTypeFromTask(DWORD* task)
 
 	return i;
 }
+
+//----------------------------------------------------
+
+DWORD* GetNextTaskFromTask(DWORD* task)
+{
+	DWORD* ret_task = NULL;
+
+	if (!task || *task < 0x800000 || *task > 0x900000) return NULL;
+
+	_asm mov edx, task
+	_asm mov ebx, [edx]
+	_asm mov edx, [ebx+8]
+	_asm mov ecx, task
+	_asm call edx
+	_asm mov ret_task, eax
+
+	return ret_task;
+}

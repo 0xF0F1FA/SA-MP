@@ -109,6 +109,8 @@ public:
 	bool IsInJetpackMode();
 
 	bool StartPassengerDriveByMode();
+	bool PerformingDriveByFreeAimTask();
+	void DestroyDriveByFreeAimTask();
 
 	void SetCollisionChecking(int iCheck);
 	void SetGravityProcessing(int iState);
@@ -150,6 +152,9 @@ public:
 	char		*GetDanceAnimForMove(int iMove);
 	void		HandsUp();
 	bool		HasHandsUp();
+	bool		IsJumpTask();
+	bool		IsTakeDamageFallTask();
+	bool		IsSwimTask();
 	void		HoldItem(int iObject);
 
 	void		StartPissing();

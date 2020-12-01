@@ -63,6 +63,7 @@ BOOL __stdcall IsValidModel(int iModelID);
 #define FORCE_EXIT(a) GameForcedExit(a); while(true);
 
 int GetTaskTypeFromTask(DWORD* task);
+DWORD* GetNextTaskFromTask(DWORD * task);
 
 //-----------------------------------------------------------
 

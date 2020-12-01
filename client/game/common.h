@@ -38,20 +38,20 @@ typedef struct _WEAPON_SLOT_TYPE
 
 typedef struct _PED_TASKS_TYPE
 {
-	DWORD * pdwPed;
+	DWORD * pdwPed; // 0-4
 	// Basic Tasks
-	DWORD * pdwDamage;
-	DWORD * pdwFallEnterExit;
-	DWORD * pdwSwimWasted;
-	DWORD * pdwJumpJetPack;
-	DWORD * pdwAction;
+	DWORD * pdwDamage; // 4-8
+	DWORD * pdwFallEnterExit; // 8-12
+	DWORD * pdwSwimWasted; // 12-16
+	DWORD * pdwJumpJetPack; // 16-20
+	DWORD * pdwAction; // 20-24
 	// Extended Tasks
-	DWORD * pdwFighting;
-	DWORD * pdwCrouching;
-	DWORD * pdwExtUnk1;
-	DWORD * pdwExtUnk2;
-	DWORD * pdwExtUnk3;
-	DWORD * pdwExtUnk4;
+	DWORD * pdwFighting; // 24-28
+	DWORD * pdwCrouching; // 28-32
+	DWORD * pdwExtUnk1; // 32-36
+	DWORD * pdwExtUnk2; // 36-40
+	DWORD * pdwExtUnk3; // 40-44
+	DWORD * pdwExtUnk4; // 44-48
 } PED_TASKS_TYPE;
 
 //-----------------------------------------------------------

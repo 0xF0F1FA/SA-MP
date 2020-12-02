@@ -50,4 +50,6 @@
 
 #define ADDR_CAMERA								0xB6F99C
 
+#define ADDR_PLACEABLE_VTBL						0x863C40
+
 //-----------------------------------------------------------

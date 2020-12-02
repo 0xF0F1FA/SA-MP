@@ -112,9 +112,6 @@ public:
 	bool PerformingDriveByFreeAimTask();
 	void DestroyDriveByFreeAimTask();
 
-	void SetCollisionChecking(int iCheck);
-	void SetGravityProcessing(int iState);
-
 	void SetModelIndex(UINT uiModel);
 	void SetDead();
 	void ExtinguishFire();

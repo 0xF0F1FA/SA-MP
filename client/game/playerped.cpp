@@ -1260,32 +1260,6 @@ void CPlayerPed::DestroyDriveByFreeAimTask()
 
 //-----------------------------------------------------------
 
-void CPlayerPed::SetCollisionChecking(int iCheck)
-{
-	if(!GamePool_Ped_GetAt(m_dwGTAId)) return;
-
-	if(iCheck) {
-		m_pPed->entity.dwProcessingFlags |= 1;
-	} else {
-		m_pPed->entity.dwProcessingFlags &= 0xFFFFFFFE;
-	}
-}
-
-//-----------------------------------------------------------
-
-void CPlayerPed::SetGravityProcessing(int iState)
-{
-	if(!GamePool_Ped_GetAt(m_dwGTAId)) return;
-
-	if(iState) {
-		m_pPed->entity.dwProcessingFlags &= 0x7FFFFFFD;
-	} else {		
-		m_pPed->entity.dwProcessingFlags |= 0x80000002;
-	}
-}
-
-//-----------------------------------------------------------
-
 void CPlayerPed::SetModelIndex(UINT uiModel)
 {
 	DWORD dwPedPtr = (DWORD)m_pPed;

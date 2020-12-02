@@ -119,6 +119,23 @@ bool CEntity::IsStationary()
 
 //-----------------------------------------------------------
 
+void CEntity::GetBoundCentre(PVECTOR Vector)
+{
+	if (m_pEntity)
+	{
+		DWORD dwEntity = (DWORD)m_pEntity;
+		_asm
+		{
+			push Vector
+			mov ecx, dwEntity
+			mov edx, 0x534250
+			call edx
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
 void CEntity::SetModelIndex(UINT uiModel)
 {
 	if(!m_pEntity) return;
@@ -208,6 +225,26 @@ float CEntity::GetDistanceFromLocalPlayerPed()
 	fSZ = (matThis.pos.Z - matFromPlayer.pos.Z) * (matThis.pos.Z - matFromPlayer.pos.Z);
 	
 	return sqrtf(fSX + fSY + fSZ);
+}
+
+//-----------------------------------------------------------
+
+float CEntity::GetDistanceFromCamera()
+{
+	float fX, fY, fZ;
+	MATRIX4X4 mat;
+
+	if (m_pEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL)
+	{
+		GetMatrix(&mat);
+
+		fX = mat.pos.X - *(float*)0xB6F9CC;
+		fY = mat.pos.Y - *(float*)0xB6F9D0;
+		fZ = mat.pos.Z - *(float*)0xB6F9D4;
+
+		return sqrtf(fX * fX + fY * fY + fZ * fZ);
+	}
+	return 100000.0f;
 }
 
 //-----------------------------------------------------------
@@ -386,4 +423,41 @@ bool CEntity::HasExceededWorldBoundries(float fPX, float fZX, float fPY, float f
 		return true;
 	}
 	return false;
+}
+
+//-----------------------------------------------------------
+
+bool CEntity::UsesCollision()
+{
+	if (m_pEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL)
+	{
+		return m_pEntity->dwProcessingFlags & 1;
+	}
+	return true;
+}
+
+//-----------------------------------------------------------
+
+void CEntity::SetCollisionChecking(bool bCheck)
+{
+	if (m_pEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL)
+	{
+		if (bCheck)
+			m_pEntity->dwProcessingFlags |= 1;
+		else
+			m_pEntity->dwProcessingFlags &= 0xFFFFFFFE;
+	}
+}
+
+//-----------------------------------------------------------
+
+void CEntity::SetGravityProcessing(bool bState)
+{
+	if (m_pEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL)
+	{
+		if (bState)
+			m_pEntity->dwProcessingFlags &= 0x7FFFFFFD;
+		else
+			m_pEntity->dwProcessingFlags |= 0x80000002;
+	}
 }

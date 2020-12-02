@@ -84,7 +84,7 @@ public:
 	bool HasAmmoForCurrentWeapon();
 	void SetWeaponModelIndex(int iWeapon);
 
-	void SetImmunities(bool bBullet, bool bFire, bool bExplosion, bool bDamage, bool bUnknown);
+	void SetImmunities(int bBullet, int bFire, int bExplosion, int bCollision, int bMelee);
 	
 	void PutDirectlyInVehicle(int iVehicleID, int iSeat);
 	void EnterVehicle(int iVehicleID, bool bPassenger);
@@ -98,6 +98,8 @@ public:
 
 	VEHICLE_TYPE * GetGtaContactVehicle();
 	ENTITY_TYPE  * GetGtaContactEntity();
+
+	float GetDistanceFromVehicle(CVehicle* pVehicle);
 
 	int GetVehicleSeatID();
 	void TogglePlayerControllable(int iControllable);

@@ -541,6 +541,16 @@ int CPlayerPed::GetCurrentVehicleID()
 
 //-----------------------------------------------------------
 
+void CPlayerPed::SetImmunities(int bBullet, int bFire, int bExplosion, int bCollision, int bMelee)
+{
+	if (!m_pPed) return;
+	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+
+	ScriptCommand(&set_actor_immunities, m_dwGTAId, bBullet, bFire, bExplosion, bCollision, bMelee);
+}
+
+//-----------------------------------------------------------
+
 // Shows the normal marker
 void CPlayerPed::ShowMarker() //int iMarkerColor)
 {	
@@ -823,6 +833,23 @@ bool CPlayerPed::HasAmmoForCurrentWeapon()
 		if(!WeaponSlot->dwAmmo) return false;
 	}
 	return true;
+}
+
+//-----------------------------------------------------------
+
+float CPlayerPed::GetDistanceFromVehicle(CVehicle* pVehicle)
+{
+	MATRIX4X4 matPed, matVehicle;
+	float fX, fY, fZ;
+
+	pVehicle->GetMatrix(&matVehicle);
+	GetMatrix(&matPed);
+
+	fX = matPed.pos.X - matVehicle.pos.X;
+	fY = matPed.pos.Y - matVehicle.pos.Y;
+	fZ = matPed.pos.Z - matVehicle.pos.Z;
+
+	return sqrtf(fX * fX + fY * fY + fZ * fZ);
 }
 
 //-----------------------------------------------------------
@@ -1675,11 +1702,14 @@ float CPlayerPed::GetAimZ()
 
 void CPlayerPed::SetAimZ(float fAimZ)
 {
-	if(m_pPed) {
-		DWORD dwPlayerInfo = m_pPed->dwPlayerInfoOffset;
-		_asm mov eax, dwPlayerInfo
-		_asm mov ebx, fAimZ
-		_asm mov [eax+84], ebx
+	if (!_isnan(fAimZ) && fAimZ <= 100.0f && fAimZ >= -100.0f)
+	{
+		if (m_pPed) {
+			DWORD dwPlayerInfo = m_pPed->dwPlayerInfoOffset;
+			_asm mov eax, dwPlayerInfo
+			_asm mov ebx, fAimZ
+			_asm mov[eax + 84], ebx
+		}
 	}
 }
 //-----------------------------------------------------------
@@ -1756,7 +1786,8 @@ void CPlayerPed::StartDancing(int iStyle)
 
 	m_iDanceState = 1;
 	m_iDanceStyle = iStyle;
-	
+
+	//if(!m_bytePlayerNumber) ?
 	ApplyAnimation(DanceIdleLoops[m_iDanceStyle],DanceStyleLibs[m_iDanceStyle],16.0,1,0,0,0,-1);
 }
 
@@ -1973,8 +2004,8 @@ void CPlayerPed::StopPissing()
 
 int CPlayerPed::IsPissing()
 {
-	if(!m_pPed) return 0;
-	if(!GamePool_Ped_GetAt(m_dwGTAId)) return 0;
+	//if(!m_pPed) return 0;
+	//if(!GamePool_Ped_GetAt(m_dwGTAId)) return 0;
 	return m_iPissingState;
 }
 

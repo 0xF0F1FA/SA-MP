@@ -16,7 +16,7 @@
 void ProcessLineOfSight(VECTOR *vecOrigin, VECTOR *vecLine, VECTOR *colPoint,
 		DWORD *pHitEntity, int bCheckBuildings, int bCheckVehicles, int bCheckPeds,
 		int bCheckObjects, int bCheckDummies, int bSeeThroughStuff,
-		int  bIgnoreSomeObjectsForCamera, int bUnk1);
+		int  bIgnoreSomeObjectsForCamera, int bShootThrough);
 
 float GetNormalisation(VECTOR *vec);
 void CompressNormalVector(VECTOR* vec, C_VECTOR1 * c1);
@@ -38,6 +38,9 @@ VEHICLE_TYPE * __stdcall GamePool_Vehicle_GetAt(int iID);
 ENTITY_TYPE * __stdcall GamePool_Object_GetAt(int iID);
 DWORD __stdcall GamePool_Vehicle_GetIndex(VEHICLE_TYPE *pVehicle);
 PED_TYPE * __stdcall GamePool_FindPlayerPed();
+ENTITY_TYPE* __stdcall GamePool_Building_Get();
+ENTITY_TYPE* __stdcall GamePool_Dummys_Get();
+ENTITY_TYPE* __stdcall GamePool_Objects_Get();
 int Game_PedStatPrim(int model_id);
 int Game_PedStat(int model_id);
 
@@ -64,6 +67,8 @@ BOOL __stdcall IsValidModel(int iModelID);
 
 int GetTaskTypeFromTask(DWORD* task);
 DWORD* GetNextTaskFromTask(DWORD * task);
+
+unsigned int CRC32UppercaseString(char* szString);
 
 //-----------------------------------------------------------
 

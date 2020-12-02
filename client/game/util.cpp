@@ -227,8 +227,10 @@ DWORD dwUseHudColors[NUM_RADAR_COLORS];
 void  ProcessLineOfSight(VECTOR *vecOrigin, VECTOR *vecLine, VECTOR *colPoint,
 		DWORD *pHitEntity, int bCheckBuildings, int bCheckVehicles, int bCheckPeds,
 		int bCheckObjects, int bCheckDummies, int bSeeThroughStuff,
-		int  bIgnoreSomeObjectsForCamera, int bUnk1)
-{	
+		int  bIgnoreSomeObjectsForCamera, int bShootThrough)
+{
+	_asm mov eax, 0x56BA00
+	_asm jmp eax
 }
 
 //-----------------------------------------------------------
@@ -344,6 +346,51 @@ ENTITY_TYPE * __stdcall GamePool_Object_GetAt(int iID)
 PED_TYPE * __stdcall GamePool_FindPlayerPed()
 {
 	return *(PED_TYPE **)(0xB7CD98);
+}
+
+//-----------------------------------------------------------
+
+ENTITY_TYPE* __stdcall GamePool_Building_Get()
+{
+	ENTITY_TYPE* pEntity;
+	_asm
+	{
+		mov eax, 0xB74498
+		mov edx, [eax]
+		mov eax, [edx]
+		mov pEntity, eax
+	}
+	return pEntity;
+}
+
+//-----------------------------------------------------------
+
+ENTITY_TYPE* __stdcall GamePool_Dummys_Get()
+{
+	ENTITY_TYPE* pEntity;
+	_asm
+	{
+		mov eax, 0xB744A0
+		mov edx, [eax]
+		mov eax, [edx]
+		mov pEntity, eax
+	}
+	return pEntity;
+}
+
+//-----------------------------------------------------------
+
+ENTITY_TYPE* __stdcall GamePool_Objects_Get()
+{
+	ENTITY_TYPE* pEntity;
+	_asm
+	{
+		mov eax, 0xB7449C
+		mov edx, [eax]
+		mov eax, [edx]
+		mov pEntity, eax
+	}
+	return pEntity;
 }
 
 //-----------------------------------------------------------
@@ -859,4 +906,20 @@ DWORD* GetNextTaskFromTask(DWORD* task)
 	_asm mov ret_task, eax
 
 	return ret_task;
+}
+
+//----------------------------------------------------
+
+unsigned int CRC32UppercaseString(char* szString)
+{
+	unsigned int uiResult = 0;
+	_asm
+	{
+		push szString
+		mov edx, 0x53CF30
+		call edx
+		mov uiResult, eax
+		pop edx
+	}
+	return uiResult;
 }

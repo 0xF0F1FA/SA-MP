@@ -70,5 +70,7 @@ DWORD* GetNextTaskFromTask(DWORD * task);
 
 unsigned int CRC32UppercaseString(char* szString);
 
+void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius);
+
 //-----------------------------------------------------------
 

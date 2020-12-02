@@ -923,3 +923,8 @@ unsigned int CRC32UppercaseString(char* szString)
 	}
 	return uiResult;
 }
+
+void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius)
+{
+	// TODO
+}

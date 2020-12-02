@@ -338,6 +338,9 @@ void DoInitStuff()
 			pGameCamera->Restore();
 			pGameCamera->SetBehindPlayer();
 			pGame->DisplayHud(TRUE);
+			pGame->EnableClock(0);
+			if (tSettings.szDebugScript[0] != '\0')
+				GameDebugLoadScript(tSettings.szDebugScript);
 		}
 
 		bGameInited = true;
@@ -523,6 +526,10 @@ void InitSettings()
 				case 'n':
 					szCmdLine++;
 					SetStringFromCommandLine(szCmdLine,tSettings.szNickName,sizeof(tSettings.szNickName));
+					break;
+				case 'l':
+					szCmdLine++;
+					SetStringFromCommandLine(szCmdLine, tSettings.szDebugScript, sizeof(tSettings.szDebugScript));
 					break;
 			}
 		}

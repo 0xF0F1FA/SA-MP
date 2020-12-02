@@ -40,6 +40,7 @@ typedef struct _GAME_SETTINGS {
 	CHAR szConnectHost[MAX_SETTINGS_STRING];
 	CHAR szConnectPort[6];
 	CHAR szNickName[MAX_PLAYER_NAME];
+	CHAR szDebugScript[MAX_PATH];
 } GAME_SETTINGS;
 
 #include <d3d9.h>

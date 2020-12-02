@@ -20,23 +20,31 @@ static int		iGameDebugType=0;
 static DWORD	dwDebugEntity1=0;
 static DWORD	dwDebugEntity2=0;
 
-static int debug_draw_top=0;
+//#define PARAM_SKIP(l) szToken=strtok(l,",")
+//#define PARAM_FLOAT(l,f,d) szToken=strtok(l,","); f=atof(szToken)
+//#define PARAM_INT32(l,i,d) szToken=strtok(l,","); i=(int)atol(szToken)
+#define PARAM_SKIP(l) szToken=strtok_s(l,",",&szContext)
+#define PARAM_FLOAT(l,f,d) szToken=strtok_s(l,",",&szContext); f=(szToken)?(strtof(szToken,NULL)):(d)
+#define PARAM_INT32(l,i,d) szToken=strtok_s(l,",",&szContext); i=(szToken)?((int)strtol(szToken,NULL,0)):(d)
+
+static VECTOR g_vecPos;
+static CObjectPool* g_pObjectPool = NULL;
+static BYTE g_byteObjectCount = 0;
+
+#ifdef _DEBUG
+
+static int debug_draw_top = 0;
 
 // screen buffer for debug text
 #define NUM_SCREEN_LINES 35
 static PCHAR screen_buf[NUM_SCREEN_LINES];
 
-extern CAMERA_AIM * pcaInternalAim;
-extern BYTE	* pbyteCameraMode;
-
+extern CAMERA_AIM* pcaInternalAim;
+extern BYTE* pbyteCameraMode;
 //extern INCAR_SYNC_DATA DebugSync;
 //extern BOOL bDebugUpdate;
-
 //extern char *aScanListMemory;
-
 extern float fFarClip;
-
-#ifdef _DEBUG
 
 //----------------------------------------------------------
 
@@ -832,7 +840,7 @@ CVehicle *pVehicle=NULL;
 int iSelection = 400;
 GTA_CONTROLSET *pControls;
 CCamera *pCam;
-char sz2[256];
+//char sz2[256];
 
 void GameBuildRecreateVehicle()
 {
@@ -988,3 +996,153 @@ void GameDebugDrawDebugScreens()
 }
 
 //----------------------------------------------------------
+
+char* GetParamsFromFunction(char* szLine)
+{
+	char* szStart, * szEnd;
+	size_t nLen;
+
+	szStart = strchr(szLine, '(');
+	szEnd = strchr(szLine, ')');
+	if (szStart && szEnd)
+	{
+		nLen = szEnd - szStart;
+		strncpy_s(szLine, nLen, szStart + 1, nLen - 1);
+		szLine[nLen] = '\0';
+		return szLine;
+	}
+	return NULL;
+}
+
+//----------------------------------------------------------
+
+void GameDebugProcessLine(char* szLine)
+{
+	char* szParams, * szToken, * szContext;
+	float f1, f2, f3, f4, f5, f6;
+	int i1; //, i2, i3;
+	CPlayerPed* pPlayerPed;
+
+	szToken = NULL;
+	szContext = NULL;
+
+	if (!strncmp(szLine, "CreateObject", 12))
+	{
+		szParams = GetParamsFromFunction(szLine);
+		if (szParams)
+		{
+			PARAM_INT32(szParams, i1, 0); // modelid
+			PARAM_FLOAT(NULL, f1, 0.0f); // x
+			PARAM_FLOAT(NULL, f2, 0.0f); // y
+			PARAM_FLOAT(NULL, f3, 0.0f); // z
+			PARAM_FLOAT(NULL, f4, 0.0f); // rx
+			PARAM_FLOAT(NULL, f5, 0.0f); // ry
+			PARAM_FLOAT(NULL, f6, 0.0f); // rz
+			
+			if (g_pObjectPool)
+			{
+				g_pObjectPool->New(g_byteObjectCount, i1, { f1, f2, f3 }, { f4, f5, f6 });
+				g_byteObjectCount++;
+			}
+		}
+	}
+	else if (!strncmp(szLine, "CreateVehicle", 13) || !strncmp(szLine, "AddStaticVehicle", 16))
+	{
+		szParams = GetParamsFromFunction(szLine);
+		//GameDebugCreateVehicle(szParams); // Using it's content here, instead of create a seperate function
+		if (szParams)
+		{
+			PARAM_INT32(szParams, i1, 0); // modelid
+			PARAM_FLOAT(NULL, f1, 0.0f); // x
+			PARAM_FLOAT(NULL, f2, 0.0f); // y
+			PARAM_FLOAT(NULL, f3, 0.0f); // z
+			PARAM_FLOAT(NULL, f4, 0.0f); // angle
+			//PARAM_INT32(NULL, i2, 0); // color1 (unused)
+			//PARAM_INT32(NULL, i3, 0); // color2 (unused)
+
+			new CVehicle(i1, f1, f2, f3, f4);
+		}
+	}
+	else if (!strncmp(szLine, "SetPlayerCameraPos", 18))
+	{
+		szParams = GetParamsFromFunction(szLine);
+		if (szParams)
+		{
+			PARAM_SKIP(szParams); // playerid
+			PARAM_FLOAT(NULL, f1, 0.0f); // x
+			PARAM_FLOAT(NULL, f2, 0.0f); // y
+			PARAM_FLOAT(NULL, f3, 0.0f); // z
+
+			g_vecPos.X = f1;
+			g_vecPos.Y = f2;
+			g_vecPos.Z = f3;
+		}
+	}
+	else if (!strncmp(szLine, "SetPlayerCameraLookAt", 21))
+	{
+		//GetParamsFromFunction(szLine); Unused?
+	}
+	else if (!strncmp(szLine, "RemoveBuildingForPlayer", 23))
+	{
+		szParams = GetParamsFromFunction(szLine);
+		if (szParams)
+		{
+			PARAM_SKIP(szParams); // playerid
+			PARAM_INT32(NULL, i1, 0); // modelid
+			PARAM_FLOAT(NULL, f1, 0.0f); // x
+			PARAM_FLOAT(NULL, f2, 0.0f); // y
+			PARAM_FLOAT(NULL, f3, 0.0f); // z
+			PARAM_FLOAT(NULL, f4, 0.0f); // radius
+
+			RemoveBuilding(i1, f1, f2, f3, f4);
+		}
+	}
+	else if (!strncmp(szLine, "SetPlayerInterior", 17))
+	{
+		szParams = GetParamsFromFunction(szLine);
+		if (szParams)
+		{
+			PARAM_SKIP(szParams); // playerid
+			PARAM_INT32(NULL, i1, 0); // interiorid
+
+			pPlayerPed = pGame->FindPlayerPed();
+			if (pPlayerPed)
+			{
+				pPlayerPed->SetInterior((BYTE)i1);
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+
+void GameDebugLoadScript(char* szScript)
+{
+	FILE* pFile;
+	char szLine[256];
+	CPlayerPed* pPlayerPed;
+
+	pGame->SetWorldTime(12, 0);
+	pChatWindow->AddDebugMessage("DEBUGSCRIPT: Loading %s", szScript);
+
+	g_pObjectPool = new CObjectPool();
+
+	if (fopen_s(&pFile, szScript, "r") == 0 && pFile != NULL)
+	{
+		while (!feof(pFile))
+		{
+			fgets(szLine, sizeof(szLine), pFile);
+			GameDebugProcessLine(szLine);
+		}
+
+		fclose(pFile);
+
+		pPlayerPed = pGame->FindPlayerPed();
+		if (pPlayerPed)
+			pPlayerPed->TeleportTo(g_vecPos.X, g_vecPos.Y, g_vecPos.Z);
+	}
+	else
+	{
+		pChatWindow->AddDebugMessage("DEBUGSCRIPT: I can't open %s", szScript);
+	}
+}

@@ -1444,6 +1444,13 @@ static void cmdTeamTest(PCHAR szCmd)
 	}
 }
 
+static void cmdShowMem(PCHAR* szCmd)
+{
+	(void)szCmd;
+
+	pChatWindow->AddDebugMessage("Memory: %u", *(DWORD*)0x8A5A80);
+}
+
 void SetupCommands()
 {
 	// RELEASE COMMANDS
@@ -1453,6 +1460,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("save",cmdSavePos);
 	pCmdWindow->AddCmdProc("rs", cmdRawSave);
 	pCmdWindow->AddCmdProc("rcon",cmdRcon);
+	pCmdWindow->AddCmdProc("mem", cmdShowMem);
 
 	pCmdWindow->AddCmdProc("pagesize", cmdSetChatPageSize);
 	pCmdWindow->AddCmdProc("timestamp", cmdToggleChatTimeStamp);

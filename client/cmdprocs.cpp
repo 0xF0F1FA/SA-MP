@@ -1444,7 +1444,7 @@ static void cmdTeamTest(PCHAR szCmd)
 	}
 }
 
-static void cmdShowMem(PCHAR* szCmd)
+static void cmdShowMem(PCHAR szCmd)
 {
 	(void)szCmd;
 

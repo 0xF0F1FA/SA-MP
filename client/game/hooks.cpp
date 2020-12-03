@@ -1255,6 +1255,122 @@ NUDE CAmbientAuidoTrack_Process_Hook()
 	_asm retn 8
 }
 
+//-----------------------------------------------------------
+
+static float fScreenWidthScaleSaved, fScreenHeightScaleSaved, fAspectRatio;
+static int iMaximumWidth, iMaximumHeight;
+static DWORD dwHudSizeX = 0x866B74, dwHudSizeY = 0x866B78;
+static bool bHudScaleChanged, bAiming;
+static CPlayerPed* pPedForCamera;
+static BYTE byteCameraMode;
+
+static void UpdateForHudOrCrossHairScale()
+{
+	if (bWantHudScaling)
+	{
+		fScreenWidthScaleSaved = *(float*)0x859520;
+		fScreenHeightScaleSaved = *(float*)0x859524;
+
+		iMaximumWidth = *(int*)0xC17044;
+		iMaximumHeight = *(int*)0xC17048;
+
+		if (iMaximumWidth > 0 && iMaximumHeight > 0)
+		{
+			fAspectRatio = (float)iMaximumWidth / iMaximumHeight;
+			if (fAspectRatio < 1.6f)
+			{
+				*(float*)dwHudSizeX = 76.0f;
+				*(float*)dwHudSizeY = 94.0f;
+			}
+			else
+			{
+				*(float*)dwHudSizeX = 82.0f;
+				*(float*)dwHudSizeY = 96.0f;
+
+				*(float*)0x859524 = 0.00242f;
+				*(float*)0x859520 = 0.00222f / fAspectRatio;
+
+				bHudScaleChanged = true;
+			}
+		}
+	}
+}
+
+NUDE CHud_DrawRadar_Hook()
+{
+	_asm pushad
+
+	UpdateForHudOrCrossHairScale();
+
+	_asm
+	{
+		popad
+		mov edx, 0x58A330
+		call edx
+		pushad
+	}
+
+	if (bHudScaleChanged)
+	{
+		*(float*)0x859520 = fScreenWidthScaleSaved;
+		*(float*)0x859524 = fScreenHeightScaleSaved;
+
+		*(float*)dwHudSizeX = 76.0f;
+		*(float*)dwHudSizeY = 94.0f;
+
+		bHudScaleChanged = false;
+	}
+
+	_asm popad
+}
+
+NUDE CHud_DrawCrossHair_Hook()
+{
+	_asm pushad
+
+	bAiming = false;
+
+	if (pGame && (pPedForCamera = pGame->FindPlayerPed()))
+	{
+		if(pPedForCamera->m_bytePlayerNumber)
+			byteCameraMode = GameGetPlayerCameraMode(pPedForCamera->m_bytePlayerNumber);
+		else
+			byteCameraMode = GameGetLocalPlayerCameraMode();
+		
+		if (byteCameraMode == 53)
+		{
+			UpdateForHudOrCrossHairScale();
+			bAiming = true;
+		}
+	}
+	
+	_asm
+	{
+		popad
+		mov edx, 0x58E020
+		call edx
+		pushad
+	}
+
+	if (bAiming)
+	{
+		if (bHudScaleChanged)
+		{
+			*(float*)0x859520 = fScreenWidthScaleSaved;
+			*(float*)0x859524 = fScreenHeightScaleSaved;
+
+			*(float*)dwHudSizeX = 76.0f;
+			*(float*)dwHudSizeY = 94.0f;
+
+			bHudScaleChanged = false;
+		}
+		bAiming = false;
+	}
+
+	_asm popad
+}
+
+//-----------------------------------------------------------
 
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
@@ -1299,6 +1415,10 @@ void GameInstallHooks()
 	
 	//UnFuck(0x53EB13,4);
 	*(int*)0x53EB13 = dwGraphicsLoop - 0x53EB12 - 5; // relative addr
+
+	// For hud scaling
+	InstallCallHook(0x58FC53, (DWORD)CHud_DrawRadar_Hook);
+	InstallCallHook(0x58FBBF, (DWORD)CHud_DrawCrossHair_Hook);
 
 	InstallHook(0x58C246, (DWORD)GameProcessHook,
 		0x53BED1, GameProcess_HookJmpCode, sizeof(GameProcess_HookJmpCode));

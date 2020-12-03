@@ -113,6 +113,7 @@ extern CDXUTDialog* pGameUI;
 extern GAME_SETTINGS tSettings;
 extern IDirect3DDevice9* pD3DDevice;
 extern bool bShowDebugLabels;
+extern bool bWantHudScaling;
 extern int iGtaVersion;
 
 #include "outputdebugstring.h"

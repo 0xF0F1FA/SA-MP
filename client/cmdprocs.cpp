@@ -1451,6 +1451,14 @@ static void cmdShowMem(PCHAR* szCmd)
 	pChatWindow->AddDebugMessage("Memory: %u", *(DWORD*)0x8A5A80);
 }
 
+// TODO: Add "nohudscalefix" config store here
+static void cmdHudScaleFix(PCHAR szCmd)
+{
+	(void)szCmd;
+
+	bWantHudScaling = (bWantHudScaling != 0);
+}
+
 void SetupCommands()
 {
 	// RELEASE COMMANDS
@@ -1464,6 +1472,7 @@ void SetupCommands()
 
 	pCmdWindow->AddCmdProc("pagesize", cmdSetChatPageSize);
 	pCmdWindow->AddCmdProc("timestamp", cmdToggleChatTimeStamp);
+	pCmdWindow->AddCmdProc("hudscalefix", cmdHudScaleFix);
 
 	pCmdWindow->AddCmdProc("disvehico", cmdDisableVehMapIcon);
 

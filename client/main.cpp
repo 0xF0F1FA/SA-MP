@@ -43,6 +43,7 @@ CNetStats				*pNetStats=NULL;
 CAudioStream			*pAudioStream=NULL;
 
 bool					bShowDebugLabels = false;
+bool					bWantHudScaling = true;
 
 CGame					*pGame=0;
 //DWORD					dwGameLoop=0;
@@ -256,6 +257,7 @@ void SetupGameUI()
 
 //extern void CheckDuplicateD3D9Dlls();
 
+// TODO: Add "nohudscalefix", "pagesize", "timestamp", "fpslimit", "multicore", "disableheadmove" config checks here
 void DoInitStuff()
 {
 	// GAME INIT

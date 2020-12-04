@@ -1322,6 +1322,7 @@ NUDE CHud_DrawRadar_Hook()
 	}
 
 	_asm popad
+	_asm ret
 }
 
 NUDE CHud_DrawCrossHair_Hook()
@@ -1368,6 +1369,7 @@ NUDE CHud_DrawCrossHair_Hook()
 	}
 
 	_asm popad
+	_asm ret
 }
 
 //-----------------------------------------------------------

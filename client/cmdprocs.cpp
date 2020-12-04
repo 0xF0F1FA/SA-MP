@@ -1456,7 +1456,7 @@ static void cmdHudScaleFix(PCHAR szCmd)
 {
 	(void)szCmd;
 
-	bWantHudScaling = (bWantHudScaling != 0);
+	bWantHudScaling = !bWantHudScaling;
 }
 
 void SetupCommands()

@@ -10,6 +10,7 @@
 #include "main.h"
 
 bool bRconSocketReply = false;
+bool g_bQueryLogging = false;
 
 void RconSocketReply(char* szMessage)
 {

@@ -1367,13 +1367,6 @@ void cmdDisableEnEx(PCHAR szCmd)
 
 //-----------------------------------------------------
 
-void cmdDisableVehMapIcon(PCHAR szCmd)
-{
-	pGame->m_bDisableVehMapIcons = !pGame->m_bDisableVehMapIcons;
-}
-
-//-----------------------------------------------------
-
 void cmdStartPiss(PCHAR szCmd)
 {
 	if(pNetGame) {
@@ -1407,6 +1400,22 @@ void cmdShowPlayerVirtualWorld(PCHAR szCmd)
 
 //------------------------------------------------------
 
+static void cmdTeamTest(PCHAR szCmd)
+{
+	(void)szCmd;
+	if (pNetGame) {
+		CLocalPlayer* pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
+		pChatWindow->AddDebugMessage("Your team = %d", pLocalPlayer->GetTeam());
+		for (unsigned short i = 0; i < MAX_PLAYERS; i++) {
+			CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
+			if (pRemotePlayer) {
+				pChatWindow->AddDebugMessage("ID: %d Name: %s Team: %d",
+					pRemotePlayer->GetID(), pRemotePlayer->GetName(), pRemotePlayer->GetTeam());
+			}
+		}
+	}
+}
+
 #endif
 
 //----------------------------------------------------
@@ -1428,20 +1437,9 @@ static void cmdToggleChatTimeStamp(PCHAR szCmd)
 		pChatWindow->ToggleTimeStamp();
 }
 
-static void cmdTeamTest(PCHAR szCmd)
+void cmdDisableVehMapIcon(PCHAR szCmd)
 {
-	(void)szCmd;
-	if (pNetGame) {
-		CLocalPlayer* pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
-		pChatWindow->AddDebugMessage("Your team = %d", pLocalPlayer->GetTeam());
-		for (size_t i = 0; i < MAX_PLAYERS; i++) {
-			CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
-			if (pRemotePlayer) {
-				pChatWindow->AddDebugMessage("ID: %d Name: %s Team: %d", 
-					pRemotePlayer->GetID(), pRemotePlayer->GetName(), pRemotePlayer->GetTeam());
-			}
-		}
-	}
+	pGame->m_bDisableVehMapIcons = !pGame->m_bDisableVehMapIcons;
 }
 
 static void cmdShowMem(PCHAR szCmd)

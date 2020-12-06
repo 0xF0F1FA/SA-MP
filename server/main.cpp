@@ -36,6 +36,8 @@ int g_iStreamRate = 1000;
 bool g_bDBLogging = true;
 bool g_bDBLogQueries = true;
 
+bool bQueryLogging = false;
+
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
 #endif
@@ -364,6 +366,7 @@ int main (int argc, char** argv)
 
 	pConsole->AddVariable("lanmode",CON_VARTYPE_BOOL,0, &bLanModeEnable);
 	pConsole->AddVariable("query",CON_VARTYPE_BOOL, 0, &bAllowQuery);
+	pConsole->AddVariable("logqueries",CON_VARTYPE_BOOL, 0, &bQueryLogging);
 
 /*#ifdef RAKRCON
 	pConsole->AddVariable("rcon_port", CON_VARTYPE_INT, 0, &iRconPort);

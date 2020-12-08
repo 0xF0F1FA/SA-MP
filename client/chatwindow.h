@@ -57,6 +57,8 @@ private:
 	CDXUTEditBox		*m_pEditBackground;
 	CDXUTScrollBar		*m_pScrollBar;
 
+	CFontRender* m_pFontRender;
+
 	void PushBack();
 	void FilterInvalidChars(PCHAR szString);
 	void AddToChatWindowBuffer(eChatMessageType eType,PCHAR szString,
@@ -79,14 +81,14 @@ public:
 	void RenderText(CHAR *sz,RECT rect,DWORD dwColor);
 	void ResetDialogControls(CDXUTDialog *pGameUI);
 
-	CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, ID3DXFont *pFont);
+	CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender);
 	~CChatWindow();
 
 	LONG GetChatWindowBottom() { return m_lChatWindowBottom; };
 	void ScrollBarPosFromCurrentPage();
 
 	LONG				m_lFontSizeY;
-	ID3DXFont			*m_pD3DFont;
+	//ID3DXFont			*m_pD3DFont;
 	ID3DXSprite			*m_pChatTextSprite;
 	IDirect3DDevice9	*m_pD3DDevice;
 

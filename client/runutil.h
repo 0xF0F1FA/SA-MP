@@ -24,4 +24,11 @@ void K_EncodeString(char *szInput, char *szOutput);
 unsigned long Util_GetTime();
 const char* GetWeaponName(int iWeaponID);
 
+bool IsHexChar(char c);
+bool IsHexCharW(wchar_t c);
+unsigned long GetColorFromStringEmbed(char* szString);
+unsigned long GetColorFromStringEmbedW(wchar_t* wszString);
+void RemoveColorEmbedsFromString(char* szString);
+int ConvertMultiToWideString(LPCSTR szSource, LPWSTR szDest, int iLen);
+
 //----------------------------------------------------

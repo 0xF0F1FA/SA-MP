@@ -105,7 +105,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	m_bInstagib = false;
 	m_iCheckLoadedStuff = 0;
 
-	if(pChatWindow) pChatWindow->AddDebugMessage("SA:MP " SAMP_VERSION " Initialized");
+	if (pChatWindow) pChatWindow->AddDebugMessage("{FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}Started");
 
 }
 
@@ -747,7 +747,7 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *p)
 	uiChallenge ^= NETGAME_VERSION;
 
 	if(pChatWindow) {
-		pChatWindow->AddDebugMessage("Connection success. Loading network game...");
+		pChatWindow->AddDebugMessage("Connected. Joining the game...");
 	}
 
 	m_iGameState = GAMESTATE_AWAIT_JOIN;

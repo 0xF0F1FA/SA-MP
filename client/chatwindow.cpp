@@ -11,12 +11,13 @@
 
 //----------------------------------------------------
 
-CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, ID3DXFont *pFont)
+CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender)
 {
 	int x=0;
 
 	m_pD3DDevice		= pD3DDevice;
-	m_pD3DFont			= pFont;
+	//m_pD3DFont			= pFont;
+	m_pFontRender		= pFontRender;
 	m_iEnabled			= CHAT_WINDOW_MODE_FULL;
 	m_iCurrentPage		= 1;
 	m_uiPageSize		= DISP_MESSAGES;
@@ -32,9 +33,12 @@ CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, ID3DXFont *pFont)
 		x++;
 	}
 
-	RECT rectSize;
-	m_pD3DFont->DrawText(0,"Y",-1,&rectSize,DT_CALCRECT|DT_SINGLELINE|DT_LEFT,0xFF000000);
-	m_lFontSizeY = rectSize.bottom - rectSize.top;
+	//RECT rectSize;
+	//m_pD3DFont->DrawText(0,"Y",-1,&rectSize,DT_CALCRECT|DT_SINGLELINE|DT_LEFT,0xFF000000);
+	//m_lFontSizeY = rectSize.bottom - rectSize.top;
+
+	SIZE size;
+	m_lFontSizeY = pFontRender->MeasureText(&size, "Y", DT_SINGLELINE | DT_LEFT).cy;
 
 	m_dwChatTextColor = D3DCOLOR_ARGB(255,255,255,255);
 	m_dwChatInfoColor = D3DCOLOR_ARGB(255, 136, 170, 98);
@@ -170,7 +174,7 @@ void CChatWindow::Draw()
 
 	iMessageAt = (m_iCurrentPage * m_uiPageSize) - 1;
 
-	if(m_pD3DFont && m_iEnabled)
+	if(/*m_pD3DFont &&*/ m_iEnabled)
 	{
 		m_pChatTextSprite->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
 
@@ -178,7 +182,7 @@ void CChatWindow::Draw()
 
 			if (m_bTimeStamp)
 			{
-				m_pD3DFont->DrawText(0, m_ChatWindowEntries[iMessageAt].szTimeStamp, -1, &rectSize, DT_CALCRECT | DT_LEFT, 0xFF000000);
+				m_pFontRender->GetDXFont()->DrawText(0, m_ChatWindowEntries[iMessageAt].szTimeStamp, -1, &rectSize, DT_CALCRECT | DT_LEFT, 0xFF000000);
 				RenderText(m_ChatWindowEntries[iMessageAt].szTimeStamp, rect, m_ChatWindowEntries[iMessageAt].dwTextColor);
 				rect.left = 35 + (rectSize.right - rectSize.left);
 			}
@@ -190,9 +194,10 @@ void CChatWindow::Draw()
 				i = strlen(m_ChatWindowEntries[iMessageAt].szNick);
 
 				if(i) {
-					m_pD3DFont->DrawText(0,m_ChatWindowEntries[iMessageAt].szNick,-1,&rectSize,DT_CALCRECT|DT_LEFT,0xFF000000);
+					m_pFontRender->GetDXFont()->DrawText(0,m_ChatWindowEntries[iMessageAt].szNick,-1,&rectSize,DT_CALCRECT|DT_LEFT,0xFF000000);
 					RenderText(m_ChatWindowEntries[iMessageAt].szNick,rect,m_ChatWindowEntries[iMessageAt].dwNickColor);
 					rect.left = (m_bTimeStamp) ? (rect.left + (rectSize.right - rectSize.left)) : (35 + (rectSize.right - rectSize.left));
+					//rect.left = (m_bTimeStamp) ? rect.left + size.cx : 35 + size.cy;
 				}
 
 				RenderText(m_ChatWindowEntries[iMessageAt].szMessage,rect,m_ChatWindowEntries[iMessageAt].dwTextColor);
@@ -395,32 +400,77 @@ void CChatWindow::PushBack()
 }
 
 //----------------------------------------------------
+#define FONT_RENDER_FORMAT DT_NOCLIP | DT_SINGLELINE | DT_LEFT
 
 void CChatWindow::RenderText(CHAR *sz,RECT rect,DWORD dwColor)
 {
-	if(m_iEnabled == CHAT_WINDOW_MODE_FULL) {
-		// above
-		rect.top -= 1;
-		m_pD3DFont->DrawText(m_pChatTextSprite,sz,-1,&rect,DT_NOCLIP|DT_SINGLELINE|DT_LEFT,0xFF000000);
-		rect.top += 1;
+	ID3DXFont* pFont;
+	ID3DXFontCE* pFontCE;
+	char szModifiedStr[512] = { 0 };
+	size_t nOriginalLen, nModifiedLen;
 
-		// below
-		rect.top += 1;
-		m_pD3DFont->DrawText(m_pChatTextSprite,sz,-1,&rect,DT_NOCLIP|DT_SINGLELINE|DT_LEFT,0xFF000000);
-		rect.top -= 1;
+	pFont = m_pFontRender->GetDXFont();
+	pFontCE = m_pFontRender->GetDXFontCE();
 
-		// left
-		rect.left -= 1;
-		m_pD3DFont->DrawText(m_pChatTextSprite,sz,-1,&rect,DT_NOCLIP|DT_SINGLELINE|DT_LEFT,0xFF000000);
-		rect.left += 1;
+	nOriginalLen = strlen(sz);
 
-		// right
-		rect.left += 1;
-		m_pD3DFont->DrawText(m_pChatTextSprite,sz,-1,&rect,DT_NOCLIP|DT_SINGLELINE|DT_LEFT,0xFF000000);
-		rect.left -= 1;
+	if (m_iEnabled == CHAT_WINDOW_MODE_FULL) {
+
+		//memset(szModifiedStr, 0, sizeof(szModifiedStr));
+		strncpy_s(szModifiedStr, sz, sizeof(szModifiedStr) - 1);
+		RemoveColorEmbedsFromString(szModifiedStr);
+		nModifiedLen = strlen(szModifiedStr);
+		if (pGame->GetScreenWidth() <= 1280)
+		{
+			rect.top -= 1;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.top += 2;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.top -= 1;
+			rect.left -= 1;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left += 2;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left -= 1;
+		}
+		else
+		{
+			rect.top -= 2;
+			rect.bottom -= 2;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.top += 1;
+			rect.bottom += 1;
+			rect.right -= 1;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left += 2;
+			rect.right += 2;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left -= 1;
+			rect.right -= 1;
+			rect.top += 3;
+			rect.bottom += 3;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left -= 1;
+			rect.top -= 1;
+			rect.bottom -= 1;
+			rect.right -= 1;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left += 2;
+			rect.right += 2;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.top -= 1;
+			rect.bottom -= 1;
+			rect.left -= 3;
+			rect.right -= 3;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left += 4;
+			rect.right += 4;
+			pFont->DrawTextA(m_pChatTextSprite, szModifiedStr, nModifiedLen, &rect, FONT_RENDER_FORMAT, 0xFF000000);
+			rect.left -= 2;
+			rect.right -= 2;
+		}
 	}
-
-	m_pD3DFont->DrawText(m_pChatTextSprite,sz,-1,&rect,DT_NOCLIP|DT_SINGLELINE|DT_LEFT,dwColor);
+	pFontCE->DrawTextA(m_pChatTextSprite, sz, nOriginalLen, &rect, FONT_RENDER_FORMAT, dwColor | 0xFF000000);
 }
 
 //----------------------------------------------------

@@ -26,6 +26,9 @@
 #define CSCANNER_DISTANCE		200.0f
 #define PSCANNER_DISTANCE		600.0f
 
+// 3x 100000 bytes to alloc for string is little bit overkill, isn't it?
+#define MAX_STRING_LENGTH 33000 // 100000
+
 // Shared stuffs
 #include "shared.h"
 
@@ -67,6 +70,7 @@ typedef struct _GAME_SETTINGS {
 #include "net/scriptrpc.h"
 
 #include "runutil.h"
+#include "colorembed.h"
 #include "filehooks.h"
 #include "fontrender.h"
 #include "chatwindow.h"

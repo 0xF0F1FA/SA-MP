@@ -84,7 +84,8 @@ void CPlayerTags::Draw(D3DXVECTOR3 PlayerPos, char* pNameText, DWORD dwColor, fl
 		return;
 
 	RECT rect = {(int)Out.x, (int)Out.y, (int)Out.x+1, (int)Out.y+1};
-	SIZE size = pDefaultFont->MeasureText(pNameText);
+	SIZE size;
+	pDefaultFont->MeasureText(&size, pNameText, DT_LEFT);
 	rect.left -= size.cx/2;
 
 	pDefaultFont->RenderText(pNameText,rect,dwColor);

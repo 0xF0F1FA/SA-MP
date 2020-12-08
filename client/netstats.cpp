@@ -72,7 +72,8 @@ void CNetStats::Draw()
 
 	//m_pD3DDevice->GetDisplayMode(0,&dDisplayMode);
 
-	SIZE size = pDefaultFont->MeasureText(szDispBuf);
+	SIZE size;
+	pDefaultFont->MeasureText(&size, szDispBuf, DT_LEFT);
 
 	RECT rect;
 	rect.top		= 10;

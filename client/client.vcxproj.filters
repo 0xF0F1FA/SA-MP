@@ -324,6 +324,7 @@
       <Filter>sdk\dxut</Filter>
     </ClCompile>
     <ClCompile Include="audiostream.cpp" />
+    <ClCompile Include="colorembed.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -731,6 +732,7 @@
       <Filter>sdk\bass</Filter>
     </ClInclude>
     <ClInclude Include="audiostream.h" />
+    <ClInclude Include="colorembed.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

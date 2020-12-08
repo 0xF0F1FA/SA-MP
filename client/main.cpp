@@ -295,8 +295,10 @@ void DoInitStuff()
 
 		// Create instances of the chat and input classes.
 		pDefaultFont = new CFontRender(pD3DDevice);
-		pChatWindow = new CChatWindow(pD3DDevice,pDefaultFont->m_pD3DFont);
+		pChatWindow = new CChatWindow(pD3DDevice,pDefaultFont);
 		pCmdWindow = new CCmdWindow(pD3DDevice);
+
+		AllocateBufferForColorEmbed();
 
 		// DXUT GUI INITIALISATION
 		OutputDebugString("DXUTGUI creating..");

@@ -401,3 +401,117 @@ const char* GetWeaponName(int iWeaponID)
 }
 
 //----------------------------------------------------
+
+bool IsHexChar(char c)
+{
+	return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
+}
+
+//----------------------------------------------------
+
+bool IsHexCharW(wchar_t c)
+{
+	return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
+}
+
+//----------------------------------------------------
+
+unsigned long GetColorFromStringEmbed(char* szString)
+{
+	char szHex[7] = { 0 }; // [17];
+
+	if (*szString &&
+		*szString == '{' &&
+		*(szString + 1) &&
+		IsHexChar(*(szString + 1)) &&
+		*(szString + 2) &&
+		IsHexChar(*(szString + 2)) &&
+		*(szString + 3) &&
+		IsHexChar(*(szString + 3)) &&
+		*(szString + 4) &&
+		IsHexChar(*(szString + 4)) &&
+		*(szString + 5) &&
+		IsHexChar(*(szString + 5)) &&
+		*(szString + 6) &&
+		IsHexChar(*(szString + 6)) &&
+		*(szString + 7) &&
+		*(szString + 7) == '}')
+	{
+		//memset(szHex, 0, sizeof(szHex));
+		strncpy_s(szHex, szString + 1, 6);
+		return strtoul(szHex, 0, 16);
+	}
+	return -1;
+}
+
+//----------------------------------------------------
+
+unsigned long GetColorFromStringEmbedW(wchar_t* wszString)
+{
+	wchar_t wszHex[7] = { 0 }; // [17];
+
+	if (*wszString &&
+		*wszString == '{' &&
+		*(wszString + 1) &&
+		IsHexCharW(*(wszString + 1)) &&
+		*(wszString + 2) &&
+		IsHexCharW(*(wszString + 2)) &&
+		*(wszString + 3) &&
+		IsHexCharW(*(wszString + 3)) &&
+		*(wszString + 4) &&
+		IsHexCharW(*(wszString + 4)) &&
+		*(wszString + 5) &&
+		IsHexCharW(*(wszString + 5)) &&
+		*(wszString + 6) &&
+		IsHexCharW(*(wszString + 6)) &&
+		*(wszString + 7) &&
+		*(wszString + 7) == '}')
+	{
+		//memset(wszHex, 0, sizeof(wszHex));
+		wcsncpy_s(wszHex, wszString + 1, 6);
+		return wcstoul(wszHex, 0, 16); // wcstoxl ?!
+	}
+	return -1;
+}
+
+//----------------------------------------------------
+
+void RemoveColorEmbedsFromString(char* szString)
+{
+	char* szCurrent, * szNext;
+
+	szCurrent = szString;
+	szNext = szString + 8;
+	while (*szCurrent)
+	{
+		if (GetColorFromStringEmbed(szCurrent) == (unsigned long)-1)
+		{
+			szCurrent++;
+			szNext++;
+		}
+		else
+			strcpy_s(szCurrent, RSIZE_MAX, szNext);
+	}
+	*szCurrent = '\0';
+}
+
+//----------------------------------------------------
+
+int ConvertMultiToWideString(LPCSTR szSource, LPWSTR szDest, int iLen)
+{
+	size_t nSourceLen;
+	int iResult;
+
+	SecureZeroMemory(szDest, sizeof(WCHAR) * iLen);
+
+	nSourceLen = strlen(szSource);
+
+	//iResult = MultiByteToWideChar(CP_ACP, 0, szSource, strlen(nSrcLen), NULL, 0);
+	iResult = MultiByteToWideChar(CP_ACP, 0, szSource, nSourceLen, NULL, 0);
+
+	if (iResult < iLen)
+		//iResult = MultiByteToWideChar(CP_ACP, 0, szSource, strlen(szSource), szDest, iResult);
+		iResult = MultiByteToWideChar(CP_ACP, 0, szSource, nSourceLen, szDest, iResult);
+
+	return iResult;
+}

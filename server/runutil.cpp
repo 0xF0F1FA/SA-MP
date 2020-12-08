@@ -735,11 +735,74 @@ bool ContainsInvalidNickChars(char * szString)
 
 //----------------------------------------------------
 
+bool IsHexChar(char c)
+{
+	return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
+}
+
+//----------------------------------------------------
+
+unsigned long GetColorFromStringEmbed(char* szString)
+{
+	//char szHex[7] = { 0 }; // [17];
+
+	if (*szString &&
+		*szString == '{' &&
+		*(szString + 1) &&
+		IsHexChar(*(szString + 1)) &&
+		*(szString + 2) &&
+		IsHexChar(*(szString + 2)) &&
+		*(szString + 3) &&
+		IsHexChar(*(szString + 3)) &&
+		*(szString + 4) &&
+		IsHexChar(*(szString + 4)) &&
+		*(szString + 5) &&
+		IsHexChar(*(szString + 5)) &&
+		*(szString + 6) &&
+		IsHexChar(*(szString + 6)) &&
+		*(szString + 7) &&
+		*(szString + 7) == '}')
+	{
+		//memset(szHex, 0, sizeof(szHex));
+		//strncpy_s(szHex, szString + 1, 6);
+		//return strtoul(szHex, 0, 16);
+		return 0;
+	}
+	return -1;
+}
+
+//----------------------------------------------------
+
+void RemoveColorEmbedsFromString(char* szString)
+{
+	char* szCurrent, * szNext;
+
+	szCurrent = szString;
+	szNext = szString + 8;
+	while (*szCurrent)
+	{
+		if (GetColorFromStringEmbed(szCurrent) == (unsigned long)-1)
+		{
+			szCurrent++;
+			szNext++;
+		}
+		else
+			strcpy_s(szCurrent, RSIZE_MAX, szNext);
+	}
+	*szCurrent = '\0';
+}
+
+//----------------------------------------------------
+
 void ReplaceBadChars(char * szString)
 {
+	RemoveColorEmbedsFromString(szString);
+
 	while(*szString) {
 		//if(*szString >= 1 && *szString < ' ') *szString = '?';
-		if(*szString == '%') *szString = '?';
+		//if(*szString == '%') *szString = '?';
+		if (*szString == '%' || *szString == '~' && *(szString + 1) == 'k')
+			*szString = '#';
 
 		szString++;
 	}

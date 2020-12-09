@@ -176,7 +176,7 @@ void CChatWindow::Draw()
 
 	if(/*m_pD3DFont &&*/ m_iEnabled)
 	{
-		m_pChatTextSprite->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
+		m_pChatTextSprite->Begin( D3DXSPRITE_ALPHABLEND /*| D3DXSPRITE_SORT_TEXTURE*/ );
 
 		while(x!= m_uiPageSize) {
 

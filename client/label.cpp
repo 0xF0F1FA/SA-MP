@@ -2,65 +2,69 @@
 // Version: $Id: label.cpp,v 1.2 2006/03/20 17:44:19 kyeman Exp $
 //
 
-#include "label.h"
-
-#ifndef SAFE_RELEASE
-	#define SAFE_RELEASE(p)	{ if(p) { (p)->Release(); (p)=NULL; } }
-#endif
+#include "main.h"
 
 extern D3DXMATRIX matView, matProj;
 
-CLabel::CLabel(IDirect3DDevice9* pDevice, char* szFontFace, bool bFontBold)
+CLabel::CLabel(IDirect3DDevice9* pDevice)
 {
-	m_pDevice			= pDevice;
-	m_pFont				= NULL;
-
-	strcpy_s(m_szFontFace, szFontFace);
-	m_bFontBold			= bFontBold;
+	m_pDevice = pDevice;
+	D3DXCreateSprite(pDevice, &m_pSprite);
 }
 
 CLabel::~CLabel()
 {
-	DeleteDeviceObjects();
+	SAFE_RELEASE(m_pSprite);
 }
 
-void CLabel::Draw(D3DXVECTOR3* ppos, char* szText, DWORD dwColor)
+void CLabel::Begin()
 {
-	if (!m_pFont)
-	{
-		RestoreDeviceObjects();
-		if (!m_pFont)
-			return;
-	}
+	if (m_pSprite) m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
+}
+
+void CLabel::End()
+{
+	if (m_pSprite) m_pSprite->End();
+}
+
+int CLabel::IsLineOfSightClear(float fX, float fY, float fZ)
+{
+	CAMERA_AIM* pAimCam = GameGetInternalAim();
+
+	return (int)ScriptCommand(&get_line_of_sight, fX, fY, fZ,
+		pAimCam->pos1x, pAimCam->pos1y, pAimCam->pos1z, 1, 0, 0, 1, 0);
+}
+
+void CLabel::Draw(D3DXVECTOR3* ppos, char* szText, DWORD dwColor, bool bShadowed, bool bDoLOS)
+{
+	if (!m_pDevice && (bDoLOS || !IsLineOfSightClear(ppos->x, ppos->y, ppos->z)))
+		return;
 
 	D3DVIEWPORT9 Viewport;
 	m_pDevice->GetViewport(&Viewport);
 
 	D3DXVECTOR3 Out;
-	D3DXMATRIX matIdent;
-	D3DXMatrixIdentity(&matIdent);
+	D3DXMATRIX matIdent = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
 	D3DXVec3Project(&Out, ppos, &Viewport, &matProj, &matView, &matIdent);
 
-	if (Out.z > 1.0f)
+	if (Out.z >= 1.0f)
 		return;
 
 	RECT rect = {(int)Out.x, (int)Out.y, (int)Out.x+1, (int)Out.y+1};
-	m_pFont->DrawText(NULL, szText, -1, &rect, DT_NOCLIP|DT_CENTER, 0xFF000000);
-	rect.left -= 1; rect.top -= 1;
-	m_pFont->DrawText(NULL, szText, -1, &rect, DT_NOCLIP|DT_CENTER, dwColor);
+	pDefaultFont->RenderSmallerText(m_pSprite, szText, rect, DT_NOCLIP | DT_CENTER, dwColor, bShadowed);
 }
 
 void CLabel::DeleteDeviceObjects()
 {
-	SAFE_RELEASE(m_pFont);
+	if (m_pSprite) m_pSprite->OnLostDevice();
 }
 
 void CLabel::RestoreDeviceObjects()
 {
-	if (!m_pFont)
-	{
-		D3DXCreateFont(m_pDevice, 12, 0, m_bFontBold?FW_BOLD:0,
-			0, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
-			m_szFontFace, &m_pFont);
-	}
+	if (m_pSprite) m_pSprite->OnResetDevice();
 }

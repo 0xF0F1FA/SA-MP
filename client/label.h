@@ -6,22 +6,22 @@
 #ifndef LABEL_H
 #define LABEL_H
 
-#include <d3d9.h>
-#include <d3dx9.h>
-
 class CLabel
 {
 private:
 	IDirect3DDevice9* m_pDevice;
-	ID3DXFont* m_pFont;
+	ID3DXSprite* m_pSprite;
 
-	char m_szFontFace[60];
-	bool m_bFontBold;
 public:
-	CLabel(IDirect3DDevice9* pDevice, char* szFontFace, bool bFontBold);
+	CLabel(IDirect3DDevice9* pDevice);
 	~CLabel();
 
-	void Draw(D3DXVECTOR3* ppos, char* szText, DWORD dwColor);
+	void Begin();
+	void End();
+
+	int IsLineOfSightClear(float fX, float fY, float fZ);
+
+	void Draw(D3DXVECTOR3* ppos, char* szText, DWORD dwColor, bool bShadowed, bool bDoLOS);
 	void DeleteDeviceObjects();
 	void RestoreDeviceObjects();
 };

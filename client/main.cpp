@@ -329,7 +329,7 @@ void DoInitStuff()
 		}
 		
 		OutputDebugString("Labels creating..");
-		pLabel = new CLabel(pD3DDevice, "Verdana", false);
+		pLabel = new CLabel(pD3DDevice);
 
 		// Setting up the commands.
 		OutputDebugString("Setting up commands..");

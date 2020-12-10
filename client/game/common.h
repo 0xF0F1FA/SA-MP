@@ -164,7 +164,10 @@ typedef struct _VEHICLE_TYPE
 	PED_TYPE * pDriver;   // 1120-1124
 	PED_TYPE * pPassengers[7]; // 1124-1152
 
-	PADDING(_pad235,16);  // 1152-1168
+	PADDING(_pad235,8); // 1152-1160
+	BYTE byteNumOfSeats; // 1160-1161
+	PADDING(_pad236, 7); // 1161-1168
+
 	DWORD pFireObject;	 // 1168-1172
 
 	float fSteerAngle1; // 1172-1176

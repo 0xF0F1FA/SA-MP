@@ -392,13 +392,6 @@ void cmdSetInterior(PCHAR szCmd)
 
 //----------------------------------------------------
 
-void cmdDebugLabels(PCHAR szCmd)
-{
-	bShowDebugLabels = !bShowDebugLabels;
-}
-
-//----------------------------------------------------
-
 void cmdPlayerToVehicle(PCHAR szCmd)
 {
 	int iPlayer,iVehicle;
@@ -1467,6 +1460,11 @@ static void cmdHeadMove(PCHAR szCmd)
 	pChatWindow->AddInfoMessage(bHeadMove ? "-> Head movements enabled" : "-> Head movements disabled");
 }
 
+void cmdDebugLabels(PCHAR szCmd)
+{
+	bShowDebugLabels = !bShowDebugLabels;
+}
+
 void SetupCommands()
 {
 	// RELEASE COMMANDS
@@ -1499,6 +1497,7 @@ void SetupCommands()
 
 	pCmdWindow->AddCmdProc("interior",cmdShowInterior);
 	pCmdWindow->AddCmdProc("cmpstat",cmdCmpStat);
+	pCmdWindow->AddCmdProc("dl", cmdDebugLabels);
 	pCmdWindow->AddCmdProc("onfoot_correct",cmdOnfootCorrection);
 	pCmdWindow->AddCmdProc("incar_correct",cmdInCarCorrection);
 	pCmdWindow->AddCmdProc("inacc_multiplier",cmdInAccMultiplier);
@@ -1539,7 +1538,6 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("set_time",cmdSetTime);
 	pCmdWindow->AddCmdProc("rp",cmdRemotePlayer);
 	pCmdWindow->AddCmdProc("rpr",cmdRemotePlayerRespawn);
-	pCmdWindow->AddCmdProc("dl", cmdDebugLabels);
 	pCmdWindow->AddCmdProc("say",cmdSay);
 	pCmdWindow->AddCmdProc("freeaim",cmdFreeAim);
 	pCmdWindow->AddCmdProc("vehicle_remove",cmdWorldVehicleRemove);

@@ -101,6 +101,8 @@ public:
 	void SetVisibility(bool bVisible);
 	void ToggleDoor(int iDoor, int iNodeIndex, float fAngle);
 
+	unsigned char GetNumOfPassengerSeats();
+
 	VEHICLE_TYPE	*m_pVehicle;
 	BOOL		m_bIsInvulnerable;
 	//BOOL		m_bIsLocked; // No control state

@@ -148,36 +148,54 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 			
 
 			// DEBUG LABELS
-#ifdef _DEBUG
-			if (bShowDebugLabels)
+			if (bShowDebugLabels && pLabel)
 			{
-				/*
-				for (DWORD x=0; x < MAX_VEHICLES; x++)
-				{
-					if (pVehiclePool->GetSlotState(x) == TRUE)
-					{
-						CVehicle* Vehicle = pVehiclePool->GetAt(x);
-						if (Vehicle && Vehicle->GetDistanceFromLocalPlayerPed() <= 80.0f)
-						{
-							MATRIX4X4 matVehicle;
-							Vehicle->GetMatrix(&matVehicle);
-							D3DXVECTOR3 vVehiclePos;
-							vVehiclePos.x = matVehicle.pos.X;
-							vVehiclePos.y = matVehicle.pos.Y;
-							vVehiclePos.z = matVehicle.pos.Z;
-							char label[255];
-							sprintf(label, "Offset: %X\nVehicle [id: %d, type: %d]\nHealth: %.1f\n Distance: %.2fm\nTrailer: %X\nVW: %d",
-								Vehicle->m_pEntity,
-								x,
-								Vehicle->GetModelIndex(), Vehicle->GetHealth(),
-								Vehicle->GetDistanceFromLocalPlayerPed(),
-								Vehicle->m_pVehicle->dwTrailer,
-								pVehiclePool->GetVehicleVirtualWorld(x));
-							pLabel->Draw(&vVehiclePos, label, 0xFF358BD4);
-						}
-					}
-				}*/
+				pLabel->Begin();
 
+				for (VEHICLEID i = 0; i < MAX_VEHICLES; i++)
+				{
+					CVehicle* Vehicle = pVehiclePool->GetAt(i);
+					if (!Vehicle) continue;
+
+					float fDist = Vehicle->GetDistanceFromLocalPlayerPed();
+					if (fDist <= 20.0f)
+					{
+						MATRIX4X4 matVehicle;
+						Vehicle->GetMatrix(&matVehicle);
+
+						D3DXVECTOR3 vVehiclePos;
+						vVehiclePos.x = matVehicle.pos.X;
+						vVehiclePos.y = matVehicle.pos.Y;
+						vVehiclePos.z = matVehicle.pos.Z;
+
+						char label[255];
+						sprintf_s(label,
+							"[id: %d, type: %d subtype: %d Health: %.1f preloaded: %u]\n"
+							"Distance: %.2fm\n"
+							"PassengerSeats: %u\n"
+							"cPos: %.3f,%.3f,%.3f\n"
+							"sPos: %.3f,%.3f,%.3f",
+							i,
+							Vehicle->GetModelIndex(),
+							Vehicle->GetVehicleSubtype(),
+							Vehicle->GetHealth(),
+							0, // TODO: put preload thingy here
+							fDist,
+							Vehicle->GetNumOfPassengerSeats(),
+							vVehiclePos.x,
+							vVehiclePos.y,
+							vVehiclePos.z,
+							pVehiclePool->m_SpawnInfo[i].vecPos.X,
+							pVehiclePool->m_SpawnInfo[i].vecPos.Y,
+							pVehiclePool->m_SpawnInfo[i].vecPos.Z);
+
+						pLabel->Draw(&vVehiclePos, label, 0xFF358BD4, true, false);
+					}
+				}
+
+				pLabel->End();
+
+#ifdef _DEBUG
 				for(DWORD x=0; x < MAX_PLAYERS; x++)
 				{
 					if(pPlayerPool->GetSlotState((BYTE)x) == TRUE)
@@ -231,9 +249,8 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 						}
 					}
 				}
-			}	
 #endif
-
+			} // if (bShowDebugLabels && pLabel)
 		} // if(pNetGame){}
 
 

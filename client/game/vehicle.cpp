@@ -971,5 +971,13 @@ void CVehicle::ToggleDoor(int iDoor, int iNodeIndex, float fAngle)
 	}
 }
 
+unsigned char CVehicle::GetNumOfPassengerSeats()
+{
+	if (!m_pVehicle) return 0;
+	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return 0;
+
+	return m_pVehicle->byteNumOfSeats;
+}
+
 //-----------------------------------------------------------
 // EOF

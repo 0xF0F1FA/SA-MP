@@ -325,6 +325,7 @@
     </ClCompile>
     <ClCompile Include="audiostream.cpp" />
     <ClCompile Include="colorembed.cpp" />
+    <ClCompile Include="licenseplate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -733,6 +734,7 @@
     </ClInclude>
     <ClInclude Include="audiostream.h" />
     <ClInclude Include="colorembed.h" />
+    <ClInclude Include="licenseplate.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

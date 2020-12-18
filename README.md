@@ -14,8 +14,6 @@ Feel free to checkout **The Project's Progress**: https://docs.google.com/spread
 2. **Will SAMPE compatible with any official SA-MP version?**
 	No, and never will be compatible, atleast you cannot connect to any SA-MP server with SAMPE client and vice versa. It's a completely different version, just like the other SA-MP 0.3a to 0.3x versions. But the SA-MP server browser, RCON, SA:MP Debug program still can be used, on the server side Pawn is still the default inbuilt scripting language, and still can execute announce module to be seen on the official server lists.
 
-	If you're looking for compatibility with great interface and functions, you should check out OPEN.MP! https://www.open.mp/
-
 3. **Is this have all the SA-MP features from 0.3a to 0.3.7?**
 	Eventually all SA-MP functions will be ported to SAMPE, some of them already implemented like SetVehicleParamsCarDoors(), or SetVehicleParamsCarWindows() which was added in 0.3.7 officially, but still not fully ported yet.
 

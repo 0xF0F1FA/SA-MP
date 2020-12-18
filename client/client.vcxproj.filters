@@ -326,6 +326,9 @@
     <ClCompile Include="audiostream.cpp" />
     <ClCompile Include="colorembed.cpp" />
     <ClCompile Include="licenseplate.cpp" />
+    <ClCompile Include="game\txdstuff.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -735,6 +738,9 @@
     <ClInclude Include="audiostream.h" />
     <ClInclude Include="colorembed.h" />
     <ClInclude Include="licenseplate.h" />
+    <ClInclude Include="game\txdstuff.h">
+      <Filter>game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

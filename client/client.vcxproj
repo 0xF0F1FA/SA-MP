@@ -343,6 +343,7 @@
     </ClCompile>
     <ClCompile Include="game\task.cpp" />
     <ClCompile Include="game\textdraw.cpp" />
+    <ClCompile Include="game\txdstuff.cpp" />
     <ClCompile Include="game\util.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -614,6 +615,7 @@
     <ClInclude Include="game\scripting.h" />
     <ClInclude Include="game\task.h" />
     <ClInclude Include="game\textdraw.h" />
+    <ClInclude Include="game\txdstuff.h" />
     <ClInclude Include="game\util.h" />
     <ClInclude Include="game\vehicle.h" />
     <ClInclude Include="label.h" />

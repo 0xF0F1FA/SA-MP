@@ -22,6 +22,8 @@ void ApplyInGamePatches();
 static bool bInputsDisabled = false;
 static int iInputDisableWaitFrames=0;
 
+PED_TYPE CrimeReportPed;
+
 typedef void (*DrawZone_t)(float *fPos, DWORD *dwColor, BYTE byteMenu);
 
 //-----------------------------------------------------------
@@ -992,4 +994,56 @@ float CGame::GetFPS()
 float CGame::GetAspectRatio()
 {
 	return *(float*)0xC3EFA4;
+}
+/*
+	0x10150B78 unk_10150B78 (block starts)
+	0x10151104 dword_10151104
+	0x10150FE4 dword_10150FE4
+*/
+void CGame::PlayCrimeReport(int iCrimeID, VECTOR* vecPos, /*bool bNeedVehicle,*/
+	int iVehicleType, int iVehicleCol1)
+{
+	PED_TYPE* pPed;
+	CVehicle* pVehicle = NULL;
+	DWORD dwPlayerInfoOffs;
+
+	memset(&CrimeReportPed, 0, sizeof(PED_TYPE));
+
+	//UnFuck(0x4E7529, 39);
+	memset((void*)0x4E7529, 0x90, 39);
+
+	pPed = GamePool_FindPlayerPed();
+
+	if (/*bNeedVehicle &&*/ iVehicleType >= 400 && iVehicleType < 612)
+	{
+		pVehicle = new CVehicle(iVehicleType, 0.0f, 0.0f, 0.0f, 0.0f);
+		if (pVehicle)
+		{
+			pVehicle->Add();
+			pVehicle->SetColor(iVehicleCol1, -1);
+
+			CrimeReportPed.pVehicle = (DWORD)pVehicle->m_pVehicle;
+			CrimeReportPed.dwStateFlags |= 256;
+		}
+	}
+
+	if (pPed)
+	{
+		dwPlayerInfoOffs = pPed->dwPlayerInfoOffset;
+
+		_asm
+		{
+			mov ecx, dwPlayerInfoOffs
+			mov eax, [ecx]
+			lea ecx, [eax+21Ch]
+			push vecPos
+			push iCrimeID
+			push 164
+			mov edx, 0x4E71E0
+			call edx
+		}
+	}
+
+	if (pVehicle)
+		delete pVehicle;
 }

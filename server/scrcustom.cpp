@@ -3001,6 +3001,70 @@ static cell n_StopAudioStreamForPlayer(AMX* amx, cell* params)
 	return 0;
 }
 
+// native PlayCrimeReportForPlayer(playerid, suspectid, crimeid)
+static cell n_PlayCrimeReportForPlayer(AMX* amx, cell* params)
+{
+	CPlayerPool* pPlayerPool;
+	CVehiclePool* pVehiclePool;
+	//CPlayer* pPlayer;
+	CPlayer* pPlayerSuspect;
+	BYTE byteState;
+	CVehicle* pVehicle;
+
+	CHECK_PARAMS(amx, "PlayCrimeReportForPlayer", 3);
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+	pVehiclePool = pNetGame->GetVehiclePool();
+
+	if (pPlayerPool && pVehiclePool)
+	{
+		//pPlayer = pPlayerPool->GetAt(params[1]);
+		pPlayerSuspect = pPlayerPool->GetAt(params[2]);
+
+		if (pPlayerPool->GetSlotState(params[1]) && pPlayerSuspect)
+		{
+			byteState = pPlayerSuspect->GetState();
+
+			if (byteState == PLAYER_STATE_DRIVER || byteState == PLAYER_STATE_PASSENGER)
+			{
+				pVehicle = pVehiclePool->GetAt(pPlayerSuspect->m_VehicleID);
+
+				if (pVehicle)
+				{
+					RakNet::BitStream bs;
+
+					//bs.Write((PLAYERID)params[2]); // suspectid
+					bs.Write1(); // has vehicle
+					bs.Write((unsigned char)(pVehicle->m_SpawnInfo.iVehicleType - 400));
+					bs.Write((unsigned char)pVehicle->m_SpawnInfo.iColor1);
+					bs.Write(params[3]); // crimeid
+					bs.Write(pVehicle->m_matWorld.pos.X);
+					bs.Write(pVehicle->m_matWorld.pos.Y);
+					bs.Write(pVehicle->m_matWorld.pos.Z);
+
+					return pNetGame->SendToPlayer(params[1], RPC_ScrPlayCrimeReport, &bs);
+				}
+			}
+			else if (byteState == PLAYER_STATE_ONFOOT)
+			{
+				RakNet::BitStream bs;
+
+				//bs.Write((PLAYERID)params[2]); // suspectid
+				bs.Write0(); // has vehicle
+				//bs.Write((unsigned char)0); // vehicle mmodel
+				//bs.Write((unsigned char)0); // vehicle pri color
+				bs.Write(params[3]); // crimeid
+				bs.Write(pPlayerSuspect->m_vecPos.X);
+				bs.Write(pPlayerSuspect->m_vecPos.Y);
+				bs.Write(pPlayerSuspect->m_vecPos.Z);
+
+				return pNetGame->SendToPlayer(params[1], RPC_ScrPlayCrimeReport, &bs);
+			}
+		}
+	}
+	return 0;
+}
+
 // native SetPVarInt(playerid, varname[], int_value)
 static cell n_SetPVarInt(AMX* amx, cell* params)
 {

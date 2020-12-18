@@ -1374,6 +1374,16 @@ NUDE CHud_DrawCrossHair_Hook()
 
 //-----------------------------------------------------------
 
+extern PED_TYPE CrimeReportPed;
+
+NUDE CrimeReport_Hook()
+{
+	_asm mov eax, offset CrimeReportPed
+	_asm ret
+}
+
+//-----------------------------------------------------------
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1431,6 +1441,8 @@ void GameInstallHooks()
 	InstallMethodHook(0x86C168, (DWORD)CPed_Render_Hook);
 	InstallMethodHook(0x86C248, (DWORD)CPed_Render_Hook);
 	InstallMethodHook(0x86C3A0, (DWORD)CPed_Render_Hook);
+
+	InstallCallHook(0x4E7427, (DWORD)CrimeReport_Hook);
 
 	/*
 	InstallHook(0x5EFFE0,(DWORD)CPed_Say_Hook,

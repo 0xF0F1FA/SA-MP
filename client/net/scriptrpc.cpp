@@ -1723,6 +1723,37 @@ static void ScrAudioStream(RPCParameters* rpcParams)
 		pAudioStream->Stop();
 }
 
+static void ScrPlayCrimeReport(RPCParameters* rpcParams)
+{
+	//PLAYERID SuspectPlayerID;
+	int iCrimeID;
+	unsigned char ucVehicleModel, ucVehicleColor;
+	VECTOR vecPosition;
+
+	if (rpcParams->numberOfBitsOfData == 145 ||
+		rpcParams->numberOfBitsOfData == 129)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		//bsData.Read(SuspectPlayerID);
+
+		ucVehicleModel = ucVehicleColor = 255;
+
+		if (bsData.ReadBit())
+		{
+			bsData.Read(ucVehicleModel);
+			bsData.Read(ucVehicleColor);
+		}
+
+		bsData.Read(iCrimeID);
+		bsData.Read(vecPosition.X);
+		bsData.Read(vecPosition.Y);
+		bsData.Read(vecPosition.Z);
+
+		CGame::PlayCrimeReport(iCrimeID, &vecPosition, ucVehicleModel + 400, ucVehicleColor);
+	}
+}
+
 //----------------------------------------------------
 
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
@@ -1811,6 +1842,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetScore);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetShopName);
 	REGISTER_STATIC_RPC(pRakClient, ScrAudioStream);
+	REGISTER_STATIC_RPC(pRakClient, ScrPlayCrimeReport);
 }
 
 //----------------------------------------------------

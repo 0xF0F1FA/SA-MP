@@ -139,6 +139,7 @@ enum
 	RPC_ScrSetScore,
 	RPC_ScrSetShopName,
 	RPC_ScrAudioStream,
+	RPC_ScrPlayCrimeReport,
 
 	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };

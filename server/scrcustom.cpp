@@ -7178,6 +7178,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SetPlayerDrunkLevel),
 	DEFINE_NATIVE(PlayAudioStreamForPlayer),
 	DEFINE_NATIVE(StopAudioStreamForPlayer),
+	DEFINE_NATIVE(PlayCrimeReportForPlayer),
 
 	// Player Variable
 	DEFINE_NATIVE(SetPVarInt),

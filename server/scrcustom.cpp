@@ -1479,6 +1479,27 @@ static cell n_RepairVehicle(AMX* amx, cell* params)
 	return 0;
 }
 
+// native ExplodeVehicle(vehicleid)
+static cell n_ExplodeVehicle(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "ExplodeVehicle", 1);
+
+	// TODO: Add marking for script explosion on sync update
+
+	CVehiclePool* pPool = pNetGame->GetVehiclePool();
+	if (pPool && pPool->GetSlotState(params[1]))
+	{
+		RakNet::BitStream bs;
+
+		bs.Write<unsigned char>(9);
+		bs.Write((VEHICLEID)params[1]);
+
+		return (cell)pNetGame->GetRakServer()->RPC(RPC_ScrSetVehicle, &bs, HIGH_PRIORITY,
+			RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+	}
+	return 0;
+}
+
 // native SetVehicleParamsCarDoors(vehicleid, driver, passenger, backleft, backright)
 static cell n_SetVehicleParamsCarDoors(AMX* amx, cell* params)
 {
@@ -7244,6 +7265,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetVehicleSpawnInfo),
 	DEFINE_NATIVE(SetVehicleSpawnInfo),
 	DEFINE_NATIVE(RepairVehicle),
+	DEFINE_NATIVE(ExplodeVehicle),
 	DEFINE_NATIVE(SetVehicleParamsCarDoors),
 	DEFINE_NATIVE(GetVehicleParamsCarDoors),
 	DEFINE_NATIVE(SetVehicleParamsCarWindows),

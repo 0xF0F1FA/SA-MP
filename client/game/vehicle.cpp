@@ -637,6 +637,45 @@ void CVehicle::SetTrainSpeed(float fSpeed)
 
 //-----------------------------------------------------------
 
+void CVehicle::Explode()
+{
+	DWORD dwThis = (DWORD)m_pVehicle;
+	DWORD dwFunc = 0;
+
+	switch (GetVehicleSubtype())
+	{
+	case VEHICLE_SUBTYPE_CAR:
+		dwFunc = 0x6B3780;
+		break;
+	case VEHICLE_SUBTYPE_BIKE:
+		dwFunc = 0x6BEA10;
+		break;
+	case VEHICLE_SUBTYPE_HELI:
+		dwFunc = 0x6C6D30;
+		break;
+	case VEHICLE_SUBTYPE_BOAT:
+		dwFunc = 0x6F21B0;
+		break;
+	case VEHICLE_SUBTYPE_PLANE:
+		dwFunc = 0x6CCCF0;
+		break;
+	//case VEHICLE_SUBTYPE_PUSHBIKE:
+		//dwFunc = 0x6C0560; // does nothing
+		//break;
+	//case VEHICLE_SUBTYPE_TRAIN:
+		//dwFunc = 0x6D6340; // does nothing
+		//break;
+	}
+
+	if (dwFunc != 0)
+	{
+		_asm mov ecx, dwThis
+		_asm call dwFunc
+	}
+}
+
+//-----------------------------------------------------------
+
 void CVehicle::Fix()
 {
 	DWORD dwThis = (DWORD)m_pVehicle;

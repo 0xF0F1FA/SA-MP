@@ -1436,6 +1436,10 @@ static void ScrSetVehicle(RPCParameters* rpcParams)
 					}
 					break;
 				}
+				case 9:
+				{
+					pVehicle->Explode();
+					break;
 				}
 			}
 		}

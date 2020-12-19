@@ -73,6 +73,7 @@ native SetVehicleNumberPlate(vehicleid, const numberplate[]);
 native GetVehicleNumberPlate(vehicleid, numberplate[], len = sizeof(numberplate));
 native GetVehicleModel(vehicleid);
 native RepairVehicle(vehicleid);
+native ExplodeVehicle(vehicleid);
 native SetVehicleVirtualWorld(vehicleid, worldid);
 native GetVehicleVirtualWorld(vehicleid);
 native ToggleTaxiLight(vehicleid, toggle);

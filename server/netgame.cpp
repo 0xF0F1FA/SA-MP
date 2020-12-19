@@ -68,6 +68,7 @@ CNetGame::CNetGame()
 	m_fNameTagDrawDistance = 70.0f;
 	m_bDisableEnterExits = false;
 	m_bDisableVehMapIcons = false;
+	m_bManualEngineAndLights = false;
 	m_uiMaxRconAttempt = 3;
 	m_bNameTagLOS = true;
 
@@ -1301,6 +1302,7 @@ void CNetGame::InitGameForPlayer(BYTE bytePlayerID)
 	bsInitGame.Write(m_bStuntBonus);
 	bsInitGame.Write(m_fNameTagDrawDistance);
 	bsInitGame.Write(m_bDisableEnterExits);
+	bsInitGame.Write(m_bManualEngineAndLights);
 	bsInitGame.Write(m_bDisableVehMapIcons);
 	bsInitGame.Write(m_bNameTagLOS);
 	bsInitGame.Write(sOnfootRate);

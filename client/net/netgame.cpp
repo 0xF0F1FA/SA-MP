@@ -91,6 +91,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	m_bShowPlayerTags = true;
 	m_bTirePopping = true;
 	m_fGlobalMarkerRadius = 10000.0f;
+	m_bManualEngineAndLights = false;
 
 	m_WorldBounds[0] = m_WorldBounds[2] = 20000.0f;
 	m_WorldBounds[1] = m_WorldBounds[3] = -20000.0f;

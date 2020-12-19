@@ -197,6 +197,29 @@ void ApplyDebugLevelPatches()
 
 //----------------------------------------------------------
 
+void ApplyManualVehicleLightsPatch()
+{
+	static bool bInited = false;
+	if (bInited)
+	{
+		memset((void*)0x6E1BE3, 0x90, 37);
+		memset((void*)0x6E1C38, 0x90, 8);
+		memset((void*)0x6E1D98, 0x90, 15);
+		memset((void*)0x6E1DBC, 0x90, 8);
+		memset((void*)0x6E1BA0, 0x90, 6);
+		memset((void*)0x6E1BB1, 0x90, 6);
+		memset((void*)0x6E1BD2, 0x90, 7);
+
+		const BYTE byteVehicleLightRenderPatch[] = { 0x8A,0x86,0x28,0x04,0x00,0x00,0xA8,0x40,0x74,0x28 };
+		memcpy((void*)0x6E1BE5, byteVehicleLightRenderPatch, sizeof(byteVehicleLightRenderPatch));
+
+		// There's an another global variable set here to 1, but it's unused?
+		bInited = true;
+	}
+}
+
+//----------------------------------------------------------
+
 bool ApplyPreGamePatches()
 {	
 	BYTE * pbyteVersionDetermination = (PBYTE)ADDR_BYPASS_VIDS_USA10;

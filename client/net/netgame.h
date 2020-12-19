@@ -81,6 +81,7 @@ public:
 	int			m_iGameState;
 	bool		m_bLanMode;
 	bool		m_bNameTagLOS;
+	bool		m_bManualEngineAndLights;
 
 	char		m_szHostName[256];
 	char		m_szHostOrIp[256];

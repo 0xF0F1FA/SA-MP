@@ -16,6 +16,7 @@ using namespace RakNet;
 //#define UNREGISTER_STATIC_RPC UNREGISTER_AS_REMOTE_PROCEDURE_CALL
 
 void ProcessIncommingEvent(BYTE bytePlayerID, int iEventType, DWORD dwParam1, DWORD dwParam2, DWORD dwParam3);
+void ApplyManualVehicleLightsPatch();
 
 //----------------------------------------------------
 // Sent when a client joins the server we're
@@ -96,6 +97,7 @@ void InitGame(RPCParameters *rpcParams)
 	bsInitGame.Read(pNetGame->m_fGlobalMarkerRadius);
 	bsInitGame.Read(bStuntBonus);
 	bsInitGame.Read(pNetGame->m_fNameTagDrawDistance);
+	bsInitGame.Read(pNetGame->m_bManualEngineAndLights);
 	bsInitGame.Read(pNetGame->m_bDisableEnterExits);
 	bsInitGame.Read(pNetGame->m_bDisableVehMapIcons);
 	bsInitGame.Read(pNetGame->m_bNameTagLOS);
@@ -114,6 +116,9 @@ void InitGame(RPCParameters *rpcParams)
 	if (bLanMode) pNetGame->SetLanMode(true);
 
 	//pNetGame->InitGameLogic();
+	
+	if (pNetGame->m_bManualEngineAndLights)
+		ApplyManualVehicleLightsPatch();
 
 	// Set the gravity now
 	pGame->SetGravity(pNetGame->m_fGravity);

@@ -92,6 +92,7 @@ public:
 	bool m_bDisableEnterExits; // Interior enter/exits disabled?
 	bool m_bDisableVehMapIcons;
 	unsigned int m_uiMaxRconAttempt;
+	bool m_bManualEngineAndLights;
 
 	RakNet::Time32 m_iInitialTime;
 

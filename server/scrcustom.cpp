@@ -3351,6 +3351,16 @@ static cell n_SetVehicleParamsForPlayer(AMX *amx, cell *params)
 	return 1;
 }
 
+// native ManualVehicleEngineAndLights()
+static cell n_ManualVehicleEngineAndLights(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "ManualVehicleEngineAndLights", 0);
+
+	pNetGame->m_bManualEngineAndLights = true;
+
+	return 1;
+}
+
 // native SetPlayerScore(playerid,score)
 static cell n_SetPlayerScore(AMX *amx, cell *params)
 {	
@@ -7210,6 +7220,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetVehicleZAngle",		n_SetVehicleZAngle },
 	DEFINE_NATIVE(GetVehicleDistanceFromPoint),
 	{ "SetVehicleParamsForPlayer",	n_SetVehicleParamsForPlayer },
+	DEFINE_NATIVE(ManualVehicleEngineAndLights),
 	{ "SetVehicleToRespawn",	n_SetVehicleToRespawn },
 	{ "AddVehicleComponent",	n_AddVehicleComponent },
 	{ "RemoveVehicleComponent",	n_RemoveVehicleComponent },

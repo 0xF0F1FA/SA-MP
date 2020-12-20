@@ -2138,3 +2138,22 @@ void CPlayerPed::LoadShoppingData(char* szSectionName)
 		add esp, 4
 	}
 }
+
+VECTOR* CPlayerPed::GetBonePosition(int iBoneID, VECTOR* pPos)
+{
+	if (m_pPed && m_pPed->entity.vtable != ADDR_PLACEABLE_VTBL) return 0;
+
+	DWORD dwThis = (DWORD)m_pPed;
+	VECTOR* pReturn;
+	_asm
+	{
+		push 0
+		push iBoneID
+		push pPos
+		mov ecx, m_pPed
+		mov edx, 0x5E4280
+		call edx
+		mov pReturn, eax
+	}
+	return pReturn;
+}

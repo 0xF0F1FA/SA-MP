@@ -46,6 +46,7 @@ public:
 	BOOL  HasSunk();
 	BOOL  IsWrecked();
 	BOOL  IsDriverLocalPlayer();
+	bool  IsVehicleMatchesPedVehicle();
 	BOOL  IsATrainPart();
 	BOOL  HasTurret();
 
@@ -68,11 +69,14 @@ public:
 	BOOL    IsSirenOn();
 	void    SetLandingGearState(eLandingGearState state);
 	eLandingGearState	GetLandingGearState();
+	bool	IsLandingGearNotUp();
+	void	SetLandingGearState(bool bUpState);
 	void	SetInvulnerable(BOOL bInv);
 	BOOL	IsInvulnerable() { return m_bIsInvulnerable; };
 	void    SetEngineState(BOOL bState);
 	void	SetDoorState(int iState);
 	void	LinkToInterior(int iInterior);
+	bool	IsPrimaryPedInVehicle();
 	void	SetWheelPopped(DWORD wheelid, DWORD popped);
 	BYTE	GetWheelPopped(DWORD wheelid);
 	void	AttachTrailer();
@@ -80,6 +84,14 @@ public:
 	void    SetTrailer(CVehicle *pTrailer);
 	CVehicle* GetTrailer();
 	BOOL	IsRCVehicle();
+
+	void UpdateDamage(int iPanels, int iDoors, unsigned char ucLights);
+	int GetCarPanelsDamageStatus();
+	int GetCarDoorsDamageStatus();
+	unsigned char GetCarLightsDamageStatus();
+
+	void SetCarOrBikeWheelStatus(unsigned char ucStatus);
+	unsigned char GetCarOrBikeWheelStatus();
 
 	BOOL	IsOccupied();
 	void    Recreate();

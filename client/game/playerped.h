@@ -183,6 +183,8 @@ public:
 	void SetEntryExit(char* szSectionName);
 	void LoadShoppingData(char* szSectionName);
 
+	VECTOR* GetBonePosition(int iBoneID, VECTOR* pPos);
+
 	PED_TYPE    *m_pPed;
 	BYTE		m_bytePlayerNumber;
 	DWORD		m_dwMarkerID;

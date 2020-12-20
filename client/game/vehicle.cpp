@@ -234,6 +234,24 @@ void CVehicle::LinkToInterior(int iInterior)
 }
 
 //-----------------------------------------------------------
+
+bool CVehicle::IsPrimaryPedInVehicle()
+{
+	PED_TYPE* pPed;
+
+	if (!m_pVehicle) return false;
+	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return false;
+
+	pPed = m_pVehicle->pDriver;
+
+	if (pPed && IN_VEHICLE(pPed) && !pPed->dwPedType)
+	{
+		return true;
+	}
+	return false;
+}
+
+//-----------------------------------------------------------
 // If the game has internally destroyed the vehicle
 // during this frame, the vehicle pointer should become 0
 
@@ -436,6 +454,23 @@ BOOL CVehicle::IsDriverLocalPlayer()
 
 //-----------------------------------------------------------
 
+bool CVehicle::IsVehicleMatchesPedVehicle()
+{
+	PED_TYPE* pPed;
+
+	if (m_pVehicle)
+	{
+		pPed = GamePool_FindPlayerPed();
+		if (pPed && IN_VEHICLE(pPed) && (DWORD)m_pVehicle == pPed->pVehicle)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+//-----------------------------------------------------------
+
 BOOL CVehicle::IsATrainPart()
 {
 	int nModel;
@@ -496,6 +531,45 @@ eLandingGearState CVehicle::GetLandingGearState()
 		return LGS_DOWN;
 	else
 		return LGS_CHANGING;
+}
+
+//-----------------------------------------------------------
+
+bool CVehicle::IsLandingGearNotUp()
+{
+	return
+		m_pVehicle &&
+		GetVehicleSubtype() == VEHICLE_SUBTYPE_PLANE &&
+		m_pVehicle->fPlaneLandingGear != 0.0f;
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::SetLandingGearState(bool bUpState)
+{
+	DWORD dwThis = (DWORD)m_pVehicle;
+
+	if (m_pVehicle && GetVehicleSubtype() == VEHICLE_SUBTYPE_PLANE)
+	{
+		if (bUpState && m_pVehicle->fPlaneLandingGear == 0.0f)
+		{
+			_asm
+			{
+				mov ecx, dwThis
+				mov edx, 0x6CAC20
+				call edx
+			}
+		}
+		else if (!bUpState && m_pVehicle->fPlaneLandingGear == 1.0f)
+		{
+			_asm
+			{
+				mov ecx, dwThis
+				mov edx, 0x6CAC70
+				call edx
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------
@@ -625,14 +699,22 @@ float CVehicle::GetTankRotY()
 
 float CVehicle::GetTrainSpeed()
 {
-	return m_pVehicle->fTrainSpeed;
+	if (m_pVehicle)
+	{
+		return m_pVehicle->fTrainSpeed;
+	}
+	return 0.0f;
 }
 
 //-----------------------------------------------------------
 
 void CVehicle::SetTrainSpeed(float fSpeed)
 {
-	m_pVehicle->fTrainSpeed = fSpeed;
+	if (fSpeed <= 100.0f && fSpeed >= -100.0f)
+	{
+		if(m_pVehicle)
+			m_pVehicle->fTrainSpeed = fSpeed;
+	}
 }
 
 //-----------------------------------------------------------
@@ -797,6 +879,143 @@ BOOL CVehicle::IsRCVehicle()
 		}
 	}
 	return FALSE;
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::UpdateDamage(int iPanels, int iDoors, unsigned char ucLights)
+{
+	DWORD dwThis = (DWORD)m_pVehicle;
+	unsigned int uiSubtype;
+
+	if (m_pVehicle)
+	{
+		uiSubtype = GetVehicleSubtype();
+
+		if (uiSubtype == VEHICLE_SUBTYPE_CAR || uiSubtype == VEHICLE_SUBTYPE_PLANE)
+		{
+			if (iPanels || iDoors || ucLights || !m_pVehicle->dwPanelsDamageStatus &&
+				!m_pVehicle->dwDoorsDamageStatus && !m_pVehicle->dwLightsDamageStatus)
+			{
+				m_pVehicle->dwPanelsDamageStatus = iPanels;
+				m_pVehicle->dwDoorsDamageStatus = iDoors;
+				m_pVehicle->dwLightsDamageStatus = ucLights;
+
+				_asm
+				{
+					mov ecx, dwThis
+					mov edx, 0x6B3E90
+					call edx
+				}
+			}
+			else
+			{
+				_asm
+				{
+					mov ecx, dwThis
+					mov edx, 0x6A3440
+					call edx
+				}
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
+int CVehicle::GetCarPanelsDamageStatus()
+{
+	if (m_pVehicle && GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
+	{
+		return (int)m_pVehicle->dwPanelsDamageStatus;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------
+
+int CVehicle::GetCarDoorsDamageStatus()
+{
+	if (m_pVehicle && GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
+	{
+		return (int)m_pVehicle->dwDoorsDamageStatus;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------
+
+unsigned char CVehicle::GetCarLightsDamageStatus()
+{
+	if (m_pVehicle && GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
+	{
+		return (unsigned char)m_pVehicle->dwLightsDamageStatus;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::SetCarOrBikeWheelStatus(unsigned char ucStatus)
+{
+	unsigned int uiSubtype;
+	
+	if (m_pVehicle)
+	{
+		uiSubtype = GetVehicleSubtype();
+
+		if (uiSubtype == VEHICLE_SUBTYPE_CAR)
+		{
+			m_pVehicle->bCarWheelPopped[0] = (ucStatus & 0b1000) != 0;
+			m_pVehicle->bCarWheelPopped[1] = (ucStatus & 0b0100) != 0;
+			m_pVehicle->bCarWheelPopped[2] = (ucStatus & 0b0010) != 0;
+			m_pVehicle->bCarWheelPopped[3] = (ucStatus & 0b0001) != 0;
+		}
+		else if (uiSubtype == VEHICLE_SUBTYPE_BIKE)
+		{
+			m_pVehicle->bBikeWheelPopped[0] = (ucStatus & 0b10) != 0;
+			m_pVehicle->bBikeWheelPopped[1] = (ucStatus & 0b01) != 0;
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
+unsigned char CVehicle::GetCarOrBikeWheelStatus()
+{
+	unsigned int uiSubtype;
+	unsigned char ucRet;
+
+	ucRet = 0;
+
+	if (m_pVehicle)
+	{
+		uiSubtype = GetVehicleSubtype();
+	
+		if (uiSubtype == VEHICLE_SUBTYPE_CAR)
+		{
+			if (m_pVehicle->bCarWheelPopped[0])
+				ucRet |= 1;
+			ucRet <<= 1;
+			if (m_pVehicle->bCarWheelPopped[1])
+				ucRet |= 1;
+			ucRet <<= 1;
+			if (m_pVehicle->bCarWheelPopped[2])
+				ucRet |= 1;
+			ucRet <<= 1;
+			if (m_pVehicle->bCarWheelPopped[3])
+				ucRet |= 1;
+		}
+		else if (uiSubtype == VEHICLE_SUBTYPE_BIKE)
+		{
+			if (m_pVehicle->bBikeWheelPopped[0])
+				ucRet |= 1;
+			ucRet <<= 1;
+			if (m_pVehicle->bBikeWheelPopped[1])
+				ucRet |= 1;
+		}
+	}
+	return ucRet;
 }
 
 //-----------------------------------------------------------

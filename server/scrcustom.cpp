@@ -2552,6 +2552,34 @@ static cell n_GetVehicleParamsSirenState(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetVehicleDamageStatus(vehicleid, &panels, &doors, &lights, &tires);
+static cell n_GetVehicleDamageStatus(AMX* amx, cell* params)
+{
+	CVehicle* pVehicle;
+	cell* cptr;
+
+	CHECK_PARAMS(amx, "GetVehicleDamageStatus", 5);
+
+	if (pNetGame->GetVehiclePool())
+	{
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle != NULL)
+		{
+			if (amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+				*cptr = pVehicle->m_iPanelDamageStatus;
+			if (amx_GetAddr(amx, params[3], &cptr) == AMX_ERR_NONE)
+				*cptr = pVehicle->m_iDoorDamageStatus;
+			if (amx_GetAddr(amx, params[4], &cptr) == AMX_ERR_NONE)
+				*cptr = pVehicle->m_ucLightDamageStatus;
+			if (amx_GetAddr(amx, params[5], &cptr) == AMX_ERR_NONE)
+				*cptr = pVehicle->m_ucTireDamageStatus;
+
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // native UpdateVehicleDamageStatus(vehicleid, panels, doors, lights, tires)
 static cell n_UpdateVehicleDamageStatus(AMX* amx, cell* params)
 {
@@ -7315,6 +7343,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SetVehicleVisibility),
 	DEFINE_NATIVE(GetVehicleModelInfo),
 	DEFINE_NATIVE(GetVehicleParamsSirenState),
+	DEFINE_NATIVE(GetVehicleDamageStatus),
 	DEFINE_NATIVE(UpdateVehicleDamageStatus),
 
 	// Messaging

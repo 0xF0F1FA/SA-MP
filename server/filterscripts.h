@@ -82,6 +82,7 @@ public:
 	int OnPlayerStunt(cell playerid, cell vehicleid);
 	void OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
 	int OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
+	void OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
 };
 
 //----------------------------------------------------------------------------------

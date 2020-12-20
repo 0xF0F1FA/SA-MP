@@ -515,3 +515,4 @@ forward OnIncomingConnection(playerid, ip_address[], port);
 forward OnTrailerUpdate(playerid, vehicleid);
 forward OnPlayerStunt(playerid, vehicleid);
 forward OnVehicleSirenStateChange(playerid, vehicleid, newstate);
+forward OnVehicleDamageStatusUpdate(vehicleid, playerid);

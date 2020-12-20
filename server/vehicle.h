@@ -57,6 +57,11 @@ public:
 	VEHICLE_OPEN_CLOSE_FLAG m_Windows;
 	VEHICLE_OPEN_CLOSE_FLAG m_Doors;
 
+	int m_iPanelDamageStatus;
+	int m_iDoorDamageStatus;
+	unsigned char m_ucLightDamageStatus;
+	unsigned char m_ucTireDamageStatus;
+
 	bool m_bOnItsSide;
 	bool m_bUpsideDown;
 	bool m_bSirenOn;
@@ -89,6 +94,7 @@ public:
 	bool HandleSiren(unsigned char ucPlayerId, bool bSirenState);
 
 	void Update(BYTE bytePlayerID, MATRIX4X4 * matWorld, float fHealth, VEHICLEID TrailerID);
+	void UpdateDamage(PLAYERID PlayerID, int iPanels, int iDoors, unsigned char ucLights, unsigned char ucTires);
 
 	float GetDistanceFromPoint(float fX, float fY, float fZ);
 

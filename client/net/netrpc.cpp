@@ -428,6 +428,38 @@ void VehicleSpawn(RPCParameters *rpcParams)
 
 //----------------------------------------------------
 
+static void VehicleDamage(RPCParameters* rpcParams)
+{
+	CVehiclePool* pVehiclePool;
+	CVehicle* pVehicle;
+	VEHICLEID VehicleID;
+	int iPanelsStatus, iDoorsStatus;
+	unsigned char ucLightsStatus, ucWheelStatus;
+
+	pVehiclePool = pNetGame->GetVehiclePool();
+
+	if (rpcParams->numberOfBitsOfData == 96 && pVehiclePool)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(VehicleID);
+		
+		pVehicle = pVehiclePool->GetAt(VehicleID);
+		if (pVehicle != NULL)
+		{
+			bsData.Read(iPanelsStatus);
+			bsData.Read(iDoorsStatus);
+			bsData.Read(ucLightsStatus);
+			bsData.Read(ucWheelStatus);
+
+			pVehicle->UpdateDamage(iPanelsStatus, iDoorsStatus, ucLightsStatus);
+			pVehicle->SetCarOrBikeWheelStatus(ucWheelStatus);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void SetCheckpoint(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
@@ -816,6 +848,7 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,ExitVehicle);
 	REGISTER_STATIC_RPC(pRakClient,VehicleSpawn);
 	REGISTER_STATIC_RPC(pRakClient,VehicleDestroy);
+	REGISTER_STATIC_RPC(pRakClient,VehicleDamage);
 	REGISTER_STATIC_RPC(pRakClient,SetCheckpoint); //14
 	REGISTER_STATIC_RPC(pRakClient,DisableCheckpoint);
 	REGISTER_STATIC_RPC(pRakClient,SetRaceCheckpoint);

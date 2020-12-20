@@ -100,3 +100,4 @@ native SetVehicleFeature(vehicleid, toggle);
 native SetVehicleVisibility(vehicleid, visible);
 native GetVehicleModelInfo(vehiclemodel, infotype, &Float:X, &Float:Y, &Float:Z);
 native GetVehicleParamsSirenState(vehicleid);
+native UpdateVehicleDamageStatus(vehicleid, panels, doors, lights, tires);

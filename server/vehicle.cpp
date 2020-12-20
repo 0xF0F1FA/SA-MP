@@ -51,6 +51,11 @@ CVehicle::CVehicle( int iModel, VECTOR *vecPos, float fRotation, int iColor1,
 	m_Windows = { 1, 1, 1, 1 }; // Close all window 
 	m_Doors = { 0,0,0,0 }; // Close all doors
 
+	m_iPanelDamageStatus = 0;
+	m_iDoorDamageStatus = 0;
+	m_ucLightDamageStatus = 0;
+	m_ucTireDamageStatus = 0;
+
 	m_bOnItsSide = false;
 	m_bUpsideDown = false;
 	m_bSirenOn = false;
@@ -92,6 +97,36 @@ void CVehicle::Update(BYTE bytePlayerID, MATRIX4X4 * matWorld, float fHealth, VE
 	m_bHasBeenOccupied = true;
 
 	if(m_fHealth <= 0.0f) m_bDead = true;
+}
+
+//----------------------------------------------------
+// Stores and broadcast vehicle damage statuses
+
+void CVehicle::UpdateDamage(PLAYERID PlayerID, int iPanels, int iDoors, unsigned char ucLights, unsigned char ucTires)
+{
+	RakNet::BitStream bsSend;
+
+	m_iDoorDamageStatus = iDoors;
+	m_iPanelDamageStatus = iPanels;
+	m_ucLightDamageStatus = ucLights;
+	m_ucTireDamageStatus = ucTires;
+
+	bsSend.Write(m_VehicleID);
+	bsSend.Write(m_iPanelDamageStatus);
+	bsSend.Write(m_iDoorDamageStatus);
+	bsSend.Write(m_ucLightDamageStatus);
+	bsSend.Write(m_ucTireDamageStatus);
+
+	if (PlayerID != INVALID_PLAYER_ID)
+	{
+		if (pNetGame->GetFilterScripts())
+			pNetGame->GetFilterScripts()->OnVehicleDamageStatusUpdate(m_VehicleID, PlayerID);
+
+		if (pNetGame->GetGameMode())
+			pNetGame->GetGameMode()->OnVehicleDamageStatusUpdate(m_VehicleID, PlayerID);
+	}
+
+	pNetGame->BroadcastVehicleRPC(RPC_VehicleDamage, &bsSend, m_VehicleID, PlayerID);
 }
 
 //----------------------------------------------------

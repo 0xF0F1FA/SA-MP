@@ -19,6 +19,7 @@ enum
 	RPC_InitGame,
 	RPC_VehicleSpawn,
 	RPC_VehicleDestroy,
+	RPC_VehicleDamage,
 	RPC_SetCheckpoint,
 	RPC_DisableCheckpoint,
 	RPC_SetRaceCheckpoint,

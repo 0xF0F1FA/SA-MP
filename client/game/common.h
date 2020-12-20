@@ -136,6 +136,7 @@ typedef struct _PED_TYPE
 
 //-----------------------------------------------------------
 
+#pragma pack(1)
 typedef struct _VEHICLE_TYPE
 {
 	ENTITY_TYPE entity; // 0-184
@@ -195,7 +196,11 @@ typedef struct _VEHICLE_TYPE
 			PADDING(_pad2422,1); // 1448-1449
 		};
 	};
-	PADDING(_pad243, 179);  // 1449-1628
+	DWORD dwDoorsDamageStatus; // 1449-1453
+	PADDING(_pad1453, 3); // 1453-1456
+	DWORD dwLightsDamageStatus; // 1456-1460
+	DWORD dwPanelsDamageStatus; // 1460-1464
+	PADDING(_pad1464, 164);  // 1464-1628
 	BYTE bBikeWheelPopped[2]; // 1628-1630
 	PADDING(_pad244, 526);  // 1630-2156
 	DWORD dwHydraThrusters; // 2156-2160

@@ -2552,6 +2552,27 @@ static cell n_GetVehicleParamsSirenState(AMX* amx, cell* params)
 	return 0;
 }
 
+// native UpdateVehicleDamageStatus(vehicleid, panels, doors, lights, tires)
+static cell n_UpdateVehicleDamageStatus(AMX* amx, cell* params)
+{
+	CVehicle* pVehicle;
+
+	CHECK_PARAMS(amx, "UpdateVehicleDamageStatus", 5);
+
+	if (pNetGame->GetVehiclePool())
+	{
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle != NULL)
+		{
+			pVehicle->UpdateDamage(INVALID_PLAYER_ID, params[2], params[3],
+				(unsigned char)params[4], (unsigned char)params[5]);
+
+			return 1;
+		}
+	}
+	return 0;
+}
+
 //----------------------------------------------------------------------------------
 
 // native SendClientMessage(playerid, color, const message[])
@@ -7294,6 +7315,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SetVehicleVisibility),
 	DEFINE_NATIVE(GetVehicleModelInfo),
 	DEFINE_NATIVE(GetVehicleParamsSirenState),
+	DEFINE_NATIVE(UpdateVehicleDamageStatus),
 
 	// Messaging
 	{ "SendClientMessage",		n_SendClientMessage },

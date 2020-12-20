@@ -1230,3 +1230,20 @@ int CFilterScripts::OnVehicleSirenStateChange(cell playerid, cell vehicleid, cel
 	}
 	return ret;
 }
+
+void CFilterScripts::OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid)
+{
+	int idx = 0;
+	for (char i = 0; i < MAX_FILTER_SCRIPTS; i++)
+	{
+		if (m_pFilterScripts[i] == NULL)
+			continue;
+
+		if (!amx_FindPublic(m_pFilterScripts[i], "OnVehicleDamageStatusUpdate", &idx))
+		{
+			amx_Push(m_pFilterScripts[i], playerid);
+			amx_Push(m_pFilterScripts[i], vehicleid);
+			amx_Exec(m_pFilterScripts[i], NULL, idx);
+		}
+	}
+}

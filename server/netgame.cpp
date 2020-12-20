@@ -722,6 +722,34 @@ bool CNetGame::SendToAll(UniqueID nUniqId, RakNet::BitStream* pBitStream)
 	return m_pRak->RPC(nUniqId, pBitStream, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
 }
 
+// TODO: Uncomment IsVehicleStreamedIn() when it's done
+void CNetGame::BroadcastVehicleRPC(UniqueID UniqueID, RakNet::BitStream* bitStream,
+	VEHICLEID VehicleID, PLAYERID ExludedPlayer)
+{
+	int iPoolSize, iPlayerIndex;
+	CPlayer* pPlayer;
+
+	if (m_pPlayerPool && m_pVehiclePool)
+	{
+		iPoolSize = m_pPlayerPool->GetLastPlayerId();
+		iPlayerIndex = 0;
+
+		for (; iPlayerIndex < MAX_PLAYERS; iPlayerIndex++)
+		{
+			if (m_pPlayerPool->GetSlotState(iPlayerIndex) && iPlayerIndex != ExludedPlayer)
+			{
+				pPlayer = m_pPlayerPool->GetAt(iPlayerIndex);
+
+				if (pPlayer && VehicleID < MAX_VEHICLES /*&& pPlayer->IsVehicleStreamedIn(VehicleID)*/)
+				{
+					m_pRak->RPC(UniqueID, bitStream, HIGH_PRIORITY,	RELIABLE, 0,
+						m_pRak->GetPlayerIDFromIndex(iPlayerIndex), false, false);
+				}
+			}
+		}
+	}
+}
+
 //----------------------------------------------------
 
 int CNetGame::GetBroadcastSendRateFromPlayerDistance(float fDistance)

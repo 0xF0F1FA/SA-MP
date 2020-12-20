@@ -849,6 +849,35 @@ static void ClientCheck(RPCParameters* rpcParams)
 	}
 }
 
+static void VehicleDamage(RPCParameters* rpcParams)
+{
+	CVehiclePool* pVehiclePool;
+	CVehicle* pVehicle;
+	VEHICLEID VehicleID;
+	int iPanels, iDoors;
+	unsigned char ucLights, ucWheels;
+	
+	pVehiclePool = pNetGame->GetVehiclePool();
+
+	if (rpcParams->numberOfBitsOfData == 96 && pVehiclePool)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(VehicleID);
+
+		pVehicle = pVehiclePool->GetAt(VehicleID);
+		if (pVehicle != NULL && pVehicle->m_byteDriverID == (BYTE)rpcParams->senderId)
+		{
+			bsData.Read(iPanels);
+			bsData.Read(iDoors);
+			bsData.Read(ucLights);
+			bsData.Read(ucWheels);
+
+			pVehicle->UpdateDamage((PLAYERID)rpcParams->senderId, iPanels, iDoors, ucLights, ucWheels);
+		}
+	}
+}
+
 //----------------------------------------------------
 
 void RegisterRPCs(RakServerInterface * pRakServer)
@@ -876,6 +905,7 @@ void RegisterRPCs(RakServerInterface * pRakServer)
 	REGISTER_STATIC_RPC(pRakServer, MenuQuit);
 	REGISTER_STATIC_RPC(pRakServer, TypingEvent);
 	REGISTER_STATIC_RPC(pRakServer, ClientCheck);
+	REGISTER_STATIC_RPC(pRakServer, VehicleDamage);
 }
 
 //----------------------------------------------------

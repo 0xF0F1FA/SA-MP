@@ -75,6 +75,15 @@ private:
 	DWORD					m_dwLastStatsUpdateTick;
 	DWORD					m_dwLastHeadUpdate;
 
+	struct
+	{
+		VEHICLEID MonitoredVehicleID;
+		int iPanels;
+		int iDoors;
+		unsigned char ucLights;
+		unsigned char ucWheels;
+	} m_iVehicleDamageStatus;
+
 public:
 
 	CLocalPlayer();
@@ -100,6 +109,8 @@ public:
 	void SendPassengerFullSyncData();
 	void SendAimSyncData();
 	void ResetAllSyncAttributes();
+
+	void SendVehicleDamageStatus(VEHICLEID VehicleID);
 
 	int  GetOptimumInCarSendRate(int iPlayersEffected);
 	int  GetOptimumOnFootSendRate(int iPlayersEffected);

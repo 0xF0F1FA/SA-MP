@@ -934,3 +934,17 @@ void CGameMode::OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell ne
 		amx_Exec(&m_amx, NULL, idx);
 	}
 }
+
+void CGameMode::OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnVehicleDamageStatusUpdate", &idx)) {
+		amx_Push(&m_amx, playerid);
+		amx_Push(&m_amx, vehicleid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}

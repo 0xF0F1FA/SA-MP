@@ -71,6 +71,12 @@ CLocalPlayer::CLocalPlayer()
 	m_usPing = 0;
 	m_szName[0] = '\0';
 
+	m_iVehicleDamageStatus.MonitoredVehicleID = INVALID_VEHICLE_ID;
+	m_iVehicleDamageStatus.iPanels = 0;
+	m_iVehicleDamageStatus.iDoors = 0;
+	m_iVehicleDamageStatus.ucLights = 0;
+	m_iVehicleDamageStatus.ucWheels = 0;
+
 	m_bIsSpectating = false;
 	m_byteSpectateType = SPECTATE_TYPE_NONE;
 	m_SpectateID = 0xFFFFFFFF;
@@ -254,6 +260,8 @@ bool CLocalPlayer::Process()
 			if (pVehiclePool)
 				m_CurrentVehicle = pVehiclePool->FindIDFromGtaPtr(m_pPlayerPed->GetGtaVehicle());
 			pVehicle = pVehiclePool->GetAt(m_CurrentVehicle);
+
+			SendVehicleDamageStatus(m_CurrentVehicle);
 
 			// HANDLE DRIVING AN RC VEHICLE
 			if(pVehicle && !m_bInRCMode && pVehicle->IsRCVehicle()) {
@@ -1528,6 +1536,59 @@ void CLocalPlayer::SpectatePlayer(BYTE bytePlayerID)
 			m_byteSpectateType = SPECTATE_TYPE_PLAYER;
 			m_SpectateID = bytePlayerID;
 			m_bSpectateProcessed = false;
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
+void CLocalPlayer::SendVehicleDamageStatus(VEHICLEID VehicleID)
+{
+	CVehicle* pVehicle;
+	int iPanels, iDoors;
+	unsigned char ucLights, ucWheels;
+
+	if (pNetGame->GetVehiclePool())
+	{
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(VehicleID);
+		if (pVehicle)
+		{
+			iPanels = pVehicle->GetCarPanelsDamageStatus();
+			iDoors = pVehicle->GetCarDoorsDamageStatus();
+			ucLights = pVehicle->GetCarLightsDamageStatus();
+			ucWheels = pVehicle->GetCarOrBikeWheelStatus();
+			
+			if (VehicleID == m_iVehicleDamageStatus.MonitoredVehicleID)
+			{
+				if (m_iVehicleDamageStatus.iPanels != iPanels ||
+					m_iVehicleDamageStatus.iDoors != iDoors ||
+					m_iVehicleDamageStatus.ucLights != ucLights ||
+					m_iVehicleDamageStatus.ucWheels != ucWheels)
+				{
+					RakNet::BitStream bsSend;
+
+					m_iVehicleDamageStatus.iPanels = iPanels;
+					m_iVehicleDamageStatus.iDoors = iDoors;
+					m_iVehicleDamageStatus.ucLights = ucLights;
+					m_iVehicleDamageStatus.ucWheels = ucWheels;
+
+					bsSend.Write(m_iVehicleDamageStatus.MonitoredVehicleID);
+					bsSend.Write(m_iVehicleDamageStatus.iPanels);
+					bsSend.Write(m_iVehicleDamageStatus.iDoors);
+					bsSend.Write(m_iVehicleDamageStatus.ucLights);
+					bsSend.Write(m_iVehicleDamageStatus.ucWheels);
+
+					pNetGame->Send(RPC_VehicleDamage, &bsSend);
+				}
+			}
+			else
+			{
+				m_iVehicleDamageStatus.iPanels = iPanels;
+				m_iVehicleDamageStatus.iDoors = iDoors;
+				m_iVehicleDamageStatus.ucLights = ucLights;
+				m_iVehicleDamageStatus.ucWheels = ucWheels;
+				m_iVehicleDamageStatus.MonitoredVehicleID = VehicleID;
+			}
 		}
 	}
 }

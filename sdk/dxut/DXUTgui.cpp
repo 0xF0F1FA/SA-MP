@@ -4098,6 +4098,10 @@ CDXUTListBox::CDXUTListBox( CDXUTDialog *pDialog ) :
     m_nBorder = 6;
     m_nMargin = 5;
     m_nTextHeight = 0;
+    m_nColumns = 0;
+    m_nColumnWidth[0] = 0;
+    m_nColumnWidth[1] = 0;
+    m_nColumnWidth[2] = 0;
 }
 
 
@@ -4157,6 +4161,54 @@ HRESULT CDXUTListBox::AddItem( const TCHAR *wszText, void *pData )
     }
 
     return hr;
+}
+
+
+//--------------------------------------------------------------------------------------
+HRESULT CDXUTListBox::AddItem(const TCHAR* wszText, int nIndex, D3DCOLOR Color)
+{
+    DXUTListBoxItem* pNewItem = new DXUTListBoxItem;
+    if (!pNewItem)
+        return E_OUTOFMEMORY;
+
+    StringCchCopy(pNewItem->strText, 256, wszText);
+
+    pNewItem->nIndex = nIndex;
+    SetRect(&pNewItem->rcActive, 0, 0, 0, 0);
+    pNewItem->bSelected = false;
+    pNewItem->Color = Color;
+    pNewItem->pData = NULL; // pData seems to be removed from DXUTListBoxItem
+
+    int i = 0;
+    do {
+        memset(pNewItem->strTextElements[i], 0, MAX_LISTBOX_TEXT_IN_COLUMN);
+        i++;
+    } while (i < MAX_LISTBOX_COLUMNS);
+
+    HRESULT hr = m_Items.Add(pNewItem);
+    if (FAILED(hr))
+    {
+        SAFE_DELETE(pNewItem);
+    }
+    else
+    {
+        m_ScrollBar.SetTrackRange(0, m_Items.GetSize());
+    }
+
+    return hr;
+}
+
+
+//--------------------------------------------------------------------------------------
+void CDXUTListBox::AddItemToColumn(int nIndex, int nColumn, const TCHAR* wszText)
+{
+    if (nIndex >= 0 && nIndex < m_Items.GetSize() && nColumn >= 0 && nColumn < m_nColumns)
+    {
+        DXUTListBoxItem* pItem = m_Items.GetAt(nIndex);
+
+        memset(pItem->strTextElements[nColumn], 0, MAX_LISTBOX_TEXT_IN_COLUMN);
+        strncpy_s(pItem->strTextElements[nColumn], wszText, MAX_LISTBOX_TEXT_IN_COLUMN);
+    }
 }
 
 
@@ -4644,6 +4696,11 @@ void CDXUTListBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
         // Update the line height formation
         m_nTextHeight = rc.bottom - rc.top;
 
+        if( m_ScrollBar.GetTrackPos() < 0 )
+        {
+            m_ScrollBar.SetTrackPos( 0 );
+        }
+
         static bool bSBInit;
         if( !bSBInit )
         {
@@ -4686,8 +4743,16 @@ void CDXUTListBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
                 rcSel.top = rc.top; rcSel.bottom = rc.bottom;
                 m_pDialog->DrawSprite( pSelElement, &rcSel );
                 m_pDialog->DrawText( pItem->strText, pSelElement, &rc );
+
+                for( int nColumn = 0; nColumn < m_nColumns; nColumn++ )
+                {
+                    rc.left += m_nColumnWidth[nColumn];
+                    m_pDialog->DrawTextA( pItem->strTextElements[nColumn], pSelElement, &rc );
+                }
             }
             else
+                // Theres a 1 byte pItem+669 variable at DXUTListBoxItem which forces to call this side
+                // but seems only used at CDownloadManager, so it's a TODO
                 m_pDialog->DrawText( pItem->strText, pElement, &rc );
 
             OffsetRect( &rc, 0, m_nTextHeight );

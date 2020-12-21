@@ -30,6 +30,8 @@
 // a single selection list box.
 #define EVENT_LISTBOX_SELECTION             0x0702
 
+#define MAX_LISTBOX_COLUMNS                 3
+#define MAX_LISTBOX_TEXT_IN_COLUMN          128
 
 //--------------------------------------------------------------------------------------
 // Forward declarations
@@ -590,10 +592,12 @@ protected:
 struct DXUTListBoxItem
 {
     TCHAR strText[256];
-    void*  pData;
-
-    RECT  rcActive;
-    bool  bSelected;
+    TCHAR strTextElements[MAX_LISTBOX_COLUMNS][MAX_LISTBOX_TEXT_IN_COLUMN];
+    int nIndex;
+    void* pData;
+    RECT rcActive;
+    bool bSelected;
+    D3DCOLOR Color;
 };
 
 class CDXUTListBox : public CDXUTControl
@@ -616,6 +620,8 @@ public:
     void SetScrollBarWidth( int nWidth ) { m_nSBWidth = nWidth; UpdateRects(); }
     void SetBorder( int nBorder, int nMargin ) { m_nBorder = nBorder; m_nMargin = nMargin; }
     HRESULT AddItem( const TCHAR *wszText, void *pData );
+    HRESULT AddItem( const TCHAR* wszText, int nIndex, D3DCOLOR Color );
+    void AddItemToColumn( int nIndex, int nColumn, const TCHAR* wszText );
     HRESULT InsertItem( int nIndex, const TCHAR *wszText, void *pData );
     void RemoveItem( int nIndex );
     void RemoveItemByText( TCHAR *wszText );
@@ -627,8 +633,13 @@ public:
     DXUTListBoxItem *GetSelectedItem( int nPreviousSelected = -1 ) { return GetItem( GetSelectedIndex( nPreviousSelected ) ); }
     void SelectItem( int nNewIndex );
 
+    int GetScrollBarPosition() { return m_ScrollBar.GetTrackPos(); };
+    void SetScrollBarTrackPosition(int nPosition) { m_ScrollBar.SetTrackPos(nPosition); };
+
     enum STYLE { MULTISELECTION = 1 };
 
+    int m_nColumns;
+    int m_nColumnWidth[3];
 protected:
     RECT m_rcText;      // Text rendering bound
     RECT m_rcSelection; // Selection box bound

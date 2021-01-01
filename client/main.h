@@ -71,6 +71,7 @@ typedef struct _GAME_SETTINGS {
 
 #include "runutil.h"
 #include "colorembed.h"
+#include "licenseplate.h"
 #include "filehooks.h"
 #include "fontrender.h"
 #include "chatwindow.h"

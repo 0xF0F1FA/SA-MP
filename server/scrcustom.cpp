@@ -1182,23 +1182,36 @@ static cell n_SetPlayerMaxHealth(AMX* amx, cell* params)
 
 static cell n_InterpolateCameraPos(AMX* amx, cell* params)
 {
+	VECTOR vecFrom, vecTo;
+	unsigned char ucCut;
+	float fTime;
+
 	CHECK_PARAMS(amx, "InterpolateCameraPos", 9);
-	CPlayerPool* pPool = pNetGame->GetPlayerPool();
-	if (pPool && pPool->GetSlotState(params[1]))
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
 	{
 		RakNet::BitStream out;
 		
-		out.Write<BYTE>(1);
-		out.Write<float>(amx_ctof(params[2]));
-		out.Write<float>(amx_ctof(params[3]));
-		out.Write<float>(amx_ctof(params[4]));
+		vecFrom.X = amx_ctof(params[2]);
+		vecFrom.Y = amx_ctof(params[3]);
+		vecFrom.Z = amx_ctof(params[4]);
 
-		out.Write<float>(amx_ctof(params[5]));
-		out.Write<float>(amx_ctof(params[6]));
-		out.Write<float>(amx_ctof(params[7]));
+		vecTo.X = amx_ctof(params[5]);
+		vecTo.Y = amx_ctof(params[6]);
+		vecTo.Z = amx_ctof(params[7]);
 
-		out.Write<float>((float)params[8]);
-		out.Write<BYTE>(params[9]);
+		fTime = (float)params[8];
+
+		ucCut = 1;
+		if (params[9] < 1 || params[9] > 2)
+			ucCut = 2;
+
+		out.Write(vecFrom);
+		out.Write(vecTo);
+		out.Write(fTime);
+		out.Write(ucCut);
+		out.Write1();
 
 		return pNetGame->SendToPlayer(params[1], RPC_ScrInterpolateCamera, &out);
 	}
@@ -1207,23 +1220,36 @@ static cell n_InterpolateCameraPos(AMX* amx, cell* params)
 
 static cell n_InterpolateCameraLookAt(AMX* amx, cell* params)
 {
+	VECTOR vecFrom, vecTo;
+	unsigned char ucCut;
+	float fTime;
+
 	CHECK_PARAMS(amx, "InterpolateCameraLookAt", 9);
-	CPlayerPool* pPool = pNetGame->GetPlayerPool();
-	if (pPool && pPool->GetSlotState(params[1]))
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
 	{
 		RakNet::BitStream out;
 
-		out.Write<BYTE>(0);
-		out.Write<float>(amx_ctof(params[2]));
-		out.Write<float>(amx_ctof(params[3]));
-		out.Write<float>(amx_ctof(params[4]));
+		vecFrom.X = amx_ctof(params[2]);
+		vecFrom.Y = amx_ctof(params[3]);
+		vecFrom.Z = amx_ctof(params[4]);
 
-		out.Write<float>(amx_ctof(params[5]));
-		out.Write<float>(amx_ctof(params[6]));
-		out.Write<float>(amx_ctof(params[7]));
+		vecTo.X = amx_ctof(params[5]);
+		vecTo.Y = amx_ctof(params[6]);
+		vecTo.Z = amx_ctof(params[7]);
 
-		out.Write<float>((float)params[8]);
-		out.Write<BYTE>(params[9]);
+		fTime = (float)params[8];
+
+		ucCut = 1;
+		if (params[9] < 1 || params[9] > 2)
+			ucCut = 2;
+
+		out.Write(vecFrom);
+		out.Write(vecTo);
+		out.Write(fTime);
+		out.Write(ucCut);
+		out.Write0();
 
 		return pNetGame->SendToPlayer(params[1], RPC_ScrInterpolateCamera, &out);
 	}

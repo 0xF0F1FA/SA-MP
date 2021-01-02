@@ -14,6 +14,11 @@
 
 void CCamera::SetBehindPlayer()
 {
+	m_pCamera->bLockPosition = 0;
+	m_pEntity = NULL;
+
+	Reset();
+
 	ScriptCommand(&set_camera_behind_player);
 	ScriptCommand(&restore_camera_jumpcut);
 	//ScriptCommand(&restore_camera);
@@ -23,6 +28,10 @@ void CCamera::SetBehindPlayer()
 
 void CCamera::SetPosition(float fX, float fY, float fZ, float fRotationX, float fRotationY, float fRotationZ)
 {
+	Reset();
+
+	m_pEntity = NULL;
+
 	ScriptCommand(&set_camera_position,fX,fY,fZ,fRotationX,fRotationY,fRotationZ);
 }
 
@@ -30,6 +39,10 @@ void CCamera::SetPosition(float fX, float fY, float fZ, float fRotationX, float 
 
 void CCamera::LookAtPoint(float fX, float fY, float fZ, int iType)
 {
+	Reset();
+
+	m_pEntity = NULL;
+
 	ScriptCommand(&point_camera,fX,fY,fZ,iType);
 }
 
@@ -37,7 +50,55 @@ void CCamera::LookAtPoint(float fX, float fY, float fZ, int iType)
 
 void CCamera::Restore()
 {
+	m_pEntity = NULL;
+
 	ScriptCommand(&restore_camera_jumpcut);
+}
+
+//-----------------------------------------------------------
+
+void CCamera::Reset()
+{
+	DWORD dwThis = (DWORD)m_pCamera;
+
+	_asm mov ecx, dwThis
+	_asm mov eax, 0x50D2D0
+	_asm call eax
+}
+
+//-----------------------------------------------------------
+
+void CCamera::AttachToEntity(CEntity* pEntity)
+{
+	MATRIX4X4 mat;
+
+	m_pEntity = pEntity;
+
+	if (pEntity)
+	{
+		pEntity->GetMatrix(&mat);
+
+		if (mat.pos.X < 20000.0f && mat.pos.X > -20000.0f &&
+			mat.pos.Y < 20000.0f && mat.pos.Y > -20000.0f &&
+			mat.pos.Z < 100000.0f && mat.pos.Z > -10000.0f)
+		{
+			InterpolateCameraPos(&mat.pos, &mat.pos, 100.0f, 1);
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
+void CCamera::Update()
+{
+	MATRIX4X4 mat;
+
+	if (m_pEntity && m_pEntity->m_pEntity)
+	{
+		m_pEntity->GetMatrix(&mat);
+
+		InterpolateCameraPos(&mat.pos, &mat.pos, 100.0f, 1);
+	}
 }
 
 //-----------------------------------------------------------
@@ -59,11 +120,17 @@ void CCamera::GetMatrix(PMATRIX4X4 Matrix)
 
 void CCamera::InterpolateCameraPos(VECTOR* from, VECTOR* to, FLOAT time, BYTE mode)
 {
+	Reset();
+
+	m_pCamera->bLockPosition = 1;
+
 	((void(__thiscall*)(CAMERA_TYPE*, VECTOR*, VECTOR*, FLOAT, BYTE))0x50D160)(m_pCamera, from, to, time, mode);
 }
 
 void CCamera::InterpolateCameraLookAt(VECTOR* from, VECTOR* to, FLOAT time, BYTE mode)
 {
+	m_pCamera->bLockTargetPoint = 1;
+
 	((void(__thiscall*)(CAMERA_TYPE*, VECTOR*, VECTOR*, FLOAT, BYTE))0x50D1D0)(m_pCamera, from, to, time, mode);
 }
 

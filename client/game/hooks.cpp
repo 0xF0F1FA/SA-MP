@@ -1384,6 +1384,21 @@ NUDE CrimeReport_Hook()
 
 //-----------------------------------------------------------
 
+NUDE CCamera_Process_Hook()
+{
+	_asm pushad
+
+	if (pGame && pGame->GetCamera())
+	{
+		pGame->GetCamera()->Update();
+	}
+
+	_asm popad
+	_asm mov eax, 0x52B730
+	_asm jmp eax
+}
+
+//-----------------------------------------------------------
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1527,6 +1542,8 @@ void GameInstallHooks()
 	InstallCallHook(0x44B125, (DWORD)PaynSpray_Hook, 0xE9);
 
 	InstallMethodHook(0x872A74, (DWORD)CAmbientAuidoTrack_Process_Hook);
+
+	InstallCallHook(0x53C104, (DWORD)CCamera_Process_Hook);
 }
 
 //-----------------------------------------------------------

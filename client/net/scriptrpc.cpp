@@ -1567,28 +1567,38 @@ static void ScrPlayerVelocity(RPCParameters* rpcParams)
 
 static void ScrInterpolateCamera(RPCParameters* rpcParams)
 {
-	RakNet::BitStream in(rpcParams);
+	VECTOR vecFrom, vecTo;
+	unsigned char ucMode;
+	float fTime;
 
-	BYTE type, mode;
-	VECTOR from, to;
-	FLOAT time;
-	
-	in.Read(type);
-	in.Read(from.X);
-	in.Read(from.Y);
-	in.Read(from.Z);
-	in.Read(to.X);
-	in.Read(to.Y);
-	in.Read(to.Z);
-	in.Read(time);
-	in.Read(mode);
-
-	if (0.0f < time && (mode == 1 || mode == 2))
+	if (rpcParams->numberOfBitsOfData == 233)
 	{
-		if (type)
-			pGame->GetCamera()->InterpolateCameraPos(&from, &to, time, mode);
-		else
-			pGame->GetCamera()->InterpolateCameraLookAt(&from, &to, time, mode);
+		RakNet::BitStream bsData(rpcParams);
+
+		vecFrom = 0.0f;
+		vecTo = 0.0f;
+		fTime = 0.0f;
+		ucMode = 0;
+
+		bsData.Read(vecFrom);
+		bsData.Read(vecTo);
+		bsData.Read(fTime);
+		
+		if (0.0f < fTime)
+		{
+			bsData.Read(ucMode);
+
+			if (ucMode < 1 || ucMode > 2)
+				ucMode = 2;
+
+			if (pNetGame->GetPlayerPool())
+				pNetGame->GetPlayerPool()->GetLocalPlayer()->m_bSpectateProcessed = true;
+
+			if (bsData.ReadBit())
+				pGame->GetCamera()->InterpolateCameraPos(&vecFrom, &vecTo, fTime, ucMode);
+			else
+				pGame->GetCamera()->InterpolateCameraLookAt(&vecFrom, &vecTo, fTime, ucMode);
+		}
 	}
 }
 

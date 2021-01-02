@@ -212,9 +212,15 @@ typedef struct _VEHICLE_TYPE
 	PADDING(_pad247, 1517); // 2512-4029
 } VEHICLE_TYPE;
 
+//-----------------------------------------------------------
+
 typedef struct {
-	PADDING(pad_0_to_D78, 0xD78);
-} CAMERA_TYPE; // size = 0xD78
+	PADDING(pad_0, 3310); // 0-3310
+	BYTE bLockPosition; // 3310-3311
+	BYTE bLockTargetPoint; // 3311-3312
+	PADDING(pad_3312, 136); // 3312-3448
+} CAMERA_TYPE;
+
 
 //-----------------------------------------------------------
 

@@ -562,11 +562,16 @@ NUDE AllVehicles_ProcessControl_Hook()
 			_pVehicle->pDriver->dwPedType = 4; // So CPed::IsPlayer returns FALSE
 		}*/
 
+		byteSaveControlFlags = _pVehicle->entity.nControlFlags;
+		_pVehicle->entity.nControlFlags = 0x1A;
+
 		// VEHICLE ENGINE AUDIO/RADIO
 		_asm mov edx, _pVehicle
 		_asm lea ecx, [edx+312]
 		_asm mov edx, 0x502280
 		_asm call edx
+
+		_pVehicle->entity.nControlFlags = byteSaveControlFlags;
 
 		/* Part of test code.
 		if(_pVehicle->pDriver) {

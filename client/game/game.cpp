@@ -17,7 +17,7 @@ void GameInstallHooks();
 bool ApplyPreGamePatches();
 void ApplyInGamePatches();
 
-//char *szGameTextMessage;
+char *szGameTextMessage;
 
 static bool bInputsDisabled = false;
 static int iInputDisableWaitFrames=0;
@@ -148,7 +148,7 @@ void CGame::ToggleKeyInputsDisabled(bool bDisable)
 void CGame::InitGame()
 {
 	// Create a buffer for game text.
-	//szGameTextMessage = (char*)malloc(256);
+	szGameTextMessage = (char*)malloc(MAX_GAME_TEXT + 1);
 
 	// Init the keystate stuff.
 	GameKeyStatesInit();
@@ -432,14 +432,19 @@ void CGame::ToggleRadar(int iToggle)
 
 void CGame::DisplayGameText(char *szStr,int iTime,int iSize)
 {
-	ScriptCommand(&text_clear_all);
+	if (szGameTextMessage == NULL)
+	{
+		assert(0);
+		return;
+	}
 
-	//strcpy(szGameTextMessage,szStr);
+	ScriptCommand(&text_clear_all);
+	
+	strcpy_s(szGameTextMessage, MAX_GAME_TEXT, szStr);
 
 	_asm push iSize
 	_asm push iTime
-	//_asm push szGameTextMessage
-	_asm push szStr
+	_asm push szGameTextMessage
 	_asm mov eax, 0x69F2B0
 	_asm call eax
 	_asm add esp, 12

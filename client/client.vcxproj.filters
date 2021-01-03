@@ -329,6 +329,9 @@
     <ClCompile Include="game\txdstuff.cpp">
       <Filter>game</Filter>
     </ClCompile>
+    <ClCompile Include="game\actor.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -739,6 +742,9 @@
     <ClInclude Include="colorembed.h" />
     <ClInclude Include="licenseplate.h" />
     <ClInclude Include="game\txdstuff.h">
+      <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="game\actor.h">
       <Filter>game</Filter>
     </ClInclude>
   </ItemGroup>

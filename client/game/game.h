@@ -19,6 +19,7 @@
 #include "scripting.h"
 #include "menu.h"
 #include "textdraw.h"
+#include "actor.h"
 
 #define NO_TEAM 255
 

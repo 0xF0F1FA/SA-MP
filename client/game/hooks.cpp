@@ -81,6 +81,9 @@ static DWORD dwParam1;
 //DWORD dwParam2;
 //DWORD dwParamThis;
 
+static BYTE bNightGogglesState = 0;
+static BYTE bThermalGogglesState = 0;
+
 //-----------------------------------------------------------
 // x86 codes to perform our unconditional jmp for detour entries. 
 
@@ -147,7 +150,13 @@ NUDE CPlayerPed_ProcessControl_Hook()
 	if( dwCurPlayerActor && 
 		(byteCurPlayer != 0) &&
 		(byteInternalPlayer == 0) ) // not local player and local player's keys set.
-	{	
+	{
+		// disable goggles temporarily for remote players
+		bNightGogglesState = *(BYTE*)0xC402B8;
+		*(BYTE*)0xC402B8 = 0;
+		bThermalGogglesState = *(BYTE*)0xC402B9;
+		*(BYTE*)0xC402B9 = 0;
+
 		// key switching
 		GameStoreLocalPlayerKeys(); // remember local player's keys
 		GameSetRemotePlayerKeys(byteCurPlayer); // set remote player's keys
@@ -193,6 +202,9 @@ NUDE CPlayerPed_ProcessControl_Hook()
 	}
 	else // it's the local player or keys have already been set.
 	{
+		// restore state of these two "weapons"
+		*(BYTE*)0xC402B8 = bNightGogglesState;
+		*(BYTE*)0xC402B9 = bThermalGogglesState;
 
 		if( pNetGame &&
 			pNetGame->GetPlayerPool()->GetLocalPlayer()->IsActive() && 

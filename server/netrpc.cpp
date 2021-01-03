@@ -676,7 +676,7 @@ void AdminMapTeleport(RPCParameters *rpcParams)
 				vecPos.X, vecPos.Y, vecPos.Z);
 		}
 
-		if (pNetGame->m_bAdminTeleport && pPlayer->m_bCanTeleport && pPlayer->m_bIsAdmin)
+		if (pPlayer->m_bCanTeleport || pNetGame->m_bAdminTeleport && pPlayer->m_bIsAdmin)
 		{
 			RakNet::BitStream bsParams;
 			bsParams.Write(vecPos.X);	// X

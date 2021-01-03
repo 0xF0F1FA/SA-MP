@@ -598,6 +598,8 @@ DWORD CVehicle::GetHydraThrusters()
 
 void CVehicle::ProcessMarkers()
 {
+	bool bBlipsEnabled, bOccupied, bInRange;
+
 	if(!m_pVehicle) return;
 
 	if(m_byteObjectiveVehicle) {
@@ -626,21 +628,26 @@ void CVehicle::ProcessMarkers()
 
 	// CVehicle is used outside CVehiclePool/CNetGame, and CNetGame is not initialized in debug mode
 	// Also preventing user to reenable markers when it's disabled by the server
-	if ((tSettings.bDebug || !pNetGame->m_bDisableVehMapIcons) && !pGame->m_bDisableVehMapIcons) {
-		// Add or remove car scanning markers.
-		if (GetDistanceFromLocalPlayerPed() < CSCANNER_DISTANCE && !IsOccupied()) {
-			// SHOW IT
-			if (!m_dwMarkerID) {
-				ScriptCommand(&tie_marker_to_car, m_dwGTAId, 1, 2, &m_dwMarkerID);
-				ScriptCommand(&set_marker_color, m_dwMarkerID, 200);
-			}
+	bBlipsEnabled = ((tSettings.bDebug || !pNetGame->m_bDisableVehMapIcons) && !pGame->m_bDisableVehMapIcons);
+	bInRange = GetDistanceFromLocalPlayerPed() < CSCANNER_DISTANCE;
+	bOccupied = IsOccupied();
+
+	if (bBlipsEnabled && bInRange && !bOccupied)
+	{
+		// SHOW IT
+		if (!m_dwMarkerID)
+		{
+			ScriptCommand(&tie_marker_to_car, m_dwGTAId, 1, 2, &m_dwMarkerID);
+			ScriptCommand(&set_marker_color, m_dwMarkerID, 200);
 		}
-		else if (IsOccupied() || GetDistanceFromLocalPlayerPed() >= CSCANNER_DISTANCE) {
-			// REMOVE IT	
-			if (m_dwMarkerID) {
-				ScriptCommand(&disable_marker, m_dwMarkerID);
-				m_dwMarkerID = 0;
-			}
+	}
+	else if (!bBlipsEnabled || bOccupied || !bInRange)
+	{
+		// REMOVE IT	
+		if (m_dwMarkerID)
+		{
+			ScriptCommand(&disable_marker, m_dwMarkerID);
+			m_dwMarkerID = 0;
 		}
 	}
 }

@@ -440,7 +440,7 @@ void CPlugins::LoadPlugins(std::string strPath)
 		{
 			logprintf(" Loading plugin: %s", strPlugin.c_str());
 
-			for (unsigned char i = 0; i < sizeof(g_szBlacklist); i++) {
+			for (unsigned char i = 0; i < sizeof(g_szBlacklist) / sizeof(char*); i++) {
 				if (stricmp(strPlugin.c_str(), g_szBlacklist[i]) == 0) {
 					logprintf("  Blacklisted - Loading this plugin will cause a server crash.");
 					continue;

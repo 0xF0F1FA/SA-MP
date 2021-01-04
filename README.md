@@ -36,3 +36,5 @@ kyeman, spookie, Y_Less, mike, jax, Mike, Cam, adamcs, bakasan, Born Acorn, Dalp
 - **0x8964** - https://github.com/0x8964
 - **Romz24** - https://github.com/Romz24
 - **FlexodBR** - https://github.com/FlexodBR
+- **the-x80** - https://github.com/the-x80
+

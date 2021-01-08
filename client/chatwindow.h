@@ -58,6 +58,8 @@ private:
 	CDXUTScrollBar		*m_pScrollBar;
 
 	CFontRender* m_pFontRender;
+	char m_szLogFile[MAX_PATH];
+	bool m_bLogFileCreated;
 
 	void PushBack();
 	void FilterInvalidChars(PCHAR szString);
@@ -81,7 +83,7 @@ public:
 	void RenderText(CHAR *sz,RECT rect,DWORD dwColor);
 	void ResetDialogControls(CDXUTDialog *pGameUI);
 
-	CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender);
+	CChatWindow(IDirect3DDevice9* pD3DDevice, CFontRender* pFontRender,	char* szPath);
 	~CChatWindow();
 
 	LONG GetChatWindowBottom() { return m_lChatWindowBottom; };

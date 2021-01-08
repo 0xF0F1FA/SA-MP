@@ -402,6 +402,21 @@ const char* GetWeaponName(int iWeaponID)
 
 //----------------------------------------------------
 
+bool DirExists(LPCSTR szPath)
+{
+	DWORD dwAttr;
+
+	//struct _stat64i32 status;
+	//return _stat(szPath, &status) == 0;
+
+	dwAttr = GetFileAttributes(szPath);
+
+	return dwAttr != INVALID_FILE_ATTRIBUTES &&
+		dwAttr & FILE_ATTRIBUTE_DIRECTORY;
+}
+
+//----------------------------------------------------
+
 bool IsHexChar(char c)
 {
 	return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';

@@ -26,6 +26,8 @@
 #define CSCANNER_DISTANCE		200.0f
 #define PSCANNER_DISTANCE		600.0f
 
+#define CHAT_LOG_FILE "chatlog.txt"
+
 // 3x 100000 bytes to alloc for string is little bit overkill, isn't it?
 #define MAX_STRING_LENGTH 33000 // 100000
 

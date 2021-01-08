@@ -11,9 +11,10 @@
 
 //----------------------------------------------------
 
-CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender)
+CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender, char* szPath)
 {
 	int x=0;
+	FILE* pFile;
 
 	m_pD3DDevice		= pD3DDevice;
 	//m_pD3DFont			= pFont;
@@ -23,6 +24,7 @@ CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender)
 	m_uiPageSize		= DISP_MESSAGES;
 	m_bTimeStamp = false;
 	m_bForcedHidden = false;
+	m_bLogFileCreated = false;
 
 	// Create a sprite to use when drawing text
 	D3DXCreateSprite(pD3DDevice,&m_pChatTextSprite);
@@ -39,6 +41,17 @@ CChatWindow::CChatWindow(IDirect3DDevice9 *pD3DDevice, CFontRender* pFontRender)
 
 	SIZE size;
 	m_lFontSizeY = pFontRender->MeasureText(&size, "Y", DT_SINGLELINE | DT_LEFT).cy;
+	if (szPath && szPath[0] != '\0') //&& strlen(szPath))
+	{
+		sprintf_s(m_szLogFile, "%s\\" CHAT_LOG_FILE, szPath);
+		fopen_s(&pFile, m_szLogFile, "w");
+		if (pFile)
+		{
+			m_bLogFileCreated = true;
+			fclose(pFile);
+		}
+	}
+	
 
 	m_dwChatTextColor = D3DCOLOR_ARGB(255,255,255,255);
 	m_dwChatInfoColor = D3DCOLOR_ARGB(255, 136, 170, 98);
@@ -376,16 +389,19 @@ void CChatWindow::ChatLog(PCHAR szTimeStamp, PCHAR szString,
 {
 	FILE *fileOut;
 
-	fopen_s(&fileOut, "chatlog.txt", "a");
-	if (fileOut == NULL)
-		return;
+	if (m_bLogFileCreated)
+	{
+		fopen_s(&fileOut, m_szLogFile, "a");
+		if (fileOut == NULL)
+			return;
 
-	if (eType == CHAT_TYPE_CHAT)
-		fprintf(fileOut, "%s <%s> %s\r\n", szTimeStamp, szNick, szString);
-	else
-		fprintf(fileOut, "%s %s\r\n", szTimeStamp, szString);
+		if (eType == CHAT_TYPE_CHAT)
+			fprintf_s(fileOut, "%s <%s> %s\n", szTimeStamp, szNick, szString);
+		else
+			fprintf_s(fileOut, "%s %s\n", szTimeStamp, szString);
 
-	fclose(fileOut);
+		fclose(fileOut);
+	}
 }
 
 //----------------------------------------------------

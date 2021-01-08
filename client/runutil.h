@@ -24,6 +24,8 @@ void K_EncodeString(char *szInput, char *szOutput);
 unsigned long Util_GetTime();
 const char* GetWeaponName(int iWeaponID);
 
+bool DirExists(LPCSTR szPath);
+
 bool IsHexChar(char c);
 bool IsHexCharW(wchar_t c);
 unsigned long GetColorFromStringEmbed(char* szString);

@@ -57,6 +57,9 @@ CFileSystem				*pFileSystem=NULL;
 CDXUTDialogResourceManager	*pDialogResourceManager=NULL;
 CDXUTDialog					*pGameUI=NULL;
 
+char szUserDocPath[MAX_PATH];
+char szCachePath[MAX_PATH];
+
 // forwards
 bool SubclassGameWindow();
 void SetupCommands();
@@ -256,6 +259,64 @@ void SetupGameUI()
 
 //----------------------------------------------------
 
+void SetupCacheFolders()
+{
+	HKEY hKey;
+	CHAR szPath[MAX_PATH];
+	DWORD dwLength;
+
+	SecureZeroMemory(szCachePath, sizeof(szCachePath));
+	SecureZeroMemory(szPath, sizeof(szPath));
+
+	dwLength = sizeof(szPath);
+
+	sprintf_s(szCachePath, "%s\\cache", szUserDocPath);
+	if(!RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\SAMP", 0, KEY_READ, &hKey) &&
+		!RegQueryValueEx(hKey, "model_cache", NULL, NULL, (LPBYTE)szPath, &dwLength))
+	{
+		strncpy_s(szCachePath, szPath, sizeof(szCachePath));
+		RegCloseKey(hKey);
+	}
+
+	if (!DirExists(szCachePath))
+		CreateDirectory(szCachePath, NULL);
+
+	sprintf_s(szPath, "%s\\local", szCachePath);
+	if (!DirExists(szPath))
+		CreateDirectory(szPath, NULL);
+}
+
+void SetupModUserFilesDirs()
+{
+	char szPathName[MAX_PATH];
+	char* szUserDir;
+
+	SecureZeroMemory(szUserDocPath, sizeof(szUserDocPath));
+
+	szUserDir = (char*)0xC92368;
+	while (*szUserDir)
+		szUserDir++;
+
+	if (szUserDir == (char*)0xC92369)
+	{
+		GetCurrentDirectory(sizeof(szUserDocPath), szUserDocPath);
+	}
+	else
+	{
+		sprintf_s(szUserDocPath, "%s\\SAMP", (char*)0xC92368);
+		if (!DirExists(szUserDocPath))
+			CreateDirectory(szUserDocPath, NULL);
+
+		sprintf(szPathName, "%s\\screens", szUserDocPath);
+		if (!DirExists(szPathName))
+			CreateDirectory(szPathName, NULL);
+
+		SetupCacheFolders();
+	}
+}
+
+//----------------------------------------------------
+
 //extern void CheckDuplicateD3D9Dlls();
 
 // TODO: Add "nohudscalefix", "pagesize", "timestamp", "fpslimit", "multicore", "disableheadmove" config checks here
@@ -265,6 +326,8 @@ void DoInitStuff()
 	if(!bGameInited)
 	{	
 		OutputDebugString("Start of DoInitStuff()");
+
+		SetupModUserFilesDirs();
 
 		Util_GetTime();
 
@@ -295,7 +358,7 @@ void DoInitStuff()
 
 		// Create instances of the chat and input classes.
 		pDefaultFont = new CFontRender(pD3DDevice);
-		pChatWindow = new CChatWindow(pD3DDevice,pDefaultFont);
+		pChatWindow = new CChatWindow(pD3DDevice,pDefaultFont, szUserDocPath);
 		pCmdWindow = new CCmdWindow(pD3DDevice);
 
 		AllocateBufferForColorEmbed();

@@ -276,17 +276,12 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 
 void GetScreenshotFileName(std::string & FileName)
 {
-	std::string ModuleFileName;
-    ModuleFileName.reserve(MAX_PATH);
-    GetModuleFileName(NULL,(char *)(ModuleFileName.data()),MAX_PATH);
-    FileName = ModuleFileName.substr(0, ModuleFileName.find_last_of(":\\"));
-
     char Buf[MAX_PATH];
     WIN32_FIND_DATA ffd;
     HANDLE h;
     for (int i = 0; i < 1000; i++)
     {
-        wsprintf(Buf, (FileName + "sa-mp-%03i.jpg").c_str(), i);
+		sprintf_s(Buf, "%s\\screens\\sa-mp-%03i.jpg", szUserDocPath, i);
         h = FindFirstFile(Buf, &ffd);
         if(h != INVALID_HANDLE_VALUE) {   
 			FindClose(h);

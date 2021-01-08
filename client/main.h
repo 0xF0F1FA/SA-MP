@@ -123,6 +123,7 @@ extern bool bShowDebugLabels;
 extern bool bWantHudScaling;
 extern bool bHeadMove;
 extern int iGtaVersion;
+extern char szUserDocPath[MAX_PATH];
 
 #include "outputdebugstring.h"
 

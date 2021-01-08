@@ -307,7 +307,7 @@ void SetupModUserFilesDirs()
 		if (!DirExists(szUserDocPath))
 			CreateDirectory(szUserDocPath, NULL);
 
-		sprintf(szPathName, "%s\\screens", szUserDocPath);
+		sprintf_s(szPathName, "%s\\screens", szUserDocPath);
 		if (!DirExists(szPathName))
 			CreateDirectory(szPathName, NULL);
 

@@ -171,10 +171,12 @@ void cmdSavePos(PCHAR szCmd)
 	FILE *fileOut;
 	DWORD dwVehicleID;
 	float fZAngle;
+	char szPath[MAX_PATH];
 
 	//if(!tSettings.bDebug) return;
 
-	fopen_s(&fileOut, "savedpositions.txt","a");
+	sprintf_s(szPath, "%s\\savedpositions.txt", szUserDocPath);
+	fopen_s(&fileOut, szPath, "a");
 	if(!fileOut) {
 		pChatWindow->AddDebugMessage("I can't open the savepositions.txt file for append.");
 		return;
@@ -221,10 +223,15 @@ static void cmdRawSave(PCHAR szCmd)
 	PED_TYPE* pPed;
 	DWORD dwVehicleId;
 	float fZAngle;
+	char szPath[MAX_PATH];
 
 	pPlayerPed = pGame->FindPlayerPed();
 	if (pPlayerPed->IsInVehicle()) {
-		fopen_s(&f, "rawvehicles.txt", "a");
+		// Not sure it was intended, but rawvehicles.txt was saved az
+		// the local directory, but rawvehicles.txt az GTA SA User Files?
+		// Well I guess that's gonna change.
+		sprintf_s(szPath, "%s\\rawvehicles.txt", szUserDocPath);
+		fopen_s(&f, szPath, "a");
 		if (f) {
 			pVehicle = pPlayerPed->GetGtaVehicle();
 			dwVehicleId = GamePool_Vehicle_GetIndex(pVehicle);
@@ -246,7 +253,8 @@ static void cmdRawSave(PCHAR szCmd)
 		} else
 			pChatWindow->AddDebugMessage("I can't open the rawvehicles.txt file for append.");
 	} else {
-		fopen_s(&f, "rawpositions.txt", "a");
+		sprintf_s(szPath, "%s\\rawpositions.txt", szUserDocPath);
+		fopen_s(&f, szPath, "a");
 		if (f) {
 			pPed = pPlayerPed->GetGtaActor();
 			ScriptCommand(&get_actor_z_angle, pPlayerPed->m_dwGTAId, &fZAngle);

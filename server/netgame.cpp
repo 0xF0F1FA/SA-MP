@@ -112,7 +112,7 @@ CNetGame::CNetGame()
 		pConsole->ModifyVariableFlags("mtu", CON_VARFLAG_READONLY);
 	}
 
-	if (!m_pRak->Start(dwMaxPlayers, 0, 10, dwPort, szBindAddress))
+	if (!m_pRak->Start(dwMaxPlayers, 0, iSleepTime, dwPort, szBindAddress))
 	{
 		if (szBindAddress)
 			logprintf("Unable to start server on %s:%d. Port in use?", 

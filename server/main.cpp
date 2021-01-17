@@ -38,6 +38,8 @@ bool g_bDBLogQueries = true;
 
 bool bQueryLogging = false;
 
+int iSleepTime = 5;
+
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
 #endif
@@ -406,6 +408,7 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("maxplayerperip", CON_VARTYPE_INT, 0, &iMaxPlayerPerIP, ServerPlayerPerIPChanged);
 	pConsole->AddVariable("stream_rate", CON_VARTYPE_INT, 0, &g_iStreamRate, ServerStreamRateChanged);
 	pConsole->AddVariable("stream_distance", CON_VARTYPE_FLOAT, 0, &g_fStreamDistance, ServerStreamDistanceChanged);
+	pConsole->AddVariable("sleep", CON_VARTYPE_INT, 0, &iSleepTime);
 
 	// Add 16 gamemode variables.
 	int x=0;
@@ -500,7 +503,7 @@ int main (int argc, char** argv)
 			WaitForSingleObject(hConsoleExecuteEvent, INFINITE);
 		#endif
 
-		SLEEP(10);		
+		SLEEP(iSleepTime);
 	}
 
 /*#ifdef RAKRCON

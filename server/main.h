@@ -158,6 +158,7 @@ extern unsigned int _uiRndSrvChallenge;
 extern float g_fStreamDistance;
 extern int g_iStreamRate;
 extern bool bQueryLogging;
+extern int iSleepTime;
 
 // -------------------
 // FUNCTION PROTOTYPES

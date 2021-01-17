@@ -4177,6 +4177,7 @@ HRESULT CDXUTListBox::AddItem(const TCHAR* wszText, int nIndex, D3DCOLOR Color)
     SetRect(&pNewItem->rcActive, 0, 0, 0, 0);
     pNewItem->bSelected = false;
     pNewItem->Color = Color;
+    pNewItem->bForceUnselected = false;
     pNewItem->pData = NULL; // pData seems to be removed from DXUTListBoxItem
 
     int i = 0;
@@ -4738,23 +4739,40 @@ void CDXUTListBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
                     bSelectedStyle = true;
             }
 
-            if( bSelectedStyle )
+            long nSavedLeft;
+            if( !pItem->bForceUnselected || bSelectedStyle )
             {
                 rcSel.top = rc.top; rcSel.bottom = rc.bottom;
                 m_pDialog->DrawSprite( pSelElement, &rcSel );
                 m_pDialog->DrawText( pItem->strText, pSelElement, &rc );
 
+                nSavedLeft = rc.left;
                 for( int nColumn = 0; nColumn < m_nColumns; nColumn++ )
                 {
                     rc.left += m_nColumnWidth[nColumn];
-                    m_pDialog->DrawTextA( pItem->strTextElements[nColumn], pSelElement, &rc );
+                    m_pDialog->DrawText( pItem->strTextElements[nColumn], pSelElement, &rc );
                 }
             }
             else
-                // Theres a 1 byte pItem+669 variable at DXUTListBoxItem which forces to call this side
-                // but seems only used at CDownloadManager, so it's a TODO
-                m_pDialog->DrawText( pItem->strText, pElement, &rc );
+            {
+                if (pItem->Color)
+                {
+                    pElement->FontColor.Current.r = ((pItem->Color >> 16) & 0xFF) * 0.0039215689f;
+                    pElement->FontColor.Current.g = ((pItem->Color >>  8) & 0xFF) * 0.0039215689f;
+                    pElement->FontColor.Current.b = ((pItem->Color >>  4) & 0xFF) * 0.0039215689f;
+                    pElement->FontColor.Current.a = ((pItem->Color >> 24) & 0xFF) * 0.0039215689f;
+                }
 
+                m_pDialog->DrawText(pItem->strText, pElement, &rc);
+
+                nSavedLeft = rc.left;
+                for (int nColumn = 0; nColumn < m_nColumns; nColumn++)
+                {
+                    rc.left += m_nColumnWidth[nColumn];
+                    m_pDialog->DrawText(pItem->strTextElements[nColumn], pSelElement, &rc);
+                }
+            }
+            rc.left = nSavedLeft;
             OffsetRect( &rc, 0, m_nTextHeight );
         }
     }

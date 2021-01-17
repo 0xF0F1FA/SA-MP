@@ -598,6 +598,7 @@ struct DXUTListBoxItem
     RECT rcActive;
     bool bSelected;
     D3DCOLOR Color;
+    bool bForceUnselected;
 };
 
 class CDXUTListBox : public CDXUTControl

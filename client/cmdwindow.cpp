@@ -39,18 +39,20 @@ void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 	m_pGameUI = pGameUI;
 
 	if(pGameUI) {
-		pGameUI->AddEditBox(IDC_CMDEDIT,"",5,175,420,35,true,&m_pEditControl);
-		m_pEditControl->GetElement(0)->TextureColor.Init(D3DCOLOR_ARGB( 170, 20, 20, 20 ));
-		m_pEditControl->GetElement(1)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(2)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(3)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(4)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(5)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(6)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(7)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->GetElement(8)->TextureColor.Init(D3DCOLOR_ARGB( 200, 0, 0, 0 ));
-		m_pEditControl->SetTextColor(D3DCOLOR_ARGB( 255, 255, 255, 255 ));
-		m_pEditControl->SetCaretColor(D3DCOLOR_ARGB( 255, 150, 150, 150 ));
+		// TODO: Change AddEditBox to AddIMEEditBox (currently CDXUTIMEEditBox is not disassembled yet)
+		pGameUI->AddEditBox(IDC_CMDEDIT,"",10,175,570,40,true,&m_pEditControl);
+
+		// TODO: Uncomment when, CConfig class is done
+		/*if(pConfig->GetNumber("ime"))
+		{
+			CDXUTIMEEditBox::EnableImeSystem(true);
+			CDXUTIMEEditBox::StaticOnCreateDevice();
+		}*/
+		m_pEditControl->GetElement(0)->TextureColor.Init(D3DCOLOR_ARGB(240, 5, 5, 5));
+		m_pEditControl->SetTextColor(D3DCOLOR_ARGB(255, 255, 255, 255));
+		m_pEditControl->SetCaretColor(D3DCOLOR_ARGB(255, 150, 150, 150));
+		m_pEditControl->SetSelectedBackColor(D3DCOLOR_ARGB(255, 185, 34, 40));
+		m_pEditControl->SetSelectedTextColor(D3DCOLOR_ARGB(255, 10, 10, 15));
 		m_pEditControl->SetEnabled(false);
 		m_pEditControl->SetVisible(false);
 	}

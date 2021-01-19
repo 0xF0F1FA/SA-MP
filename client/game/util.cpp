@@ -928,3 +928,63 @@ void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius)
 {
 	// TODO
 }
+//----------------------------------------------------
+
+// https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION* quat)
+{
+	float tr;
+	float S1, S2, S3, S4;
+	float L0, L1;
+
+	L0 = mat->up.Y + mat->at.Z;
+
+	tr = mat->right.X + L0 + 1.0f;
+	if (tr < 0.0f)
+		tr = 0.0f;
+	S1 = sqrtf(tr) * 0.5f;
+
+	tr = mat->right.X + 1.0f - mat->up.Y - mat->at.Z;
+	if (tr < 0.0f)
+		tr = 0.0f;
+	S2 = sqrtf(tr) * 0.5f;
+
+	L1 = 1.0f - mat->right.X;
+
+	tr = mat->up.Y + L1 - mat->at.Z;
+	if (tr < 0.0f)
+		tr = 0.0f;
+	S3 = sqrtf(tr) * 0.5f;
+
+	tr = L1 - L0;
+	if (tr < 0.0f)
+		tr = 0.0f;
+	S4 = sqrtf(tr) * 0.5f;
+
+	if (S1 < 0.0f) S1 = 0.0f;
+	if (S2 < 0.0f) S2 = 0.0f; 
+	if (S3 < 0.0f) S3 = 0.0f;
+	if (S4 < 0.0f) S4 = 0.0f;
+
+	quat->x = S1;
+	quat->y = copysignf(S2, mat->at.Y - mat->up.Z);
+	quat->z = copysignf(S3, mat->right.Z - mat->at.X);
+	quat->w = copysignf(S4, mat->up.X - mat->right.Y);
+}
+
+void QuatNormalize(D3DXQUATERNION* pQuat)
+{
+	D3DXQUATERNION Out, Source;
+
+	Source.x = pQuat->x;
+	Source.y = pQuat->y;
+	Source.z = pQuat->z;
+	Source.w = pQuat->w;
+
+	D3DXQuaternionNormalize(&Out, &Source);
+
+	pQuat->x = Out.x;
+	pQuat->y = Out.y;
+	pQuat->z = Out.z;
+	pQuat->w = Out.w;
+}

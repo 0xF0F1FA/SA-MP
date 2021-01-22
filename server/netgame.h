@@ -61,11 +61,13 @@ private:
 	//BOOL						m_bACEnabled;
 
 	void UpdateNetwork();
+	CThreadedHttp* m_pThreadedHttp;
 	CScriptTimers* m_pScriptTimers;
 	
 public:
 
 	CScriptTimers* GetTimers() { return m_pScriptTimers; };
+	CThreadedHttp* GetThreadedHttp() { return m_pThreadedHttp; };
 	CVariables* GetVariable() const { return m_pVariable; };
 
 	bool m_bNameTagLOS;

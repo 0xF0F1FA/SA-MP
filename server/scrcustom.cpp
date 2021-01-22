@@ -7040,6 +7040,34 @@ static cell n_GetVehicleDistanceFromPoint(AMX* amx, cell* params)
 	return amx_ctof(fResult);
 }
 
+// native HTTP(index, type, url[], data[], callback[])
+static cell n_HTTP(AMX* amx, cell* params)
+{
+	char* szUrl, *szData, *szCallback;
+	bool bQuietMode;
+
+	CHECK_PARAMS(amx, "HTTP", 5);
+
+	if (pNetGame->GetThreadedHttp())
+	{
+		bQuietMode = false;
+
+		amx_StrParam(amx, params[3], szUrl);
+		if (szUrl)
+		{
+			amx_StrParam(amx, params[4], szData);
+			amx_StrParam(amx, params[5], szCallback);
+
+			if (!szCallback || szCallback[0] == '\0')
+				bQuietMode = true;
+
+			return pNetGame->GetThreadedHttp()->AddEntry(params[1], params[2],
+				szUrl, szData, NULL, bQuietMode, amx, szCallback);
+		}
+	}
+	return 0;
+}
+
 //----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
@@ -7463,6 +7491,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetPlayerTime",			n_SetPlayerTime },
 	{ "TogglePlayerClock",		n_TogglePlayerClock },
 	{ "GetPlayerTime",			n_GetPlayerTime },
+
+	DEFINE_NATIVE(HTTP),
 
 	{ NULL, NULL }
 };

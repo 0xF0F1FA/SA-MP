@@ -204,6 +204,7 @@
     <ClCompile Include="format.cpp" />
     <ClCompile Include="gamemodes.cpp" />
     <ClCompile Include="gangzonepool.cpp" />
+    <ClCompile Include="httpclient.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="menupool.cpp" />
@@ -223,6 +224,7 @@
     <ClCompile Include="scrdatabase.cpp" />
     <ClCompile Include="scrtimers.cpp" />
     <ClCompile Include="textdrawpool.cpp" />
+    <ClCompile Include="threadedhttp.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="vehicle.cpp" />
     <ClCompile Include="vehiclepool.cpp" />
@@ -319,6 +321,7 @@
     <ClInclude Include="format.h" />
     <ClInclude Include="gamemodes.h" />
     <ClInclude Include="gangzonepool.h" />
+    <ClInclude Include="httpclient.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="menupool.h" />
@@ -338,6 +341,7 @@
     <ClInclude Include="scrtimers.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="textdrawpool.h" />
+    <ClInclude Include="threadedhttp.h" />
     <ClInclude Include="variable.h" />
     <ClInclude Include="vehicle.h" />
     <ClInclude Include="vehiclepool.h" />

@@ -15,6 +15,7 @@
 #include <a_vehicles>
 #include <a_objects>
 #include <a_sampdb>
+#include <a_http>
 
 #define MAX_PLAYER_NAME		(24)
 #define MAX_PLAYERS			(200)

@@ -114,6 +114,8 @@ typedef struct _SERVER_SETTINGS {
 #include "variable.h"
 #include "system.h"
 #include "console.h"
+#include "httpclient.h"
+#include "threadedhttp.h"
 #include "scrtimers.h"
 #include "gamemodes.h"
 #include "filterscripts.h"

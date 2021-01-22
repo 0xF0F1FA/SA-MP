@@ -161,12 +161,8 @@ void CHttpClient::HandleEntity()
 	m_Response.header_len = 0;
 	m_Response.response_len = 0;
 
-	while (true)
+	while ((bytes_read = Recv(buffer, sizeof(buffer))) > 0)
 	{
-		bytes_read = Recv(buffer, sizeof(buffer));
-		if (bytes_read <= 0)
-			break;
-
 		SLEEP(5);
 
 		bytes_total += bytes_read;
@@ -179,6 +175,7 @@ void CHttpClient::HandleEntity()
 		}
 
 		memcpy(m_Response.response + (bytes_total - bytes_read), buffer, bytes_read);
+		m_Response.response[bytes_total] = '\0';
 
 		if (!header_got)
 		{

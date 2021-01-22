@@ -80,7 +80,8 @@ CNetGame::CNetGame()
 	m_iCurrentGameModeRepeat = 0;
 	m_bFirstGameModeLoaded = false;
 	m_pScriptTimers = new CScriptTimers;
-	
+	m_pThreadedHttp = new CThreadedHttp;
+
 	#ifndef WIN32
 		m_dElapsedTime = 0.0;
 	#endif
@@ -211,6 +212,7 @@ CNetGame::~CNetGame()
 	SAFE_DELETE(m_pVehiclePool);
 	SAFE_DELETE(m_pPlayerPool);
 	SAFE_DELETE(m_pScriptTimers);
+	SAFE_DELETE(m_pThreadedHttp);
 	SAFE_DELETE(m_pObjectPool);
 	SAFE_DELETE(m_pPickupPool);
 	SAFE_DELETE(m_pMenuPool);
@@ -616,7 +618,7 @@ void CNetGame::Process()
 		if(m_pObjectPool) m_pObjectPool->Process(fElapsedTime);
 		if(m_pGameMode) m_pGameMode->Frame(fElapsedTime);
 		if(m_pScriptTimers) m_pScriptTimers->Process((DWORD)(fElapsedTime * 1000.0f));
-	
+		if(m_pThreadedHttp) m_pThreadedHttp->Process();
 	} 
 	else if(m_iGameState == GAMESTATE_RESTARTING) 
 	{

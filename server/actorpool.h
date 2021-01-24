@@ -12,6 +12,8 @@ public:
 	CActorPool();
 	~CActorPool();
 	bool GetSlotState(int iActorID);
+
+	void UpdateLastActorID();
 	inline int GetLastActorID() { return m_iLastActorID; };
 
 };

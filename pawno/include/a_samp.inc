@@ -322,6 +322,7 @@
 #define SERVER_VARTYPE_STRING	(2)
 #define SERVER_VARTYPE_FLOAT	(3)
 
+native GetActorPoolSize();
 native print(const output[]);
 native printf(const output[], {Float,_}:...);
 native format(buffer[], length, const format[], {Float,_}:...);

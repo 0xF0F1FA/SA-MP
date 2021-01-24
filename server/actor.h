@@ -8,6 +8,7 @@ private:
 
 public:
 	CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle);
+	//~CActor() {}
 
 };
 

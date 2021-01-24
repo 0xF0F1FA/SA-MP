@@ -5468,6 +5468,18 @@ static cell n_CreateActor(AMX* amx, cell* params)
 	return INVALID_ACTOR_ID;
 }
 
+// DestroyActor(actorid)
+static cell n_DestroyActor(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "DestroyActor", 1);
+
+	if (pNetGame->GetActorPool()) // && pNetGame->GetActorPool->GetSlotState(params[1]));
+	{
+		return (cell)pNetGame->GetActorPool()->Destroy(params[1]);
+	}
+	return 0;
+}
+
 // native IsValidActor(actorid)
 static cell n_IsValidActor(AMX* amx, cell* params)
 {
@@ -7526,6 +7538,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	// Actors
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
+	DEFINE_NATIVE(DestroyActor),
 	DEFINE_NATIVE(IsValidActor),
 
 	// Menus

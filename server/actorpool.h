@@ -16,6 +16,7 @@ public:
 
 	void UpdateLastActorID();
 	unsigned short New(int iModelID, VECTOR vecPos, float fAngle);
+	bool Destroy(int iActorID);
 	inline int GetLastActorID() { return m_iLastActorID; };
 
 };

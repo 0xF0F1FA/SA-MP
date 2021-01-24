@@ -3,6 +3,7 @@
 
 CActorPool::CActorPool()
 {
+	memset(m_pActors, 0, sizeof(CActor*) * MAX_ACTORS);
 	memset(m_bSlotState, 0, sizeof(bool) * MAX_ACTORS);
 	m_iLastActorID = -1;
 }
@@ -31,3 +32,32 @@ void CActorPool::UpdateLastActorID()
 		}
 	}
 }
+
+unsigned short CActorPool::New(int iModelID, VECTOR vecPos, float fAngle)
+{
+	CActor* pActor;
+	unsigned short ActorID;
+
+	for (ActorID = 0; ActorID < MAX_ACTORS; ActorID++)
+	{
+		if (m_bSlotState[ActorID])
+		{
+			break;
+		}
+	}
+
+	if (ActorID == MAX_ACTORS) return INVALID_ACTOR_ID;
+
+	pActor = new CActor(ActorID, iModelID, vecPos, fAngle);
+	if (pActor)
+	{
+		m_pActors[ActorID] = pActor;
+		m_bSlotState[ActorID] = true;
+
+		UpdateLastActorID();
+
+		return ActorID;
+	}
+	return INVALID_ACTOR_ID;
+}
+

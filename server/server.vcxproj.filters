@@ -195,6 +195,7 @@
     </ClCompile>
     <ClCompile Include="playertextdrawpool.cpp" />
     <ClCompile Include="actorpool.cpp" />
+    <ClCompile Include="actor.cpp" />
     <ClCompile Include="threadedhttp.cpp" />
     <ClCompile Include="httpclient.cpp" />
   </ItemGroup>
@@ -485,6 +486,7 @@
     </ClInclude>
     <ClInclude Include="playertextdrawpool.h" />
     <ClInclude Include="actorpool.h" />
+    <ClInclude Include="actor.h" />
     <ClInclude Include="threadedhttp.h" />
     <ClInclude Include="httpclient.h" />
   </ItemGroup>

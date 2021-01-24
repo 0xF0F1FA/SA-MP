@@ -198,6 +198,7 @@
     <ClCompile Include="..\sdk\zlib\trees.c" />
     <ClCompile Include="..\sdk\zlib\uncompr.c" />
     <ClCompile Include="..\sdk\zlib\zutil.c" />
+    <ClCompile Include="actor.cpp" />
     <ClCompile Include="actorpool.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="exceptions.cpp" />
@@ -317,6 +318,7 @@
     <ClInclude Include="..\sdk\zlib\zconf.in.h" />
     <ClInclude Include="..\sdk\zlib\zlib.h" />
     <ClInclude Include="..\sdk\zlib\zutil.h" />
+    <ClInclude Include="actor.h" />
     <ClInclude Include="actorpool.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="filterscripts.h" />

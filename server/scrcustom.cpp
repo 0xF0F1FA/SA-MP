@@ -5448,6 +5448,26 @@ static cell n_GetActorPoolSize(AMX* amx, cell* params)
 	return (cell)-1;
 }
 
+// native CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
+static cell n_CreateActor(AMX* amx, cell* params)
+{
+	VECTOR vecPosition;
+	float fRotation;
+
+	CHECK_PARAMS(amx, "CreateActor", 5);
+
+	if (pNetGame->GetActorPool())
+	{
+		vecPosition.X = amx_ctof(params[2]);
+		vecPosition.Y = amx_ctof(params[3]);
+		vecPosition.Z = amx_ctof(params[4]);
+		fRotation = amx_ctof(params[5]);
+
+		return (cell)pNetGame->GetActorPool()->New(params[1], vecPosition, fRotation);
+	}
+	return INVALID_ACTOR_ID;
+}
+
 // Menus
 
 // native Menu:CreateMenu(title[], columns, Float:X, Float:Y, Float:column1width, Float:column2width = 0.0);
@@ -7490,6 +7510,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	
 	// Actors
 	DEFINE_NATIVE(GetActorPoolSize),
+	DEFINE_NATIVE(CreateActor),
 
 	// Menus
 	{ "CreateMenu",				n_CreateMenu },

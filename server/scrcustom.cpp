@@ -5468,6 +5468,21 @@ static cell n_CreateActor(AMX* amx, cell* params)
 	return INVALID_ACTOR_ID;
 }
 
+// native IsValidActor(actorid)
+static cell n_IsValidActor(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "IsValidActor", 1);
+
+	if (pNetGame->GetActorPool())
+	{
+		if (pNetGame->GetActorPool()->GetSlotState(params[1]))
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // Menus
 
 // native Menu:CreateMenu(title[], columns, Float:X, Float:Y, Float:column1width, Float:column2width = 0.0);
@@ -7511,6 +7526,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	// Actors
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
+	DEFINE_NATIVE(IsValidActor),
 
 	// Menus
 	{ "CreateMenu",				n_CreateMenu },

@@ -5436,6 +5436,18 @@ static cell n_GetPlayerObjectModel(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetActorPoolSize()
+static cell n_GetActorPoolSize(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetActorPoolSize", 0);
+
+	if (pNetGame->GetActorPool())
+	{
+		return pNetGame->GetActorPool()->GetLastActorID();
+	}
+	return (cell)-1;
+}
+
 // Menus
 
 // native Menu:CreateMenu(title[], columns, Float:X, Float:Y, Float:column1width, Float:column2width = 0.0);
@@ -7476,6 +7488,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "AttachObjectToPlayer",		n_AttachObjectToPlayer },
 	{ "AttachPlayerObjectToPlayer",	n_AttachPlayerObjectToPlayer },
 	
+	// Actors
+	DEFINE_NATIVE(GetActorPoolSize),
+
 	// Menus
 	{ "CreateMenu",				n_CreateMenu },
 	{ "DestroyMenu",			n_DestroyMenu },

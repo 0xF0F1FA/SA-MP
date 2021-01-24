@@ -57,6 +57,7 @@ CNetGame::CNetGame()
 	m_pTextPool = NULL;
 	m_pGangZonePool = NULL;
 	m_pVariable = NULL;
+	m_pActorPool = NULL;
 	m_bLanMode = false;
 	//m_byteMod = 0x01;
 	//m_bACEnabled = pConsole->GetBoolVariable("anticheat");
@@ -219,6 +220,7 @@ CNetGame::~CNetGame()
 	SAFE_DELETE(m_pTextPool);
 	SAFE_DELETE(m_pGangZonePool);
 	SAFE_DELETE(m_pVariable);
+	SAFE_DELETE(m_pActorPool);
 
 	//if (IsACEnabled())
 	//	CAntiCheat::Shutdown(this);
@@ -386,6 +388,10 @@ void CNetGame::Init(bool bFirst = false)
 	if (!m_pGangZonePool) {
 		m_pGangZonePool = new CGangZonePool();
 	}
+
+	if (!m_pActorPool) {
+		m_pActorPool = new CActorPool();
+	}
 	
 	// Setup gamemode
 	if(!m_pGameMode) {
@@ -445,6 +451,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	SAFE_DELETE(m_pMenuPool);
 	SAFE_DELETE(m_pTextPool);
 	SAFE_DELETE(m_pGangZonePool);
+	SAFE_DELETE(m_pActorPool);
 
 	// m_pGameMode->Unload();
 	

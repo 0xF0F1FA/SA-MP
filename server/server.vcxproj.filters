@@ -194,6 +194,7 @@
       <Filter>sdk\sha2</Filter>
     </ClCompile>
     <ClCompile Include="playertextdrawpool.cpp" />
+    <ClCompile Include="actorpool.cpp" />
     <ClCompile Include="threadedhttp.cpp" />
     <ClCompile Include="httpclient.cpp" />
   </ItemGroup>
@@ -483,6 +484,7 @@
       <Filter>sdk\sha2</Filter>
     </ClInclude>
     <ClInclude Include="playertextdrawpool.h" />
+    <ClInclude Include="actorpool.h" />
     <ClInclude Include="threadedhttp.h" />
     <ClInclude Include="httpclient.h" />
   </ItemGroup>

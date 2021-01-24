@@ -132,6 +132,7 @@ typedef struct _SERVER_SETTINGS {
 #include "menupool.h"
 #include "textdrawpool.h"
 #include "gangzonepool.h"
+#include "actorpool.h"
 #include "netgame.h"
 #include "plugins.h"
 //#include "rcon.h"

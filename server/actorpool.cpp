@@ -91,6 +91,15 @@ void CActorPool::SetActorVirtualWorld(unsigned short ActorID, int iVirtualWorld)
 	}
 }
 
+int CActorPool::GetActorVirtualWorld(unsigned short ActorID)
+{
+	if (ActorID < MAX_ACTORS)
+	{
+		return m_iVirtualWorld[ActorID];
+	}
+	return 0;
+}
+
 bool CActorPool::Destroy(int iActorID)
 {
 	if ((iActorID >= 0 && iActorID < MAX_ACTORS) && m_bSlotState[iActorID])

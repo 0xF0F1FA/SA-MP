@@ -5496,6 +5496,21 @@ static cell n_SetActorVirtualWorld(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetActorVirtualWorld(actorid)
+static cell n_GetActorVirtualWorld(AMX* amx, cell* params)
+{
+	CActor* pActor;
+
+	CHECK_PARAMS(amx, "GetActorVirtualWorld", 1);
+
+	if (pNetGame->GetActorPool() &&
+		pNetGame->GetActorPool()->GetSlotState(params[1]))
+	{
+		return pNetGame->GetActorPool()->GetActorVirtualWorld((unsigned short)params[1]);
+	}
+	return 0;
+}
+
 
 // native GetActorFacingAngle(actorid, &Float:ang)
 static cell n_GetActorFacingAngle(AMX* amx, cell* params)
@@ -7646,6 +7661,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
 	DEFINE_NATIVE(SetActorVirtualWorld),
+	DEFINE_NATIVE(GetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorFacingAngle),
 	DEFINE_NATIVE(GetActorHealth),
 	DEFINE_NATIVE(IsValidActor),

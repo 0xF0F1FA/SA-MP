@@ -21,6 +21,7 @@ public:
 	unsigned short New(int iModelID, VECTOR vecPos, float fAngle);
 	bool Destroy(int iActorID);
 	void SetActorVirtualWorld(unsigned short ActorID, int iVirtualWorld);
+	int GetActorVirtualWorld(unsigned short ActorID);
 	inline int GetLastActorID() { return m_iLastActorID; };
 
 };

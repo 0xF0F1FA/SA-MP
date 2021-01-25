@@ -5,5 +5,6 @@
 
 native CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation);
 native DestroyActor(actorid);
+native SetActorInvulnerable(actorid, invulnerable = true);
 native IsActorInvulnerable(actorid);
 native IsValidActor(actorid);

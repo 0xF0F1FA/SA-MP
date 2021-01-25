@@ -7,6 +7,11 @@ CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAng
 }
 
 
+void CActor::SetInvulnerable(bool bInvulnerable)
+{
+	m_bInvulnerable = bInvulnerable;
+}
+
 bool CActor::IsInvulnerable()
 {
 	return m_bInvulnerable;

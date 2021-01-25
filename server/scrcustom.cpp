@@ -5495,6 +5495,24 @@ static cell n_IsValidActor(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SetActorInvulnerable(actorid, invulnerable = true)
+static cell n_SetActorInvulnerable(AMX* amx, cell* params)
+{
+	CActor* pActor;
+
+	CHECK_PARAMS(amx, "SetActorInvulnerable", 2);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			pActor->SetInvulnerable(params[2] != 0);
+			return 1;
+		}
+	}
+	return 0;
+}
 
 // native IsActorInvulnerable(actorid)
 static cell n_IsActorInvulnerable(AMX* amx, cell* params)
@@ -7562,6 +7580,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
 	DEFINE_NATIVE(IsValidActor),
+	DEFINE_NATIVE(SetActorInvulnerable),
 	DEFINE_NATIVE(IsActorInvulnerable),
 
 	// Menus

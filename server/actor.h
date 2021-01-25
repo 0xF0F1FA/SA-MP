@@ -11,6 +11,7 @@ public:
 	CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle);
 	//~CActor() {}
 
+	void SetInvulnerable(bool bInvulnerable);
 	bool IsInvulnerable();
 };
 

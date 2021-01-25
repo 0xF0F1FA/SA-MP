@@ -5480,6 +5480,32 @@ static cell n_DestroyActor(AMX* amx, cell* params)
 	return 0;
 }
 
+
+// native GetActorFacingAngle(actorid, &Float:ang)
+static cell n_GetActorFacingAngle(AMX* amx, cell* params)
+{
+	CActor* pActor;
+	float fAngle;
+	cell* cptr;
+
+	CHECK_PARAMS(amx, "GetActorFacingAngle", 2);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			fAngle = pActor->GetFacingAngle();
+
+			if (amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(fAngle);
+
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // native GetActorHealth(actorid, &Float:health)
 static cell n_GetActorHealth(AMX* amx, cell* params)
 {
@@ -7603,6 +7629,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
+	DEFINE_NATIVE(GetActorFacingAngle),
 	DEFINE_NATIVE(GetActorHealth),
 	DEFINE_NATIVE(IsValidActor),
 	DEFINE_NATIVE(SetActorInvulnerable),

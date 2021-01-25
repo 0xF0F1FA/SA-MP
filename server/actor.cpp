@@ -4,7 +4,15 @@
 CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle)
 {
 	m_fHealth = 100.0f;
+	m_fSpawnFacingAngle = fAngle;
+	m_fFacingAngle = fAngle;
 	m_bInvulnerable = true;
+
+float CActor::GetFacingAngle()
+{
+	return m_fFacingAngle;
+}
+
 }
 
 float CActor::GetHealth()

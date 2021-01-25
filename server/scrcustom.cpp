@@ -5480,6 +5480,34 @@ static cell n_DestroyActor(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z)
+static cell n_GetActorPos(AMX* amx, cell* params)
+{
+	CActor* pActor;
+	VECTOR* vecPosition;
+	cell* cptr;
+
+	CHECK_PARAMS(amx, "GetActorPos", 4);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			vecPosition = pActor->GetPosition();
+
+			if (amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(vecPosition->X);
+			if (amx_GetAddr(amx, params[3], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(vecPosition->Y);
+			if (amx_GetAddr(amx, params[4], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(vecPosition->Z);
+
+			return 1;
+		}
+	}
+	return 0;
+}
 
 // native SetActorVirtualWorld(actorid, vworld)
 static cell n_SetActorVirtualWorld(AMX* amx, cell* params)
@@ -7660,6 +7688,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
+	DEFINE_NATIVE(GetActorPos),
 	DEFINE_NATIVE(SetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorFacingAngle),

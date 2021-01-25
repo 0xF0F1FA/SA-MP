@@ -7,6 +7,7 @@ native CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation);
 native DestroyActor(actorid);
 native SetActorVirtualWorld(actorid, vworld);
 native GetActorVirtualWorld(actorid);
+native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z);
 native GetActorFacingAngle(actorid, &Float:ang);
 native GetActorHealth(actorid, &Float:health);
 native SetActorInvulnerable(actorid, invulnerable = true);

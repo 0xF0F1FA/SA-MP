@@ -5,6 +5,8 @@ CActorPool::CActorPool()
 {
 	memset(m_pActors, 0, sizeof(CActor*) * MAX_ACTORS);
 	memset(m_bSlotState, 0, sizeof(bool) * MAX_ACTORS);
+	memset(m_iVirtualWorld, 0, sizeof(int) * MAX_ACTORS);
+
 	m_iLastActorID = -1;
 }
 
@@ -72,12 +74,21 @@ unsigned short CActorPool::New(int iModelID, VECTOR vecPos, float fAngle)
 	{
 		m_pActors[ActorID] = pActor;
 		m_bSlotState[ActorID] = true;
+		m_iVirtualWorld[ActorID] = 0;
 
 		UpdateLastActorID();
 
 		return ActorID;
 	}
 	return INVALID_ACTOR_ID;
+}
+
+void CActorPool::SetActorVirtualWorld(unsigned short ActorID, int iVirtualWorld)
+{
+	if (ActorID < MAX_ACTORS && m_bSlotState[ActorID])
+	{
+		m_iVirtualWorld[ActorID] = iVirtualWorld;
+	}
 }
 
 bool CActorPool::Destroy(int iActorID)

@@ -21,6 +21,15 @@ CActorPool::~CActorPool()
 	m_iLastActorID = -1;
 }
 
+CActor* CActorPool::GetAt(int iActorID)
+{
+	if (iActorID >= 0 && iActorID < MAX_ACTORS)
+	{
+		return  m_pActors[iActorID];
+	}
+	return NULL;
+}
+
 bool CActorPool::GetSlotState(int iActorID)
 {
 	if (iActorID >= 0 && iActorID < MAX_ACTORS)
@@ -50,7 +59,7 @@ unsigned short CActorPool::New(int iModelID, VECTOR vecPos, float fAngle)
 
 	for (ActorID = 0; ActorID < MAX_ACTORS; ActorID++)
 	{
-		if (m_bSlotState[ActorID])
+		if (!m_bSlotState[ActorID])
 		{
 			break;
 		}

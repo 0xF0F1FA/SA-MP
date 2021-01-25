@@ -12,6 +12,8 @@ private:
 public:
 	CActorPool();
 	~CActorPool();
+
+	CActor* GetAt(int iActorID);
 	bool GetSlotState(int iActorID);
 
 	void UpdateLastActorID();

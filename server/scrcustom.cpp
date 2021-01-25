@@ -5480,6 +5480,30 @@ static cell n_DestroyActor(AMX* amx, cell* params)
 	return 0;
 }
 
+// native GetActorHealth(actorid, &Float:health)
+static cell n_GetActorHealth(AMX* amx, cell* params)
+{
+	CActor* pActor;
+	float fHealth;
+	cell* cptr;
+
+	CHECK_PARAMS(amx, "GetActorHealth", 2);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			fHealth = pActor->GetHealth();
+
+			if (amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(fHealth);
+
+			return 1;
+		}
+	}
+	return 0;
+}
 // native IsValidActor(actorid)
 static cell n_IsValidActor(AMX* amx, cell* params)
 {
@@ -7579,6 +7603,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
+	DEFINE_NATIVE(GetActorHealth),
 	DEFINE_NATIVE(IsValidActor),
 	DEFINE_NATIVE(SetActorInvulnerable),
 	DEFINE_NATIVE(IsActorInvulnerable),

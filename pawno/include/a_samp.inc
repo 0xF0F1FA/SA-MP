@@ -518,3 +518,5 @@ forward OnTrailerUpdate(playerid, vehicleid);
 forward OnPlayerStunt(playerid, vehicleid);
 forward OnVehicleSirenStateChange(playerid, vehicleid, newstate);
 forward OnVehicleDamageStatusUpdate(vehicleid, playerid);
+forward OnActorStreamIn(actorid, forplayerid);
+forward OnActorStreamOut(actorid, forplayerid);

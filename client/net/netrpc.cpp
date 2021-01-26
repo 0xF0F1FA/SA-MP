@@ -834,6 +834,60 @@ static void ClientCheck(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void WorldAddActor(RPCParameters* rpcParams)
+{
+	ACTOR_TRANSMIT Transmit;
+
+	// Note: Due to SA-MP's structure packing, ACTOR_TRANSMIT size is 27 bytes,
+	// and not 32 bytes, so everything, except the actor id will be correct.
+	// Atleast this way. So maybe it's a TODO?
+	// Also Note: In the DL version the ACTOR_TRANSMIT size is 31 bytes,
+	// because it's contains some custom skin informations.
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == sizeof(ACTOR_TRANSMIT) * 8)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		memset(&Transmit, 0, sizeof(ACTOR_TRANSMIT));
+
+		bsData.Read((PCHAR)&Transmit, sizeof(ACTOR_TRANSMIT));
+
+		// TODO: Change this line
+		//if (sub_100B3DE0(ActorData.iModelID))
+		{
+			pNetGame->GetActorPool()->New(&Transmit);
+
+			// Seems like theres an leftover code here, it's not connected anywhere
+			/*if (ActorData.usID < MAX_ACTORS)
+			{
+				if (pNetGame->GetActorPool()->m_bSlotState[ActorData.usID])
+				{
+					CActor* pActor = pNetGame->GetActorPool()->m_pActor[ActorData.usID];
+				}
+			}*/
+		}
+	}
+}
+
+//----------------------------------------------------
+
+static void WorldRemoveActor(RPCParameters* rpcParams)
+{
+	unsigned short usActorID = INVALID_ACTOR_ID;
+
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == 16)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(usActorID);
+		
+		pNetGame->GetActorPool()->Delete(usActorID);
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakClientInterface * pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient,ServerJoin);
@@ -868,6 +922,8 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,SetTimeEx);
 	REGISTER_STATIC_RPC(pRakClient,ToggleClock);
 	REGISTER_STATIC_RPC(pRakClient,ClientCheck);
+	REGISTER_STATIC_RPC(pRakClient,WorldAddActor);
+	REGISTER_STATIC_RPC(pRakClient,WorldRemoveActor);
 }
 
 //----------------------------------------------------

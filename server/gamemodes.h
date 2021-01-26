@@ -85,6 +85,8 @@ public:
 	void OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
 	void OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
 	void OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
+	void OnActorStreamIn(cell actorid, cell forplayerid);
+	void OnActorStreamOut(cell actorid, cell forplayerid);
 };
 
 //----------------------------------------------------------------------------------

@@ -56,6 +56,8 @@ enum
 	RPC_TypingEvent,
 	RPC_ClientCheck,
 	RPC_Click,
+	RPC_WorldAddActor,
+	RPC_WorldRemoveActor,
 
 	RPC_ScrSetSpawnInfo = 100,
 	RPC_ScrSetPlayerTeam,

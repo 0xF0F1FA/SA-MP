@@ -53,6 +53,7 @@ public:
 	CPlayerPool			*m_pPlayerPool;
 	CPickupPool			*m_pPickupPool;
 	CVehiclePool		*m_pVehiclePool;
+	CActorPool			*m_pActorPool;
 	RakClientInterface	*m_pRakClient;	
 
 	float		m_fGravity;
@@ -99,6 +100,7 @@ public:
 	CMenuPool * GetMenuPool() { return m_pMenuPool; };
 	CTextDrawPool * GetTextDrawPool() { return m_pTextDrawPool; };
 	CGangZonePool * GetGangZonePool() { return m_pGangZonePool; };
+	CActorPool * GetActorPool() { return m_pActorPool; };
 	RakClientInterface * GetRakClient() { return m_pRakClient; };
 
 	int GetGameState() { return m_iGameState; };
@@ -118,6 +120,7 @@ public:
 	void ResetMenuPool();
 	void ResetTextDrawPool();
 	void ResetGangZonePool();
+	void ResetActorPool();
 	void ShutdownForGameModeRestart();
 
 	void  ResetMapIcons();

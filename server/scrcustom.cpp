@@ -5516,10 +5516,14 @@ static cell n_SetActorVirtualWorld(AMX* amx, cell* params)
 
 	CHECK_PARAMS(amx, "SetActorVirtualWorld", 2);
 
-	if (pNetGame->GetActorPool() &&
-		pNetGame->GetActorPool()->GetSlotState(params[1]))
+	if (pNetGame->GetActorPool())
 	{
-		pNetGame->GetActorPool()->SetActorVirtualWorld((unsigned short)params[1], params[2]);
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			pActor->SetVirtualWorld(params[2]);
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -5531,10 +5535,13 @@ static cell n_GetActorVirtualWorld(AMX* amx, cell* params)
 
 	CHECK_PARAMS(amx, "GetActorVirtualWorld", 1);
 
-	if (pNetGame->GetActorPool() &&
-		pNetGame->GetActorPool()->GetSlotState(params[1]))
+	if (pNetGame->GetActorPool())
 	{
-		return pNetGame->GetActorPool()->GetActorVirtualWorld((unsigned short)params[1]);
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			return pActor->GetVirtualWorld();
+		}
 	}
 	return 0;
 }

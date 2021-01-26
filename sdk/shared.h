@@ -30,6 +30,8 @@
 
 #define RPC_PING_UPDATE_TIME 3000 // in ms (3 seconds)
 
+#define MAX_CLIENT_ACTORS 50
+
 #define EVENT_TYPE_PAINTJOB 1
 #define EVENT_TYPE_CARCOMPONENT 2
 #define EVENT_TYPE_CARCOLOR 3
@@ -375,5 +377,15 @@ typedef struct
 	unsigned char bBackLeft : 1;
 	unsigned char bBackRight : 1;
 } VEHICLE_OPEN_CLOSE_FLAG;
+
+typedef struct
+{
+	unsigned short usActorID;
+	int iModelID;
+	VECTOR vecPosition;
+	float fFacingAngle;
+	float fHealth;
+	bool bInvurnable;
+} ACTOR_TRANSMIT;
 
 #endif // _SAMP_SHARED_H

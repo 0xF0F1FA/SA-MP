@@ -49,6 +49,9 @@ private:
 	bool m_bStreamedInPickup[MAX_PICKUPS];
 	unsigned short m_usPickupLimitCount;
 
+	bool m_bIsActorStreamedIn[MAX_ACTORS];
+	int m_iStreamedActorCount;
+
 public:
 	CVariables* m_pVariables;
 	CPlayerTextDrawPool* m_pTextDraw;
@@ -127,11 +130,18 @@ public:
 		m_fGameTime = 720.0f; // 12 o'clock in minutes	
 		m_fHealth = 0.0f;
 		m_fArmour = 0.0f;
+
+		memset(m_bIsActorStreamedIn, 0, sizeof(bool) * MAX_ACTORS);
+		m_iStreamedActorCount = 0;
 	};
 
 	bool IsPickupStreamedIn(int iPickupID);
 	void StreamPickupIn(int iPickupID);
 	void StreamPickupOut(int iPickupID);
+
+	bool IsActorStreamedIn(int iActorID);
+	void StreamActorIn(int iActorID);
+	void StreamActorOut(int iActorID);
 
 	void UpdatePosition(float x, float y, float z);
 	void ProcessStreaming();

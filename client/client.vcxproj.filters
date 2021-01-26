@@ -332,6 +332,9 @@
     <ClCompile Include="game\actor.cpp">
       <Filter>game</Filter>
     </ClCompile>
+    <ClCompile Include="net\actorpool.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -746,6 +749,9 @@
     </ClInclude>
     <ClInclude Include="game\actor.h">
       <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="net\actorpool.h">
+      <Filter>net</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

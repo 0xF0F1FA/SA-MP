@@ -948,3 +948,33 @@ void CGameMode::OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid)
 		amx_Exec(&m_amx, NULL, idx);
 	}
 }
+
+void CGameMode::OnActorStreamIn(cell actorid, cell forplayerid)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnActorStreamIn", &idx))
+	{
+		amx_Push(&m_amx, forplayerid);
+		amx_Push(&m_amx, actorid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}
+
+void CGameMode::OnActorStreamOut(cell actorid, cell forplayerid)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnActorStreamOut", &idx))
+	{
+		amx_Push(&m_amx, forplayerid);
+		amx_Push(&m_amx, actorid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}

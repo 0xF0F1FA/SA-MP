@@ -113,6 +113,8 @@ CPlayer::CPlayer()
 
 	m_tmLastStreamRateTick = 0;
 	m_usPickupLimitCount = 0;
+
+	Deactivate();
 }
 
 CPlayer::~CPlayer()
@@ -210,6 +212,8 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 void CPlayer::ProcessStreaming()
 {
 	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	CActorPool* pActorPool;
+	CActor* pActor;
 	float fDistance;
 	int i;
 
@@ -226,6 +230,28 @@ void CPlayer::ProcessStreaming()
 				StreamPickupIn(i);
 			} else if (m_bStreamedInPickup[i]) {
 				StreamPickupOut(i);
+			}
+		}
+	}
+
+	pActorPool = pNetGame->GetActorPool();
+	if (pActorPool)
+	{
+		for (i = 0; i <= pActorPool->GetLastActorID(); i++)
+		{
+			pActor = pActorPool->GetAt(i);
+			if (pActor && m_iVirtualWorld == pActor->GetVirtualWorld())
+			{
+				if (pActor->GetSquaredDistanceFrom2DPoint(m_vecPos.X, m_vecPos.Y) <= fDistance)
+				{
+					if(!m_bIsActorStreamedIn[i])
+						StreamActorIn(i);
+				}
+				else
+				{
+					if (m_bIsActorStreamedIn[i])
+						StreamActorOut(i);
+				}
 			}
 		}
 	}
@@ -252,6 +278,43 @@ void CPlayer::StreamPickupOut(int iPickupID)
 		pNetGame->GetPickupPool()->StreamOut(iPickupID, m_bytePlayerID);
 		m_bStreamedInPickup[iPickupID] = false;
 		m_usPickupLimitCount--;
+	}
+}
+
+bool CPlayer::IsActorStreamedIn(int iActorID)
+{
+	return m_bIsActorStreamedIn[iActorID];
+}
+
+void CPlayer::StreamActorIn(int iActorID)
+{
+	if (pNetGame->GetActorPool() && m_iStreamedActorCount <= MAX_CLIENT_ACTORS)
+	{
+		pNetGame->GetActorPool()->StreamActorInForPlayer(iActorID, m_bytePlayerID);
+
+		m_bIsActorStreamedIn[iActorID] = true;
+		m_iStreamedActorCount++;
+
+		if (pNetGame->GetFilterScripts())
+			pNetGame->GetFilterScripts()->OnActorStreamIn(iActorID, m_bytePlayerID);
+		if (pNetGame->GetGameMode())
+			pNetGame->GetGameMode()->OnActorStreamIn(iActorID, m_bytePlayerID);
+	}
+}
+
+void CPlayer::StreamActorOut(int iActorID)
+{
+	if (pNetGame->GetActorPool())
+	{
+		pNetGame->GetActorPool()->StreamActorOutForPlayer(iActorID, m_bytePlayerID);
+
+		m_bIsActorStreamedIn[iActorID] = false;
+		m_iStreamedActorCount--;
+
+		if (pNetGame->GetFilterScripts())
+			pNetGame->GetFilterScripts()->OnActorStreamOut(iActorID, m_bytePlayerID);
+		if (pNetGame->GetGameMode())
+			pNetGame->GetGameMode()->OnActorStreamOut(iActorID, m_bytePlayerID);
 	}
 }
 

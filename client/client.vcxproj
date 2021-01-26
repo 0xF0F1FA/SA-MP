@@ -391,6 +391,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="net\actorpool.cpp" />
     <ClCompile Include="net\gangzonepool.cpp" />
     <ClCompile Include="net\localplayer.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -625,6 +626,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="mod.h" />
     <ClInclude Include="netstats.h" />
+    <ClInclude Include="net\actorpool.h" />
     <ClInclude Include="net\gangzonepool.h" />
     <ClInclude Include="net\localplayer.h" />
     <ClInclude Include="net\menupool.h" />

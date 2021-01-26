@@ -1247,3 +1247,39 @@ void CFilterScripts::OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid)
 		}
 	}
 }
+
+void CFilterScripts::OnActorStreamIn(cell actorid, cell forplayerid)
+{
+	int idx = 0;
+
+	for (char i = 0; i < MAX_FILTER_SCRIPTS; i++)
+	{
+		if (m_pFilterScripts[i] == NULL)
+			continue;
+
+		if (!amx_FindPublic(m_pFilterScripts[i], "OnActorStreamIn", &idx))
+		{
+			amx_Push(m_pFilterScripts[i], forplayerid);
+			amx_Push(m_pFilterScripts[i], actorid);
+			amx_Exec(m_pFilterScripts[i], NULL, idx);
+		}
+	}
+}
+
+void CFilterScripts::OnActorStreamOut(cell actorid, cell forplayerid)
+{
+	int idx = 0;
+
+	for (char i = 0; i < MAX_FILTER_SCRIPTS; i++)
+	{
+		if (m_pFilterScripts[i] == NULL)
+			continue;
+
+		if (!amx_FindPublic(m_pFilterScripts[i], "OnActorStreamOut", &idx))
+		{
+			amx_Push(m_pFilterScripts[i], forplayerid);
+			amx_Push(m_pFilterScripts[i], actorid);
+			amx_Exec(m_pFilterScripts[i], NULL, idx);
+		}
+	}
+}

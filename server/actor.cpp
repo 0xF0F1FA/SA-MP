@@ -12,6 +12,7 @@ CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAng
 	m_fFacingAngle = fAngle;
 	m_bInvulnerable = true;
 	m_iVirtualWorld = 0;
+}
 
 void CActor::SetPosition(float fX, float fY, float fZ)
 {
@@ -91,6 +92,31 @@ float CActor::GetSquaredDistanceFrom2DPoint(float fX, float fY)
 	return Y * Y + X * X;
 }
 
+void CActor::SetHealth(float fHealth)
+{
+	CPlayerPool* pPlayerPool;
+	CPlayer* pPlayer;
+
+	m_fHealth = fHealth;
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool)
+	{
+		RakNet::BitStream bsSend;
+
+		bsSend.Write(m_usActorID);
+		bsSend.Write(m_fHealth);
+
+		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+
+			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			{
+				pNetGame->SendToPlayer(i, RPC_ScrSetActorHealth, &bsSend);
+			}
+		}
+	}
 }
 
 float CActor::GetHealth()

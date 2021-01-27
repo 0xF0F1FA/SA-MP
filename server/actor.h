@@ -24,6 +24,7 @@ public:
 	void SetFacingAngle(float fAngle);
 	float GetFacingAngle();
 	float GetSquaredDistanceFrom2DPoint(float fX, float fY);
+	void SetHealth(float fHealth);
 	float GetHealth();
 	void SetInvulnerable(bool bInvulnerable);
 	bool IsInvulnerable();

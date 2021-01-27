@@ -1821,6 +1821,31 @@ static void ScrSetActorFacingAngle(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ScrSetActorHealth(RPCParameters* rpcParams)
+{
+	unsigned short usActorID;
+	CActor* pActor;
+	float fHealth;
+
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == 48)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(usActorID);
+
+		pActor = pNetGame->GetActorPool()->GetAt(usActorID);
+		if (pActor)
+		{
+			bsData.Read(fHealth);
+
+			pActor->SetHealth(fHealth);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient, ScrSetSpawnInfo);
@@ -1910,6 +1935,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrPlayCrimeReport);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorPos);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorFacingAngle);
+	REGISTER_STATIC_RPC(pRakClient, ScrSetActorHealth);
 }
 
 //----------------------------------------------------

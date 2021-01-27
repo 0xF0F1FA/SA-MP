@@ -21,6 +21,7 @@ public:
 
 	void SetPosition(float fX, float fY, float fZ);
 	VECTOR* GetPosition();
+	void SetFacingAngle(float fAngle);
 	float GetFacingAngle();
 	float GetSquaredDistanceFrom2DPoint(float fX, float fY);
 	float GetHealth();

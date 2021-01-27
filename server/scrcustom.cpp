@@ -5604,6 +5604,24 @@ static cell n_GetActorVirtualWorld(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SetActorFacingAngle(actorid, Float:ang)
+static cell n_SetActorFacingAngle(AMX* amx, cell* params)
+{
+	CActor* pActor;
+
+	CHECK_PARAMS(amx, "SetActorFacingAngle", 2);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			pActor->SetFacingAngle(amx_ctof(params[2]));
+			return 1;
+		}
+	}
+	return 0;
+}
 
 // native GetActorFacingAngle(actorid, &Float:ang)
 static cell n_GetActorFacingAngle(AMX* amx, cell* params)

@@ -1780,7 +1780,7 @@ static void ScrSetActorPos(RPCParameters* rpcParams)
 	if (pNetGame->GetActorPool() &&
 		rpcParams->numberOfBitsOfData == 112)
 	{
-		RakNet::BitStream bsData;
+		RakNet::BitStream bsData(rpcParams);
 
 		bsData.Read(usActorID);
 
@@ -1790,6 +1790,31 @@ static void ScrSetActorPos(RPCParameters* rpcParams)
 			bsData.Read(vecPos);
 
 			pActor->TeleportTo(vecPos.X, vecPos.Y, vecPos.Z);
+		}
+	}
+}
+
+//----------------------------------------------------
+
+static void ScrSetActorFacingAngle(RPCParameters* rpcParams)
+{
+	unsigned short usActorID;
+	CActor* pActor;
+	float fFacingAngle;
+
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == 48)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(usActorID);
+
+		pActor = pNetGame->GetActorPool()->GetAt(usActorID);
+		if (pActor)
+		{
+			bsData.Read(fFacingAngle);
+
+			pActor->SetAngle(fFacingAngle);
 		}
 	}
 }
@@ -1884,6 +1909,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrAudioStream);
 	REGISTER_STATIC_RPC(pRakClient, ScrPlayCrimeReport);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorPos);
+	REGISTER_STATIC_RPC(pRakClient, ScrSetActorFacingAngle);
 }
 
 //----------------------------------------------------

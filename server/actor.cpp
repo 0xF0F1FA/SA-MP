@@ -50,6 +50,32 @@ VECTOR* CActor::GetPosition()
 	return &m_vecPosition;
 }
 
+void CActor::SetFacingAngle(float fAngle)
+{
+	CPlayerPool* pPlayerPool;
+	CPlayer* pPlayer;
+
+	m_fFacingAngle = fAngle;
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool)
+	{
+		RakNet::BitStream bsSend;
+
+		bsSend.Write(m_usActorID);
+		bsSend.Write(fAngle);
+
+		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+
+			if (pPlayer && pPlayer->IsActorStreamedIn(i))
+			{
+				pNetGame->SendToPlayer(i, RPC_ScrSetActorFacingAngle, &bsSend);
+			}
+		}
+	}
+}
 
 float CActor::GetFacingAngle()
 {

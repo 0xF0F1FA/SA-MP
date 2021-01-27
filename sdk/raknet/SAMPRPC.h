@@ -144,6 +144,7 @@ enum
 	RPC_ScrAudioStream,
 	RPC_ScrPlayCrimeReport,
 	RPC_ScrSetActorPos,
+	RPC_ScrSetActorFacingAngle,
 
 	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };

@@ -5513,6 +5513,31 @@ static cell n_DestroyActor(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SetActorPos(actorid, Float:X, Float:Y, Float:Z)
+static cell n_SetActorPos(AMX* amx, cell* params)
+{
+	CActor* pActor;
+	float fX, fY, fZ;
+
+	CHECK_PARAMS(amx, "SetActorPos", 4);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if(pActor)
+		{
+			fX = amx_ctof(params[2]);
+			fY = amx_ctof(params[3]);
+			fZ = amx_ctof(params[4]);
+
+			pActor->SetPosition(fX, fY, fZ);
+
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z)
 static cell n_GetActorPos(AMX* amx, cell* params)
 {
@@ -7729,6 +7754,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetActorPoolSize),
 	DEFINE_NATIVE(CreateActor),
 	DEFINE_NATIVE(DestroyActor),
+	DEFINE_NATIVE(SetActorPos),
 	DEFINE_NATIVE(GetActorPos),
 	DEFINE_NATIVE(SetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorVirtualWorld),

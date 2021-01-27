@@ -1771,6 +1771,31 @@ static void ScrPlayCrimeReport(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ScrSetActorPos(RPCParameters* rpcParams)
+{
+	unsigned short usActorID;
+	CActor* pActor;
+	VECTOR vecPos;
+
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == 112)
+	{
+		RakNet::BitStream bsData;
+
+		bsData.Read(usActorID);
+
+		pActor = pNetGame->GetActorPool()->GetAt(usActorID);
+		if (pActor)
+		{
+			bsData.Read(vecPos);
+
+			pActor->TeleportTo(vecPos.X, vecPos.Y, vecPos.Z);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient, ScrSetSpawnInfo);
@@ -1858,6 +1883,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetShopName);
 	REGISTER_STATIC_RPC(pRakClient, ScrAudioStream);
 	REGISTER_STATIC_RPC(pRakClient, ScrPlayCrimeReport);
+	REGISTER_STATIC_RPC(pRakClient, ScrSetActorPos);
 }
 
 //----------------------------------------------------

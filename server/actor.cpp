@@ -3,6 +3,7 @@
 
 CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle)
 {
+	m_usActorID = usActorID;
 	m_fHealth = 100.0f;
 	m_iModelID = iModelID;
 	m_vecSpawnPosition = vecPos;
@@ -11,6 +12,38 @@ CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAng
 	m_fFacingAngle = fAngle;
 	m_bInvulnerable = true;
 	m_iVirtualWorld = 0;
+
+void CActor::SetPosition(float fX, float fY, float fZ)
+{
+	CPlayerPool* pPlayerPool;
+	CPlayer* pPlayer;
+
+	m_vecPosition.X = fX;
+	m_vecPosition.Y = fY;
+	m_vecPosition.Z = fZ;
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool)
+	{
+		RakNet::BitStream bsSend;
+
+		bsSend.Write(m_usActorID);
+		/*bsSend.Write(fX);
+		bsSend.Write(fY);
+		bsSend.Write(fZ);*/
+		bsSend.Write(m_vecPosition);
+
+		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+
+			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			{
+				pNetGame->SendToPlayer(i, RPC_ScrSetActorPos, &bsSend);
+			}
+		}
+	}
+}
 
 VECTOR* CActor::GetPosition()
 {

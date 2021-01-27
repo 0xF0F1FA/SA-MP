@@ -11,6 +11,16 @@ private:
 public:
 	CActorPool();
 	~CActorPool();
+
+	CActor* GetAt(int iActorID)
+	{
+		if (iActorID >= 0 && iActorID < MAX_ACTORS)
+		{
+			return  m_pActor[iActorID];
+		}
+		return NULL;
+	}
+
 	void UpdateLastActorID();
 	bool New(ACTOR_TRANSMIT* pTransmit);
 	bool Delete(unsigned short usActorID);

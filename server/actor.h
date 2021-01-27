@@ -8,6 +8,7 @@ private:
 	VECTOR m_vecSpawnPosition;
 	float m_fSpawnFacingAngle;
 	int m_iModelID;
+	unsigned short m_usActorID;
 	float m_fHealth;
 	VECTOR m_vecPosition;
 	float m_fFacingAngle;
@@ -18,6 +19,7 @@ public:
 	CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle);
 	//~CActor() {}
 
+	void SetPosition(float fX, float fY, float fZ);
 	VECTOR* GetPosition();
 	float GetFacingAngle();
 	float GetSquaredDistanceFrom2DPoint(float fX, float fY);

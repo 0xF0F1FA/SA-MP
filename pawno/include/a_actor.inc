@@ -16,6 +16,7 @@ native IsActorStreamedIn(actorid, forplayerid);
 
 native SetActorVirtualWorld(actorid, vworld);
 native GetActorVirtualWorld(actorid);
+native SetActorPos(actorid, Float:X, Float:Y, Float:Z);
 native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z);
 native GetActorFacingAngle(actorid, &Float:ang);
 native GetActorHealth(actorid, &Float:health);

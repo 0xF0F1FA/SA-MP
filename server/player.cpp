@@ -283,7 +283,11 @@ void CPlayer::StreamPickupOut(int iPickupID)
 
 bool CPlayer::IsActorStreamedIn(int iActorID)
 {
-	return m_bIsActorStreamedIn[iActorID];
+	if (iActorID >= 0 && iActorID < MAX_ACTORS)
+	{
+		return m_bIsActorStreamedIn[iActorID];
+	}
+	return false;
 }
 
 void CPlayer::StreamActorIn(int iActorID)

@@ -1,3 +1,9 @@
+/*  SA-MP Actor Functions
+ *
+ *  (c) Copyright 2015, SA-MP Team
+ *
+ */
+
 #if defined _actor_included
 	#endinput
 #endif
@@ -5,6 +11,9 @@
 
 native CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation);
 native DestroyActor(actorid);
+
+native IsActorStreamedIn(actorid, forplayerid);
+
 native SetActorVirtualWorld(actorid, vworld);
 native GetActorVirtualWorld(actorid);
 native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z);

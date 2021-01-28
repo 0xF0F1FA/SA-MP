@@ -31,7 +31,7 @@ private:
 
 public:
 	CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle);
-	//~CActor() {}
+	~CActor();
 
 	void SetPosition(float fX, float fY, float fZ);
 	VECTOR* GetPosition();

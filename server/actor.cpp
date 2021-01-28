@@ -17,6 +17,14 @@ CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAng
 	memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
 }
 
+CActor::~CActor()
+{
+	if (pNetGame->GetPlayerPool())
+	{
+		pNetGame->GetPlayerPool()->DestroyActorForPlayers(m_usActorID);
+	}
+}
+
 void CActor::SetPosition(float fX, float fY, float fZ)
 {
 	CPlayerPool* pPlayerPool;

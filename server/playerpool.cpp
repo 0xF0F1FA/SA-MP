@@ -358,3 +358,14 @@ void CPlayerPool::DeactivateAll()
 }*/
 	
 //----------------------------------------------------
+
+void CPlayerPool::DestroyActorForPlayers(unsigned short usActorID)
+{
+	for (int i = 0; i <= m_iLastPlayerId; i++)
+	{
+		if (m_bPlayerSlotState[i] && m_pPlayers[i]->IsActorStreamedIn(usActorID))
+		{
+			m_pPlayers[i]->StreamActorOut(usActorID);
+		}
+	}
+}

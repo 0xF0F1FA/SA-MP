@@ -107,6 +107,8 @@ public:
 
 	int GetPlayerCount() { return m_iPlayerCount; };
 
+	void DestroyActorForPlayers(unsigned short usActorID);
+
 	void DeactivateAll();
 	int GetLastPlayerId() const { return m_iLastPlayerId; }
 };

@@ -5604,6 +5604,41 @@ static cell n_GetActorVirtualWorld(AMX* amx, cell* params)
 	return 0;
 }
 
+// native ApplyActorAnimation(actorid, animlib[], animname[], Float:fDelta, loop, lockx, locky, freeze, time)
+static cell n_ApplyActorAnimation(AMX* amx, cell* params)
+{
+	CActor* pActor;
+	char* szAnimLib, * szAnimName;
+	float fDelta;
+	bool bLoop, bLockX, bLockY, bFreeze;
+
+	CHECK_PARAMS(amx, "ApplyActorAnimation", 9);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			amx_StrParam(amx, params[2], szAnimLib);
+			amx_StrParam(amx, params[3], szAnimName);
+
+			if (szAnimLib && szAnimName)
+			{
+				fDelta = amx_ctof(params[4]);
+				bLoop = params[5] != 0;
+				bLockX = params[6] != 0;
+				bLockY = params[7] != 0;
+				bFreeze = params[8] != 0;
+
+				pActor->ApplyAnimation(szAnimLib, szAnimName, fDelta, bLoop,
+					bLockX, bLockY, bFreeze, params[9]);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 // native SetActorFacingAngle(actorid, Float:ang)
 static cell n_SetActorFacingAngle(AMX* amx, cell* params)
 {
@@ -7796,6 +7831,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetActorPos),
 	DEFINE_NATIVE(SetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorVirtualWorld),
+	DEFINE_NATIVE(ApplyActorAnimation),
 	DEFINE_NATIVE(SetActorFacingAngle),
 	DEFINE_NATIVE(GetActorFacingAngle),
 	DEFINE_NATIVE(GetActorHealth),

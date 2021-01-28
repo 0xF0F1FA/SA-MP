@@ -134,6 +134,9 @@ void CActorPool::StreamActorInForPlayer(unsigned short ActorID, unsigned short P
 		bsSend.Write((char*)&Transmit, sizeof(ACTOR_TRANSMIT));
 
 		pNetGame->SendToPlayer(PlayerID, RPC_WorldAddActor, &bsSend);
+
+		if (pActor->IsAnimationOnLoop())
+			pActor->SendAnimation(PlayerID, pActor->GetLoopedAnimationData());
 	}
 }
 

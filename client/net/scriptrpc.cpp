@@ -1846,6 +1846,48 @@ static void ScrSetActorHealth(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ScrApplyActorAnimation(RPCParameters* rpcParams)
+{
+	unsigned short usActorID;
+	CActor* pActor;
+	unsigned char ucAnimLibLen, ucAnimNameLen;
+	char szAnimLib[64] = { 0 }, szAnimName[64] = { 0 };
+	float fDelta;
+	bool bLoop, bLockX, bLockY, bFreeze;
+	int iTime;
+
+	if (pNetGame->GetActorPool() &&
+		(rpcParams->numberOfBitsOfData >= 116 && rpcParams->numberOfBitsOfData <= 1124))
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(usActorID);
+
+		pActor = pNetGame->GetActorPool()->GetAt(usActorID);
+		if (pActor)
+		{
+			//memset(szAnimLib, 0, sizeof(szAnimLib));
+			//memset(szAnimName, 0, sizeof(szAnimName));
+
+			bsData.Read(ucAnimLibLen);
+			bsData.Read(szAnimLib, ucAnimLibLen);
+			bsData.Read(ucAnimNameLen);
+			bsData.Read(szAnimName, ucAnimNameLen);
+			bsData.Read(fDelta);
+			bsData.Read(bLoop);
+			bsData.Read(bLockX);
+			bsData.Read(bLockY);
+			bsData.Read(bFreeze);
+			bsData.Read(iTime);
+
+			pActor->ApplyAnimation(szAnimName, szAnimLib, fDelta,
+				bLoop, bLockX, bLockY, bFreeze, iTime);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient, ScrSetSpawnInfo);
@@ -1936,6 +1978,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorPos);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorFacingAngle);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorHealth);
+	REGISTER_STATIC_RPC(pRakClient, ScrApplyActorAnimation);
 }
 
 //----------------------------------------------------

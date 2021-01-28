@@ -16,6 +16,7 @@ native IsActorStreamedIn(actorid, forplayerid);
 
 native SetActorVirtualWorld(actorid, vworld);
 native GetActorVirtualWorld(actorid);
+native ApplyActorAnimation(actorid, animlib[], animname[], Float:fDelta, loop, lockx, locky, freeze, time);
 native SetActorPos(actorid, Float:X, Float:Y, Float:Z);
 native GetActorPos(actorid, &Float:X, &Float:Y, &Float:Z);
 native SetActorFacingAngle(actorid, Float:ang);

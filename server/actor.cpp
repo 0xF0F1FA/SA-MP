@@ -12,6 +12,9 @@ CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAng
 	m_fFacingAngle = fAngle;
 	m_bInvulnerable = true;
 	m_iVirtualWorld = 0;
+	m_bAnimLoopedOrFreezed = false;
+
+	memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
 }
 
 void CActor::SetPosition(float fX, float fY, float fZ)
@@ -122,6 +125,80 @@ void CActor::SetHealth(float fHealth)
 float CActor::GetHealth()
 {
 	return m_fHealth;
+}
+
+void CActor::ApplyAnimation(char* szAnimLib, char* szAnimName, float fDelta,
+	bool bLoop, bool bLockX, bool bLockY, bool bFreeze, int iTime)
+{
+	ACTOR_ANIMATION Animation;
+	CPlayerPool* pPlayerPool;
+	CPlayer* pPlayer;
+
+	memset(&Animation, 0, sizeof(ACTOR_ANIMATION));
+
+	strncpy_s(Animation.szAnimLib, szAnimLib, sizeof(Animation.szAnimLib));
+	strncpy_s(Animation.szAnimName, szAnimName, sizeof(Animation.szAnimName));
+	
+	Animation.fDelta = fDelta;
+	Animation.bLoop = bLoop;
+	Animation.bLockX = bLockX;
+	Animation.bLockY = bLockY;
+	Animation.bFreeze = bFreeze;
+	Animation.iTime = iTime;
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+
+	if (pPlayerPool)
+	{
+		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+
+			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			{
+				SendAnimation((unsigned short)i, &Animation);
+			}
+		}
+	}
+
+	if (bLoop || bFreeze)
+	{
+		memcpy(&m_Animation, &Animation, sizeof(ACTOR_ANIMATION));
+		m_bAnimLoopedOrFreezed = true;
+	}
+	else
+	{
+		memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
+		m_bAnimLoopedOrFreezed = false;
+	}
+}
+
+void CActor::SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim)
+{
+	unsigned char ucLibLen, ucNameLen;
+
+	ucLibLen = (unsigned char)strlen(pAnim->szAnimLib);
+	ucNameLen = (unsigned char)strlen(pAnim->szAnimName);
+
+	RakNet::BitStream bsSend;
+
+	bsSend.Write(m_usActorID);
+	bsSend.Write(ucLibLen);
+	bsSend.Write(pAnim->szAnimLib, ucLibLen);
+	bsSend.Write(ucNameLen);
+	bsSend.Write(pAnim->szAnimName, ucNameLen);
+	bsSend.Write(pAnim->fDelta);
+	bsSend.Write(pAnim->bLoop);
+	bsSend.Write(pAnim->bLockX);
+	bsSend.Write(pAnim->bLockY);
+	bsSend.Write(pAnim->bFreeze);
+	bsSend.Write(pAnim->iTime);
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(usPlayerID))
+	{
+		pNetGame->SendToPlayer(usPlayerID, RPC_ScrApplyActorAnimation, &bsSend);
+	}
 }
 
 void CActor::SetInvulnerable(bool bInvulnerable)

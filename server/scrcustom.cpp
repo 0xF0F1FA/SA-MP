@@ -5639,6 +5639,25 @@ static cell n_ApplyActorAnimation(AMX* amx, cell* params)
 	return 0;
 }
 
+// native ClearActorAnimations(actorid)
+static cell n_ClearActorAnimations(AMX* amx, cell* params)
+{
+	CActor* pActor;
+
+	CHECK_PARAMS(amx, "ClearActorAnimations", 1);
+
+	if (pNetGame->GetActorPool())
+	{
+		pActor = pNetGame->GetActorPool()->GetAt(params[1]);
+		if (pActor)
+		{
+			pActor->ClearAnimations();
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // native SetActorFacingAngle(actorid, Float:ang)
 static cell n_SetActorFacingAngle(AMX* amx, cell* params)
 {
@@ -7832,6 +7851,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(SetActorVirtualWorld),
 	DEFINE_NATIVE(GetActorVirtualWorld),
 	DEFINE_NATIVE(ApplyActorAnimation),
+	DEFINE_NATIVE(ClearActorAnimations),
 	DEFINE_NATIVE(SetActorFacingAngle),
 	DEFINE_NATIVE(GetActorFacingAngle),
 	DEFINE_NATIVE(GetActorHealth),

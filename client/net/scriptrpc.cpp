@@ -1888,6 +1888,28 @@ static void ScrApplyActorAnimation(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ScrClearActorAnimation(RPCParameters* rpcParams)
+{
+	unsigned short usActorID;
+	CActor* pActor;
+
+	if (pNetGame->GetActorPool() &&
+		rpcParams->numberOfBitsOfData == 16)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(usActorID);
+
+		pActor = pNetGame->GetActorPool()->GetAt(usActorID);
+		if (pActor)
+		{
+			pActor->ClearAnimations();
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient, ScrSetSpawnInfo);
@@ -1979,6 +2001,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorFacingAngle);
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorHealth);
 	REGISTER_STATIC_RPC(pRakClient, ScrApplyActorAnimation);
+	REGISTER_STATIC_RPC(pRakClient, ScrClearActorAnimation);
 }
 
 //----------------------------------------------------

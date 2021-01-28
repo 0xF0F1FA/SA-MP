@@ -42,6 +42,7 @@ public:
 	float GetHealth();
 	void ApplyAnimation(char* szAnimLib, char* szAnimName, float fDelta, bool bLoop, bool bLockX, bool bLockY, bool bFreeze, int iTime);
 	void SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim);
+	void ClearAnimations();
 	void SetInvulnerable(bool bInvulnerable);
 	bool IsInvulnerable();
 	void SetVirtualWorld(int iVirtualWorld);

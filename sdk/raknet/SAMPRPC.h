@@ -147,6 +147,7 @@ enum
 	RPC_ScrSetActorFacingAngle,
 	RPC_ScrSetActorHealth,
 	RPC_ScrApplyActorAnimation,
+	RPC_ScrClearActorAnimation,
 
 	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };

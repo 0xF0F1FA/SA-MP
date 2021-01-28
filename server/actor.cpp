@@ -201,6 +201,33 @@ void CActor::SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim)
 	}
 }
 
+void CActor::ClearAnimations()
+{
+	CPlayerPool* pPlayerPool;
+	CPlayer* pPlayer;
+
+	pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool)
+	{
+		RakNet::BitStream bsSend;
+
+		bsSend.Write(m_usActorID);
+
+		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+			
+			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			{
+				pNetGame->SendToPlayer(i, RPC_ScrClearActorAnimation, &bsSend);
+			}
+		}
+	}
+
+	m_bAnimLoopedOrFreezed = false;
+	memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
+}
+
 void CActor::SetInvulnerable(bool bInvulnerable)
 {
 	m_bInvulnerable = bInvulnerable;

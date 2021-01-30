@@ -106,7 +106,8 @@ CNetGame::CNetGame()
 	//m_pRak->SetTrackFrequencyTable(true);
 
 	int iMTUSize = pConsole->GetIntVariable("mtu");
-	m_pRak->SetMTUSize(iMTUSize);
+	if(!m_pRak->SetMTUSize(iMTUSize))
+		logprintf("Can't set the fucking MTU");
 
 	if (iMTUSize != m_pRak->GetMTUSize())
 	{

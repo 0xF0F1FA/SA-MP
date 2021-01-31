@@ -91,11 +91,6 @@ public OnPlayerText(playerid, text[])
 	return 1;
 }
 
-public OnPlayerPrivmsg(playerid, recieverid, text[])
-{
-	return 1;
-}
-
 public OnPlayerCommandText(playerid, cmdtext[])
 {
 	if (strcmp("/mycommand", cmdtext, true, 10) == 0)

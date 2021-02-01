@@ -1304,7 +1304,7 @@ unsigned long CPlayer::GetCurrentWeaponAmmo()
 {
 	unsigned char ucWeapon = -1;
 	if (m_byteState == PLAYER_STATE_DRIVER)
-		ucWeapon = m_ofSync.byteCurrentWeapon;
+		ucWeapon = m_icSync.byteCurrentWeapon;
 	else if (m_byteState == PLAYER_STATE_PASSENGER)
 		ucWeapon = m_psSync.byteCurrentWeapon;
 	else

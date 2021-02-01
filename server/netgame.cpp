@@ -1106,17 +1106,16 @@ void CNetGame::Packet_WeaponsUpdate(Packet *p)
 
 void CNetGame::Packet_NewIncomingConnection(Packet* packet)
 {
-	//logprintf("Incoming Connection: %d (%d)\n", packet->length, packet->playerId);
-	
-	in_addr in;
-	in.s_addr = packet->playerId.binaryAddress;
-	char* ip = inet_ntoa(in);
-	logprintf("Incomming connection: %s:%u",ip,packet->playerId.port);
+	char* szIP;
 
-	if (m_pGameMode)
-		m_pGameMode->OnIncomingConnection(packet->playerIndex, ip, packet->playerId.port);
+	logprintf("[connection] incoming connection: %s id: %u", packet->playerId.ToString(), packet->playerIndex);
+
+	szIP = packet->playerId.ToString(false);
+
 	if (m_pFilterScripts)
-		m_pFilterScripts->OnIncomingConnection(packet->playerIndex, ip, packet->playerId.port);
+		m_pFilterScripts->OnIncomingConnection(packet->playerIndex, szIP, packet->playerId.port);
+	if (m_pGameMode)
+		m_pGameMode->OnIncomingConnection(packet->playerIndex, szIP, packet->playerId.port);
 }
 
 //----------------------------------------------------

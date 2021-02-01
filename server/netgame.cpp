@@ -1137,8 +1137,8 @@ void CNetGame::Packet_ConnectionLost(Packet* packet)
 
 void CNetGame::Packet_ModifiedPacket(Packet* packet)
 {
-	//logprintf("Packet was modified, sent by id: %d, ip: %s", 
-					//(unsigned int)packet->playerIndex, packet->playerId.ToString());
+	logprintf("Packet was modified, sent by id: %d, ip: %s",
+					packet->playerIndex, packet->playerId.ToString());
 }
 
 //----------------------------------------------------

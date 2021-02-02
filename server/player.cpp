@@ -546,24 +546,12 @@ void CPlayer::BroadcastSyncData()
 		}
 
 		// TRAILER SPECIAL
-		bool bSend = false;
-		if (m_icSync.TrailerID != 0)
-		{
-			if (pNetGame->GetFilterScripts()->OnTrailerUpdate(m_bytePlayerID, m_icSync.TrailerID))
-			{
-				if (pNetGame->GetGameMode()->OnTrailerUpdate(m_bytePlayerID, m_icSync.TrailerID))
-				{
-					bSend = true;
-				}
-			}
-		}
-		if(bSend)
-		{
+		if(m_icSync.TrailerID != 0) {
 			bsSync.Write(true);
 			bsSync.Write(m_icSync.TrailerID);
-		}
-		else
+		} else {
 			bsSync.Write(false);
+		}
 
 		pNetGame->BroadcastData(&bsSync,HIGH_PRIORITY,UNRELIABLE_SEQUENCED,0,m_bytePlayerID);
 	}
@@ -588,7 +576,6 @@ void CPlayer::BroadcastSyncData()
 		m_bHasAimUpdates = false;
 	}
 	
-	// TODO: This piece never gets called. Maybe find out why?
 	if (m_bHasTrailerUpdates) {
 		bsSync.Reset();
 		bsSync.Write((BYTE)ID_TRAILER_SYNC);
@@ -823,6 +810,17 @@ void CPlayer::StoreTrailerFullSyncData(TRAILER_SYNC_DATA* trSync)
 		
 		pVehicle->Update(m_bytePlayerID, &matWorld, 1000.0, 0); // Could be used for trailer trains, as I accidentally leaked in #betateam :o
 		memcpy(&pVehicle->m_vecMoveSpeed, &m_trSync.vecMoveSpeed, sizeof (VECTOR));
+
+		if (pNetGame->GetFilterScripts() && pNetGame->GetGameMode())
+		{
+			if (pNetGame->GetFilterScripts()->OnTrailerUpdate(m_bytePlayerID, TrailerID))
+			{
+				if (pNetGame->GetGameMode()->OnTrailerUpdate(m_bytePlayerID, TrailerID))
+				{
+					m_bHasTrailerUpdates = true;
+				}
+			}
+		}
 	}
 }
 

@@ -1113,7 +1113,6 @@ int CFilterScripts::OnTrailerUpdate(cell playerid, cell vehicleid)
 				amx_Push(m_pFilterScripts[i], vehicleid);
 				amx_Push(m_pFilterScripts[i], playerid);
 				amx_Exec(m_pFilterScripts[i], &ret, idx);
-				if (!ret) return ret;
 			}
 		}
 	}

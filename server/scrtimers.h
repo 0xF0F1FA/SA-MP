@@ -17,9 +17,11 @@
 
 struct ScriptTimer_s
 {
-	char szScriptFunc[255];
+	int iIdx;
+	//char szScriptFunc[255];
 	int iTotalTime;
-	int iRemainingTime;
+	//int iRemainingTime;
+	RakNet::Time CallTime;
 	bool bRepeating;
 	//BOOL bFilterscript;
 	bool bKilled;
@@ -40,6 +42,7 @@ class CScriptTimers
 private:
 	DwordTimerMap m_Timers;
 	DWORD m_dwTimerCount;
+
 public:
 	CScriptTimers();
 	~CScriptTimers();

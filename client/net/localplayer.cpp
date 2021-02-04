@@ -1594,3 +1594,16 @@ void CLocalPlayer::SendVehicleDamageStatus(VEHICLEID VehicleID)
 }
 
 //-----------------------------------------------------------
+
+void CLocalPlayer::SendActorDamageNotification(unsigned short usActorID, float fDamage, int iWeapon, int iBodyPart)
+{
+	RakNet::BitStream bsSend;
+
+	//bsSend.Write0();
+	bsSend.Write(usActorID);
+	bsSend.Write(fDamage);
+	bsSend.Write(iWeapon);
+	bsSend.Write(iBodyPart);
+
+	pNetGame->Send(RPC_ActorDamage, &bsSend);
+}

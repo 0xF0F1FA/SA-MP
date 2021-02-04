@@ -520,3 +520,4 @@ forward OnVehicleSirenStateChange(playerid, vehicleid, newstate);
 forward OnVehicleDamageStatusUpdate(vehicleid, playerid);
 forward OnActorStreamIn(actorid, forplayerid);
 forward OnActorStreamOut(actorid, forplayerid);
+forward OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart);

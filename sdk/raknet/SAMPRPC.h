@@ -58,6 +58,7 @@ enum
 	RPC_Click,
 	RPC_WorldAddActor,
 	RPC_WorldRemoveActor,
+	RPC_ActorDamage,
 
 	RPC_ScrSetSpawnInfo = 100,
 	RPC_ScrSetPlayerTeam,

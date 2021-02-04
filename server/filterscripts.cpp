@@ -1282,3 +1282,27 @@ void CFilterScripts::OnActorStreamOut(cell actorid, cell forplayerid)
 		}
 	}
 }
+
+//----------------------------------------------------------------------------------
+
+void CFilterScripts::OnPlayerGiveDamageActor(cell playerid, cell actorid,
+	float fDamage, cell weaponid, cell bodypart)
+{
+	int idx;
+
+	for (int i = 0; i < MAX_FILTER_SCRIPTS; i++)
+	{
+		if (m_pFilterScripts[i])
+		{
+			if (amx_FindPublic(m_pFilterScripts[i], "OnPlayerGiveDamageActor", &idx) == AMX_ERR_NONE)
+			{
+				amx_Push(m_pFilterScripts[i], bodypart);
+				amx_Push(m_pFilterScripts[i], weaponid);
+				amx_Push(m_pFilterScripts[i], amx_ftoc(fDamage));
+				amx_Push(m_pFilterScripts[i], actorid);
+				amx_Push(m_pFilterScripts[i], playerid);
+				amx_Exec(m_pFilterScripts[i], NULL, idx);
+			}
+		}
+	}
+}

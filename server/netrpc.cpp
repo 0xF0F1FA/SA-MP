@@ -880,6 +880,42 @@ static void VehicleDamage(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ActorDamage(RPCParameters* rpcParams)
+{
+	//bool bUnk;
+	unsigned short usPlayerID, usActorID;
+	float fDamage;
+	int iWeaponID, iBodyPart;
+
+	usPlayerID = (unsigned short)rpcParams->senderId;
+
+	if (pNetGame->GetActorPool() &&
+		pNetGame->GetPlayerPool() &&
+		rpcParams->numberOfBitsOfData == 112)
+	{
+		RakNet::BitStream bsData(rpcParams);
+	
+		if (pNetGame->GetPlayerPool()->GetSlotState(usPlayerID))
+		{
+			//bsData.Read(bUnk); // Possibly the same as what OnPlayer(Take/Give)Damage would've been
+			bsData.Read(usActorID);
+			if (pNetGame->GetActorPool()->GetSlotState(usActorID))
+			{
+				bsData.Read(fDamage);
+				bsData.Read(iWeaponID);
+				bsData.Read(iBodyPart);
+
+				if (pNetGame->GetFilterScripts())
+					pNetGame->GetFilterScripts()->OnPlayerGiveDamageActor(usPlayerID, usActorID, fDamage, iWeaponID, iBodyPart);
+				if (pNetGame->GetGameMode())
+					pNetGame->GetGameMode()->OnPlayerGiveDamageActor(usPlayerID, usActorID, fDamage, iWeaponID, iBodyPart);
+			}
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakServerInterface * pRakServer)
 {
 	pRak = pRakServer;
@@ -906,6 +942,7 @@ void RegisterRPCs(RakServerInterface * pRakServer)
 	REGISTER_STATIC_RPC(pRakServer, TypingEvent);
 	REGISTER_STATIC_RPC(pRakServer, ClientCheck);
 	REGISTER_STATIC_RPC(pRakServer, VehicleDamage);
+	REGISTER_STATIC_RPC(pRakServer, ActorDamage);
 }
 
 //----------------------------------------------------

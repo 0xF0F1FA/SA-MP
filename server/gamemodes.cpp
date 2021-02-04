@@ -978,3 +978,19 @@ void CGameMode::OnActorStreamOut(cell actorid, cell forplayerid)
 		amx_Exec(&m_amx, NULL, idx);
 	}
 }
+
+void CGameMode::OnPlayerGiveDamageActor(cell playerid, cell actorid,
+	float fDamage, cell weaponid, cell bodypart)
+{
+	int idx;
+
+	if (amx_FindPublic(&m_amx, "OnPlayerGiveDamageActor", &idx) == AMX_ERR_NONE)
+	{
+		amx_Push(&m_amx, bodypart);
+		amx_Push(&m_amx, weaponid);
+		amx_Push(&m_amx, amx_ftoc(fDamage));
+		amx_Push(&m_amx, actorid);
+		amx_Push(&m_amx, playerid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}

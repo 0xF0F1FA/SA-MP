@@ -221,6 +221,15 @@ typedef struct {
 	PADDING(pad_3312, 136); // 3312-3448
 } CAMERA_TYPE;
 
+//-----------------------------------------------------------
+
+typedef struct {
+	ENTITY_TYPE* pEntity;	// 0-4
+	float fDamage;			// 4-8
+	DWORD dwBodyPart;		// 8-12
+	DWORD dwWeaponUsed;		// 12-16
+	PADDING(m_16_to_17, 1); // 16-17
+} PED_DAMAGE_TYPE;
 
 //-----------------------------------------------------------
 

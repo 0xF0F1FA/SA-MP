@@ -131,6 +131,8 @@ public:
 	void SendExitVehicleNotification(VEHICLEID VehicleID);
 	void SendEnterVehicleNotification(VEHICLEID VehicleID,bool bPassenger);
 	
+	void SendActorDamageNotification(unsigned short usActorID, float fDamage, int iWeapon, int iBodyPart);
+
 	void SetPlayerColor(DWORD dwColor);
 	DWORD GetPlayerColorAsRGBA();
 	DWORD GetPlayerColorAsARGB();

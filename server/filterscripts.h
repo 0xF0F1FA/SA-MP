@@ -85,6 +85,7 @@ public:
 	void OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
 	void OnActorStreamIn(cell actorid, cell forplayerid);
 	void OnActorStreamOut(cell actorid, cell forplayerid);
+	void OnPlayerGiveDamageActor(cell playerid, cell actorid, float fDamage, cell weaponid, cell bodypart);
 };
 
 //----------------------------------------------------------------------------------

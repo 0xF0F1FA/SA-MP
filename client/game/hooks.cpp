@@ -808,21 +808,31 @@ NUDE CGameShutdownHook()
 
 //-----------------------------------------------------------
 
+unsigned short GetActorIDByGtaPtr(PED_TYPE* pPed)
+{
+	if (pPed)
+		return pNetGame->GetActorPool()->FindIDFromGtaPtr((DWORD)pPed);
 
-BOOL _stdcall IsFriendlyFire(PED_TYPE *pIssuer,PED_TYPE *pPlayer)
+	return INVALID_ACTOR_ID;
+}
+
+BOOL _stdcall IsFriendlyFire(PED_DAMAGE_TYPE *pDamageIssuer,PED_TYPE *pPlayer)
 {
 	BYTE byteLocalTeam=0, byteRemoteTeam=0;
 	VEHICLEID RemoteVehicleID=-1;
 	PED_TYPE * pPedPlayer = GamePool_FindPlayerPed();
 	BYTE byteRemotePlayerID=0;
+	PED_TYPE* pIssuer;
+	unsigned short usActorID;
 #ifdef DEBUG
 	sprintf(s,"IsFriendlyFire(0x%X,0x%X)\n",pIssuer,pPlayer);
 	OutputDebugString(s);
 #endif
+	pIssuer = (PED_TYPE*)pDamageIssuer->pEntity;
 
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	if(pIssuer && (pPlayer == pPedPlayer)) {
 		if(pNetGame && pNetGame->m_byteFriendlyFire) {
-			CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
 			byteLocalTeam = pPlayerPool->GetLocalPlayer()->GetTeam();
 
 			if((byteLocalTeam == NO_TEAM)) return FALSE;
@@ -851,6 +861,12 @@ BOOL _stdcall IsFriendlyFire(PED_TYPE *pIssuer,PED_TYPE *pPlayer)
 				}
 			}
 		}
+	}
+
+	if ((usActorID = GetActorIDByGtaPtr(pPlayer)) != INVALID_ACTOR_ID)
+	{
+		pPlayerPool->GetLocalPlayer()->SendActorDamageNotification(usActorID,
+			pDamageIssuer->fDamage, pDamageIssuer->dwWeaponUsed, pDamageIssuer->dwBodyPart);
 	}
 
 	return FALSE;
@@ -886,7 +902,7 @@ NUDE PedDamage_Hook()
 	//_asm mov dwStackFrame, esp
 	_asm pushad
 	
-	if(IsFriendlyFire((PED_TYPE *)*(DWORD*)dwPedDamagePed,(PED_TYPE *)dwPedDamage1)) {
+	if(IsFriendlyFire((PED_DAMAGE_TYPE *)dwPedDamagePed,(PED_TYPE *)dwPedDamage1)) {
 		_asm popad
 		_asm retn 12
 	}

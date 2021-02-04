@@ -7,6 +7,7 @@ CActorPool::CActorPool()
 
 	SecureZeroMemory(m_pActor, sizeof(CActor*) * MAX_ACTORS);
 	SecureZeroMemory(m_bSlotState, sizeof(bool) * MAX_ACTORS);
+	//SecureZeroMemory(m_dwPed, sizeof(DWORD) * MAX_ACTORS);
 }
 
 CActorPool::~CActorPool()
@@ -49,6 +50,7 @@ bool CActorPool::New(ACTOR_TRANSMIT* pTransmit)
 	{
 		m_pActor[usID] = pActor;
 		m_bSlotState[usID] = true;
+		//m_dwPed[usID] = pActor->GetPed();
 
 		pActor->SetHealth(pTransmit->fHealth);
 		pActor->SetImmunities(pTransmit->bInvurnable);
@@ -76,3 +78,14 @@ bool CActorPool::Delete(unsigned short usActorID)
 	return false;
 }
 
+unsigned short CActorPool::FindIDFromGtaPtr(DWORD dwTargetPed)
+{
+	for (int i = 0; i < m_iLastActorID; i++)
+	{
+		if (m_pActor[i] != NULL && dwTargetPed == m_pActor[i]->GetPed())
+		{
+			return i;
+		}
+	}
+	return INVALID_ACTOR_ID;
+}

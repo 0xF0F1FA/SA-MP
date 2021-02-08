@@ -1452,6 +1452,18 @@ NUDE CWeapon_DoCameraShot_Hook()
 
 //-----------------------------------------------------------
 
+// This is some really questionable hook. This adds 1 ms sleep time each frame render
+// TODO: Maybe find out why this was added in the first place? Maybe relates to world time passing?
+NUDE CTimer_GetCurrentTimeInCycles_Hook()
+{
+	Sleep(1);
+
+	_asm mov edx, 0x561A80
+	_asm jmp edx
+}
+
+//-----------------------------------------------------------
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1499,6 +1511,8 @@ void GameInstallHooks()
 	// For hud scaling
 	InstallCallHook(0x58FC53, (DWORD)CHud_DrawRadar_Hook);
 	InstallCallHook(0x58FBBF, (DWORD)CHud_DrawCrossHair_Hook);
+
+	InstallCallHook(0x53E930, (DWORD)CTimer_GetCurrentTimeInCycles_Hook);
 
 	InstallHook(0x58C246, (DWORD)GameProcessHook,
 		0x53BED1, GameProcess_HookJmpCode, sizeof(GameProcess_HookJmpCode));

@@ -1432,6 +1432,26 @@ NUDE CCamera_Process_Hook()
 }
 
 //-----------------------------------------------------------
+
+NUDE CWeapon_DoCameraShot_Hook()
+{
+	_asm mov ebx, [esp+8]
+	_asm mov dwCurPlayerActor, ebx
+	_asm pushad
+
+	if (dwCurPlayerActor == (DWORD)GamePool_FindPlayerPed())
+	{
+		*(BYTE*)0xC8A7C0 = 1;
+		*(BYTE*)0xC8A7C1 = 1;
+	}
+
+	_asm popad
+	_asm mov ebx, 0x73C260
+	_asm jmp ebx
+}
+
+//-----------------------------------------------------------
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1577,6 +1597,8 @@ void GameInstallHooks()
 	InstallMethodHook(0x872A74, (DWORD)CAmbientAuidoTrack_Process_Hook);
 
 	InstallCallHook(0x53C104, (DWORD)CCamera_Process_Hook);
+
+	InstallCallHook(0x73C252, (DWORD)CWeapon_DoCameraShot_Hook, 0xE9);
 }
 
 //-----------------------------------------------------------

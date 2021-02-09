@@ -4580,8 +4580,8 @@ static cell n_ApplyAnimation(AMX *amx, cell *params)
 
 	char *szAnimLib;
 	char *szAnimName;
-	size_t uiLibLen;
-	size_t uiNameLen;
+	BYTE byteAnimLibLen;
+	BYTE byteAnimNameLen;
 	float fS;
 	bool opt1,opt2,opt3,opt4;
 	int opt5;
@@ -4592,8 +4592,8 @@ static cell n_ApplyAnimation(AMX *amx, cell *params)
 	amx_StrParam(amx, params[2], szAnimLib);
 	amx_StrParam(amx, params[3], szAnimName);
 
-	uiLibLen = strlen(szAnimLib);
-	uiNameLen = strlen(szAnimName);
+	byteAnimLibLen = strlen(szAnimLib);
+	byteAnimNameLen = strlen(szAnimName);
 
 	fS = amx_ctof(params[4]);
 	opt1 = (bool)params[5];
@@ -4603,10 +4603,10 @@ static cell n_ApplyAnimation(AMX *amx, cell *params)
 	opt5 = (int)params[9];
 
 	bsSend.Write((BYTE)params[1]);
-	bsSend.Write(uiLibLen);
-	bsSend.Write(szAnimLib, uiLibLen);
-	bsSend.Write(uiNameLen);
-	bsSend.Write(szAnimName, uiNameLen);
+	bsSend.Write(byteAnimLibLen);
+	bsSend.Write(szAnimLib, byteAnimLibLen);
+	bsSend.Write(byteAnimNameLen);
+	bsSend.Write(szAnimName, byteAnimNameLen);
 	bsSend.Write(fS);
 	bsSend.Write(opt1);
 	bsSend.Write(opt2);

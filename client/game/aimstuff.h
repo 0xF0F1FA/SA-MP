@@ -35,4 +35,9 @@ void __stdcall GameSetPlayerCameraExtZoom(BYTE bytePlayerID, float fZoom);
 void __stdcall GameSetRemotePlayerCameraExtZoom(BYTE bytePlayerID);
 float __stdcall GameGetLocalPlayerCameraExtZoom();
 
+void __stdcall GameStoreLocalPlayerWeaponSkills();
+void __stdcall GameSetLocalPlayerWeaponSkills();
+void __stdcall GameResetLocalPlayerWeaponSkills();
+void __stdcall GameSetRemotePlayerWeaponSkills(int iPlayer);
+
 //----------------------------------------------------------

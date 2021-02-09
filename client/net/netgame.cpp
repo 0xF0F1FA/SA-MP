@@ -157,6 +157,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	}
 	m_pPlayerPool->GetLocalPlayer()->ResetAllSyncAttributes();
 	m_pPlayerPool->GetLocalPlayer()->ToggleSpectating(false);
+	GameResetLocalPlayerWeaponSkills();
 	m_pPlayerPool->GetLocalPlayer()->SetVirtualWorld(0);
 	m_iGameState = GAMESTATE_RESTARTING;
 

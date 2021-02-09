@@ -30,6 +30,7 @@
 
 #define RPC_PING_UPDATE_TIME 3000 // in ms (3 seconds)
 
+#define MAX_CLIENT_PLAYERS 210
 #define MAX_CLIENT_ACTORS 50
 
 #define EVENT_TYPE_PAINTJOB 1

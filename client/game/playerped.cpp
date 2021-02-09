@@ -798,12 +798,30 @@ void CPlayerPed::ClearAllWeapons()
 
 //-----------------------------------------------------------
 
-void CPlayerPed::SetArmedWeapon(int iWeaponType)
+void CPlayerPed::SetArmedWeapon(int iWeaponType, bool bDirectcall)
 {
+	if (!m_pPed) return;
+	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+
 	*pbyteCurrentPlayer = m_bytePlayerNumber;
 
-	ScriptCommand(&set_actor_armed_weapon,this->m_dwGTAId,iWeaponType);
+	GameStoreLocalPlayerWeaponSkills();
+	GameSetRemotePlayerWeaponSkills(m_bytePlayerNumber);
 
+	if (IN_VEHICLE(m_pPed) || bDirectcall)
+	{
+		DWORD dwPed = (DWORD)m_pPed;
+		_asm mov ecx, dwPed
+		_asm push iWeaponType
+		_asm mov edx, 0x5E6280
+		_asm call edx
+	}
+	else
+	{
+		ScriptCommand(&set_actor_armed_weapon, this->m_dwGTAId, iWeaponType);
+	}
+
+	GameSetLocalPlayerWeaponSkills();
 	*pbyteCurrentPlayer = 0;
 }
 

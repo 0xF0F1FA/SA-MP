@@ -84,6 +84,9 @@ static DWORD dwParam1;
 static BYTE bNightGogglesState = 0;
 static BYTE bThermalGogglesState = 0;
 
+static bool bWeaponSkillsStored;
+static DWORD dwWeaponSkillIndex;
+
 //-----------------------------------------------------------
 // x86 codes to perform our unconditional jmp for detour entries. 
 
@@ -178,6 +181,10 @@ NUDE CPlayerPed_ProcessControl_Hook()
 		GameStoreLocalPlayerAim();
 		GameSetRemotePlayerAim(byteCurPlayer);
 
+		// weapon skills
+		GameStoreLocalPlayerWeaponSkills();
+		GameSetRemotePlayerWeaponSkills(byteCurPlayer);
+
 		*pbyteCurrentPlayer = byteCurPlayer; // Set the internal player to the passed actor
 
 		fHealth = _pPlayer->fHealth;
@@ -187,6 +194,8 @@ NUDE CPlayerPed_ProcessControl_Hook()
 		_asm mov edx, 0x60EA90
 		_asm call edx
 		_asm pushad
+
+		GameSetLocalPlayerWeaponSkills();
 
 		// restore the camera modes.
 		*pbyteCameraMode = byteSavedCameraMode;
@@ -279,6 +288,11 @@ NUDE TaskUseGun_Hook()
 		// aim switching
 		GameStoreLocalPlayerAim();
 		GameSetRemotePlayerAim(byteCurPlayer);
+
+		// weapon skills
+		GameStoreLocalPlayerWeaponSkills();
+		GameSetRemotePlayerWeaponSkills(byteCurPlayer);
+
 		*pbyteCurrentPlayer = byteCurPlayer; // Set the internal player to the passed actor
 
 		// call the internal TaskUseGun
@@ -290,6 +304,8 @@ NUDE TaskUseGun_Hook()
 		// restore the camera modes, internal id and local player's aim
 		*pbyteCameraMode = byteSavedCameraMode;
 		*wCameraMode2 = wSavedCameraMode2;
+
+		GameSetLocalPlayerWeaponSkills();
 
 		// remote the local player's camera zoom factor
 		GameSetLocalPlayerCameraExtZoom();
@@ -1464,6 +1480,42 @@ NUDE CTimer_GetCurrentTimeInCycles_Hook()
 
 //-----------------------------------------------------------
 
+NUDE CPed_GetWeaponSkillIndex_Hook()
+{
+	_asm mov dwCurPlayerActor, ecx
+
+	_pPlayer = (PED_TYPE*)dwCurPlayerActor;
+	byteInternalPlayer = *pbyteCurrentPlayer;
+	byteCurPlayer = FindPlayerNumFromPedPtr(dwCurPlayerActor);
+
+	if (dwCurPlayerActor && byteCurPlayer != 0 && byteInternalPlayer == 0)
+	{
+		GameStoreLocalPlayerWeaponSkills();
+		GameSetRemotePlayerWeaponSkills(byteCurPlayer);
+		bWeaponSkillsStored = true;
+	}
+
+	_asm mov ecx, dwCurPlayerActor
+	_asm movsx eax, byte ptr [ecx+0x718]
+	_asm imul eax, 0x1C
+	_asm mov eax, [eax+ecx+0x5A0]
+	_asm push eax
+	_asm mov edx, 0x5E3B60
+	_asm call edx
+	_asm mov dwWeaponSkillIndex, eax
+
+	if (bWeaponSkillsStored)
+	{
+		GameSetLocalPlayerWeaponSkills();
+		bWeaponSkillsStored = false;
+	}
+
+	_asm mov eax, dwWeaponSkillIndex
+	_asm ret
+}
+
+//-----------------------------------------------------------
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1532,6 +1584,7 @@ void GameInstallHooks()
 
 	InstallMethodHook(0x86D190,(DWORD)CPlayerPed_ProcessControl_Hook);
 	InstallMethodHook(0x86D744,(DWORD)TaskUseGun_Hook);
+	InstallMethodHook(0x7330A2,(DWORD)CPed_GetWeaponSkillIndex_Hook);
 	InstallMethodHook(0x86D194,(DWORD)CPlayerPed_ProcessCollision_Hook);
 
 	//InstallMethodHook(0x870904,(DWORD)TaskOnFoot1_Hook);

@@ -618,7 +618,7 @@ NUDE AllVehicles_ProcessControl_Hook()
 //-----------------------------------------------------------
 
 static VEHICLE_TYPE *_pHornVehicle;
-static int _iHasSetHornHookFix = 0;
+//static int _iHasSetHornHookFix = 0;
 static BYTE _byteSavedControlFlags = 0;
 static DWORD _dwVehicleParams = 0;
 static DWORD _dwAudioClass = 0;
@@ -633,25 +633,19 @@ NUDE VehicleHorn_Hook()
 	_asm mov eax, [edx+16]	
 	_asm mov _pHornVehicle, eax
 
-	if( _pHornVehicle && _pHornVehicle->pDriver && 
-		IN_VEHICLE(_pHornVehicle->pDriver) &&
-		_pHornVehicle->pDriver->dwPedType == 4 ) 
-	{
-		_byteSavedControlFlags = _pHornVehicle->entity.nControlFlags;
+	_byteSavedControlFlags = _pHornVehicle->entity.nControlFlags;
+
+	if(_pHornVehicle->pDriver && IN_VEHICLE(_pHornVehicle->pDriver))
 		_pHornVehicle->entity.nControlFlags = 0x02;
-		_iHasSetHornHookFix = 1;
-	} else {
-		_iHasSetHornHookFix = 0;
-	}
+	else
+		_pHornVehicle->entity.nControlFlags = 0x22;
 
 	_asm push _dwVehicleParams
 	_asm mov ecx, _dwAudioClass
 	_asm mov edx, 0x5002C0
 	_asm call edx
 	
-	if(_iHasSetHornHookFix) {
-		_pHornVehicle->entity.nControlFlags = _byteSavedControlFlags;
-	}
+	_pHornVehicle->entity.nControlFlags = _byteSavedControlFlags;
     
 	_asm retn 4
 }

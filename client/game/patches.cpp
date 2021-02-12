@@ -398,6 +398,9 @@ void ApplyInGamePatches()
 
 	//------------------
 	
+	// Disable gunfire ambient
+	memset((PVOID)0x4DF7E2, 0x90, 2);
+
 	/* clouds RenderEffects (needs checking)
 	UnFuck(0x53E1AF,10);
 	memset((PVOID)0x53E1AF,0x90,10);
@@ -410,6 +413,9 @@ void ApplyInGamePatches()
 	//UnFuck(0x53C159,5);
 	memset((PVOID)0x53C159,0x90,5);
 	
+	// Remove sun/moon coronas
+	memset((PVOID)0x53C136, 0x90, 5);
+
 	// dwUIMode was unused, and always 0
 	// Also moving to top left? That's where the chatbox is..
 	/*if (dwUIMode != 0) 
@@ -438,6 +444,9 @@ void ApplyInGamePatches()
 	// No vehicle name rendering
 	//UnFuck(0x58FBE9,5);
     memset((PVOID)0x58FBE9,0x90,5);
+
+	// No place name rendering
+	memset((PVOID)0x5720A5, 0x90, 5);
 
 	// No playidles anim loading.
 	//UnFuck(0x86D1EC,1);
@@ -471,9 +480,23 @@ void ApplyInGamePatches()
 	//UnFuck(0x6BC9EB,2);
 	memset((PVOID)0x6BC9EB,0x90,2);
 
+	// Make ped stop chewing gum
+	*(BYTE*)0x4BC6C1 = 0xB0; // mov al, 0
+	*(BYTE*)0x4BC6C1 = 0x00;
+	*(BYTE*)0x4BC6C1 = 0x90;
+
 	// This removes the random weapon pickups (e.g. on the hill near chilliad)
 	//UnFuck(0x5B47B0,1);
 	memset((PVOID)0x5B47B0,0xC3,1);
+
+	// NOP game generated pickups in interiors
+	memset((PVOID)0x593D7C, 0x90, 5);
+
+	// Increase pickup distance visibility
+	*(float*)0x454CC9 = 10000.0f;
+
+	// Make the game not to removing pickups and other entities in area when exiting interiors
+	memset((PVOID)0x5952A6, 0x90, 5);
 
 	// Removes the FindPlayerInfoForThisPlayerPed at these locations.
 	//UnFuck(0x5E63A6,19);
@@ -503,6 +526,19 @@ void ApplyInGamePatches()
 	// Respawn and Interior
 	//UnFuck(0x441482,5);
 	memset((void*)0x441482, 0x90, 5);
+
+	// Sets the cooperative level to 6 (DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)
+	// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee417921(v=vs.85)
+	if (iGtaVersion == GTASA_VERSION_USA10)
+	{
+		*(BYTE*)0x7469AF = 0x33; // xor eax, eax
+		*(BYTE*)0x7469B0 = 0xC0;
+	}
+	else
+	{
+		*(BYTE*)0x7469FF = 0x33; // xor eax, eax
+		*(BYTE*)0x746A00 = 0xC0;
+	}
 
 	// No MessagePrint
 	//UnFuck(0x588BE0,1);
@@ -604,6 +640,7 @@ void ApplyInGamePatches()
 	// Automatic go-to-menu on alt+tab
 	//UnFuck(0x748063, 5);
 	//memset((PVOID)0x748063, 0x90, 5);
+	memset((iGtaVersion == GTASA_VERSION_USA10) ? (PVOID)0x748063 : (PVOID)0x7480B3, 0x90, 5);
 
 	// Wanted level hook
 	//UnFuck(0x58DB5F, 9);
@@ -633,6 +670,49 @@ void ApplyInGamePatches()
 	//UnFuck(0x63ADC8,6);
 	memset((PVOID)0x63ADC8,0x90,6);
 
+	// Aggressively "RET"-ing automobile flying (nice job Kalcor)
+	memset((PVOID)0x6A8500, 0xC3, 116);
+
+	// Using internal time stepping for weapon related stuff (TODO)
+	//*(DWORD*)0x61E0C2 = 0;
+
+	// Removes pickuping entity task check stuff /shrug
+	memset((PVOID)0x570535, 0x90, 15);
+	memset((PVOID)0x5E7847, 0x90, 17);
+	memset((PVOID)0x570546, 0x90, 175);
+
+	// Make the game not to remove weapons when entering a vehicle (done manually?)
+	memset((PVOID)0x64DB49, 0x90, 9);
+	memset((PVOID)0x64BC9F, 0x90, 9);
+	memset((PVOID)0x64B872, 0x90, 9);
+
+	// Also stop giving extra ammos
+	// But it's unused? Atleast currently we're not attaching ped to an entity
+	*(BYTE*)0x5E7D62 = 0x5E; // pop esi
+	*(BYTE*)0x5E7D63 = 0x5D; // pop ebp
+	*(BYTE*)0x5E7D64 = 0xC2; // retn 0x1C
+	*(BYTE*)0x5E7D65 = 0x1C;
+	*(BYTE*)0x5E7D66 = 0x00;
+
+	// Remove cellphone holding
+	*(DWORD*)0x6348F6 = 0xFFFFFFFF;
+	*(DWORD*)0x634DE2 = 0xFFFFFFFF;
+
+	// Increase bullet world range
+	*(float*)0x7361B2 = -20000.0f;
+	*(float*)0x7361CB = 20000.0f;
+	*(float*)0x7361E0 = -20000.0f;
+	*(float*)0x7361F5 = 20000.0;
+
+	// Enable object LOS check for birds
+	*(BYTE*)0x712025 = 1;
+
+	// Disable cutscene processing
+	memset((PVOID)0x53BF28, 0x90, 5);
+
+	// Make peds dummy
+	memset((PVOID)0x4C3A5B, 0x90, 10);
+
 	// Stop taking $100 or maybe more every death
 	memset((void*)0x442E47, 0x90, 5);
 	memset((void*)0x443200, 0x90, 6);
@@ -652,15 +732,29 @@ void ApplyInGamePatches()
 	// - Stat increment from Hotdog (588)
 	*(unsigned long*)0x006D170B = 0xE9;
 	*(unsigned long*)0x006D170C = 0x006D17D5 - 0x006D170B - 5;
+	
+	// the SA-MP way disabling vehicle gifts
+	//*(DWORD*)0x6D1874 = 0x6D17D5;
+	//*(DWORD*)0x6D1878 = 0x6D17D5;
+	//*(DWORD*)0x6D187C = 0x6D17D5;
+	//*(DWORD*)0x6D1880 = 0x6D17D5;
+	//*(DWORD*)0x6D1884 = 0x6D17D5;
+	//*(DWORD*)0x6D1888 = 0x6D17D5;
 
 	// Disable camera jump-cut after spawning
 	memset((void*)0x4422F9, 0x90, 5);
 
 	// Disable pop-up stats menu
 	*(BYTE*)0x58FC2C = 0xEB;
+	memset((PVOID)0x58FC2E, 0x90, 30);
 
 	// Make Pay 'n' Spray always free
 	*(bool*)0x96C009 = true;
+
+	// Pay 'n' Spray accepts all vehicles
+	memset((PVOID)0x44AC75, 0x90, 5);
+	*(BYTE*)0x44AC75 = 0xB0; // mov al, 1
+	*(BYTE*)0x44AC76 = 0x01;
 
 	// Disable Pay 'n' Spray messages
 	//memset((void*)0x44ACAE, 0x90, 5);
@@ -694,6 +788,23 @@ void ApplyInGamePatches()
 	// NOP out idle cam
 	memset((void*)0x52457D, 0x90, 10);
 
+	// Why?
+	/**(BYTE*)0x71A223 = 3;
+	*(BYTE*)0x71A5D5 = 3;
+	*(BYTE*)0x71A247 = 3;
+	*(BYTE*)0x71A282 = 3;
+	*(BYTE*)0x71A26A = 3;
+	*(BYTE*)0x71A2E5 = 3;
+	*(BYTE*)0x71A3AC = 3;
+	*(BYTE*)0x71A4B9 = 3;
+	*(BYTE*)0x71A53C = 3;
+	*(BYTE*)0x71A37F = 3;
+	*(BYTE*)0x71A518 = 3;
+	*(BYTE*)0x71A525 = 3;
+	*(BYTE*)0x71A54B = 3;
+	*(BYTE*)0x71A5B6 = 3;
+	*(BYTE*)0x71A3BB = 3;*/
+
 	// Rest of the stuff
 	RelocateScanListHack();
 	
@@ -702,6 +813,7 @@ void ApplyInGamePatches()
 	// Stop ped rotations from the camera
 	//UnFuck(0x6884C4,6);
 	memset((PVOID)0x6884C4,0x90,6);
+	memset((PVOID)0x688200,0x90,6);
 
 	//UnFuck(0x47BF54,4);
 	InstallSCMEventsProcessor();

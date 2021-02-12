@@ -103,6 +103,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	m_byteFriendlyFire = 1;
 	pGame->EnableClock(0); // Hide the clock by default
 	pGame->EnableZoneNames(0);
+	m_bDisableVehicleCollision = false;
 	m_bZoneNames = false;
 	m_bInstagib = false;
 	m_iCheckLoadedStuff = 0;
@@ -146,6 +147,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	m_bDisableEnterExits = false;
 	m_bDisableVehMapIcons = false;
 	m_fNameTagDrawDistance = 70.0f;
+	m_bDisableVehicleCollision = false;
 
 	for (BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
 		CRemotePlayer* pPlayer = m_pPlayerPool->GetAt(bytePlayerID);

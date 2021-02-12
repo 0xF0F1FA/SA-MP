@@ -1910,6 +1910,18 @@ static void ScrClearActorAnimation(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ScrDisableVehicleCollision(RPCParameters* rpcParams)
+{
+	if (rpcParams->numberOfBitsOfData == 1)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		pNetGame->m_bDisableVehicleCollision = bsData.ReadBit();
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterScriptRPCs(RakClientInterface* pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient, ScrSetSpawnInfo);
@@ -2002,6 +2014,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorHealth);
 	REGISTER_STATIC_RPC(pRakClient, ScrApplyActorAnimation);
 	REGISTER_STATIC_RPC(pRakClient, ScrClearActorAnimation);
+	REGISTER_STATIC_RPC(pRakClient, ScrDisableVehicleCollision);
 }
 
 //----------------------------------------------------

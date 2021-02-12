@@ -3194,6 +3194,26 @@ static cell n_PlayCrimeReportForPlayer(AMX* amx, cell* params)
 	return 0;
 }
 
+// native DisableRemoteVehicleCollisions(playerid, disable)
+static cell n_DisableRemoteVehicleCollisions(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "DisableRemoteVehicleCollisions", 2);
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		RakNet::BitStream bsSend;
+
+		if (params[2])
+			bsSend.Write1();
+		else
+			bsSend.Write0();
+
+		return pNetGame->SendToPlayer(params[1], RPC_ScrDisableVehicleCollision, &bsSend);
+	}
+	return 0;
+}
+
 // native SetPVarInt(playerid, varname[], int_value)
 static cell n_SetPVarInt(AMX* amx, cell* params)
 {
@@ -7659,6 +7679,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(TogglePlayerChatbox),
 	DEFINE_NATIVE(TogglePlayerWidescreen),
 	DEFINE_NATIVE(SetPlayerShopName),
+	DEFINE_NATIVE(DisableRemoteVehicleCollisions),
 
 	{ "SetPlayerVirtualWorld",		n_SetPlayerVirtualWorld },
 	{ "GetPlayerVirtualWorld",		n_GetPlayerVirtualWorld },

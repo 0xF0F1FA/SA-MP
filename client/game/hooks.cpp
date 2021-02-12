@@ -1510,6 +1510,127 @@ NUDE CPed_GetWeaponSkillIndex_Hook()
 
 //-----------------------------------------------------------
 
+VEHICLE_TYPE* pThisVehicle, * pCollidedVehicle;
+//DWORD dwRetAddr_Coll; // unused?
+
+NUDE ProcessEntityCollision1_Hook()
+{
+	_asm mov pThisVehicle, ecx
+	//_asm mov edx, [esp]
+	//_asm mov dwRetAddr_Coll, edx
+	_asm mov edx, [esp+4]
+	_asm mov pCollidedVehicle, edx
+	_asm pushad
+
+	if (!pNetGame ||
+		!pNetGame->m_bDisableVehicleCollision ||
+		!pThisVehicle ||
+		!pCollidedVehicle ||
+		pCollidedVehicle->entity.nModelIndex < 400 ||
+		pCollidedVehicle->entity.nModelIndex > 611 ||
+		!pThisVehicle->pDriver ||
+		!pCollidedVehicle->pDriver)
+	{
+		_asm popad
+		_asm mov edx, 0x6ACE70
+		_asm jmp edx
+	}
+
+	_asm popad
+	_asm mov eax, 0
+	//_asm retn 8 // Do we need to pop 8 bytes?
+	_asm ret
+}
+
+NUDE ProcessEntityCollision2_Hook()
+{
+	_asm mov pThisVehicle, ecx
+	//_asm mov edx, [esp]
+	//_asm mov dwRetAddr_Coll, edx
+	_asm mov edx, [esp+4]
+	_asm mov pCollidedVehicle, edx
+	_asm pushad
+
+	if (!pNetGame ||
+		!pNetGame->m_bDisableVehicleCollision ||
+		!pThisVehicle ||
+		!pCollidedVehicle ||
+		pCollidedVehicle->entity.nModelIndex < 400 ||
+		pCollidedVehicle->entity.nModelIndex > 611 ||
+		!pThisVehicle->pDriver ||
+		!pCollidedVehicle->pDriver)
+	{
+		_asm popad
+		_asm mov edx, 0x6BDEA0
+		_asm jmp edx
+	}
+
+	_asm popad
+	_asm mov eax, 0
+	//_asm retn 8 // Do we need to pop 8 bytes?
+	_asm ret
+}
+
+NUDE ProcessEntityCollision3_Hook()
+{
+	_asm mov pThisVehicle, ecx
+	//_asm mov edx, [esp]
+	//_asm mov dwRetAddr_Coll, edx
+	_asm mov edx, [esp+4]
+	_asm mov pCollidedVehicle, edx
+	_asm pushad
+
+	if (!pNetGame ||
+		!pNetGame->m_bDisableVehicleCollision ||
+		!pThisVehicle ||
+		!pCollidedVehicle ||
+		pCollidedVehicle->entity.nModelIndex < 400 ||
+		pCollidedVehicle->entity.nModelIndex > 611 ||
+		!pThisVehicle->pDriver ||
+		!pCollidedVehicle->pDriver)
+	{
+		_asm popad
+		_asm mov edx, 0x6C8AE0
+		_asm jmp edx
+	}
+
+	_asm popad
+	_asm mov eax, 0
+	//_asm retn 8 // Do we need to pop 8 bytes?
+	_asm ret
+}
+
+NUDE ProcessEntityCollision4_Hook()
+{
+	_asm mov pThisVehicle, ecx
+	//_asm mov edx, [esp]
+	//_asm mov dwRetAddr_Coll, edx
+	_asm mov edx, [esp+4]
+	_asm mov pCollidedVehicle, edx
+	_asm pushad
+
+	if (!pNetGame ||
+		!pNetGame->m_bDisableVehicleCollision ||
+		!pThisVehicle ||
+		!pCollidedVehicle ||
+		pCollidedVehicle->entity.nModelIndex < 400 ||
+		pCollidedVehicle->entity.nModelIndex > 611 ||
+		!pThisVehicle->pDriver ||
+		!pCollidedVehicle->pDriver)
+	{
+		_asm popad
+		_asm mov edx, 0x546D00
+		_asm jmp edx
+	}
+
+	_asm popad
+	_asm mov eax, 0
+	//_asm retn 8 // Do we need to pop 8 bytes?
+	_asm ret
+}
+
+//-----------------------------------------------------------
+
 void InstallMethodHook(	DWORD dwInstallAddress,
 						DWORD dwHookFunction )
 {
@@ -1593,6 +1714,15 @@ void GameInstallHooks()
 	InstallMethodHook(0x871800,(DWORD)AllVehicles_ProcessControl_Hook); // truck
 	InstallMethodHook(0x871B10,(DWORD)AllVehicles_ProcessControl_Hook); // quad
 	InstallMethodHook(0x872398,(DWORD)AllVehicles_ProcessControl_Hook); // train
+
+	InstallMethodHook(0x871178,(DWORD)ProcessEntityCollision1_Hook); // automobile
+	InstallMethodHook(0x8716D8,(DWORD)ProcessEntityCollision1_Hook); // heli
+	InstallMethodHook(0x8719A0,(DWORD)ProcessEntityCollision1_Hook); // plane
+	InstallMethodHook(0x871B40,(DWORD)ProcessEntityCollision1_Hook); // quad
+	InstallMethodHook(0x8713B8,(DWORD)ProcessEntityCollision2_Hook); // bike
+	InstallMethodHook(0x871580,(DWORD)ProcessEntityCollision2_Hook); // bmx
+	InstallMethodHook(0x871830,(DWORD)ProcessEntityCollision3_Hook); // monster truck
+	InstallMethodHook(0x8721F8,(DWORD)ProcessEntityCollision4_Hook); // boat
 
 	InstallCallHook(0x6E0954, (DWORD)IsModelHasSiren_Hook);
 	InstallCallHook(0x6B2BCB, (DWORD)IsModelHasSiren_Hook);

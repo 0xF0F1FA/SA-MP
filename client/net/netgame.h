@@ -83,6 +83,7 @@ public:
 	bool		m_bLanMode;
 	bool		m_bNameTagLOS;
 	bool		m_bManualEngineAndLights;
+	bool		m_bDisableVehicleCollision;
 
 	char		m_szHostName[256];
 	char		m_szHostOrIp[256];

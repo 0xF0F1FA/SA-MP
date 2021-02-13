@@ -955,7 +955,7 @@ float CGame::GetRadioVolume()
 {
 	// 0xBA6748 + 0x50 (CMenuRenderer.byteRadioVolume) [Range: 0-64]
 	// Game multiplies byteRadioVolume with 0.015625 to get in range with audio engine's volume control
-	return *(float*)0xB5F8B8 + 0x410; // [Range: 0.0-1.0]
+	return *(float*)0xB5FCC8; // [Range: 0.0-1.0]
 }
 
 void CGame::SetGameSpeed(float fSpeed)

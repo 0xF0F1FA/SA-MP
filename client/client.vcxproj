@@ -125,6 +125,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\sdk\discordrpc\connection_win.cpp" />
+    <ClCompile Include="..\sdk\discordrpc\discord_register_win.cpp" />
+    <ClCompile Include="..\sdk\discordrpc\discord_rpc.cpp" />
+    <ClCompile Include="..\sdk\discordrpc\rpc_connection.cpp" />
+    <ClCompile Include="..\sdk\discordrpc\serialization.cpp" />
     <ClCompile Include="..\sdk\dxut\dxstdafx.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUT.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUTenum.cpp" />
@@ -493,6 +498,13 @@
   <ItemGroup>
     <ClInclude Include="..\sdk\bass\bass.h" />
     <ClInclude Include="..\sdk\detours\detours.h" />
+    <ClInclude Include="..\sdk\discordrpc\backoff.h" />
+    <ClInclude Include="..\sdk\discordrpc\connection.h" />
+    <ClInclude Include="..\sdk\discordrpc\discord_register.h" />
+    <ClInclude Include="..\sdk\discordrpc\discord_rpc.h" />
+    <ClInclude Include="..\sdk\discordrpc\msg_queue.h" />
+    <ClInclude Include="..\sdk\discordrpc\rpc_connection.h" />
+    <ClInclude Include="..\sdk\discordrpc\serialization.h" />
     <ClInclude Include="..\sdk\dxut\dxstdafx.h" />
     <ClInclude Include="..\sdk\dxut\DXUT.h" />
     <ClInclude Include="..\sdk\dxut\DXUTenum.h" />

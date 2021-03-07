@@ -51,6 +51,8 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	strncpy_s(m_szHostOrIp, szHostOrIp, sizeof(m_szHostOrIp));
 	m_iPort = iPort;
 
+	UpdateDiscordPresence("Waiting to join...", m_szHostName);
+
 	// Setup player pool
 	m_pPlayerPool = new CPlayerPool();
 	m_pPlayerPool->GetLocalPlayer()->SetName(szPlayerName);

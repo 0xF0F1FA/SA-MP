@@ -147,6 +147,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 				delete pAntiCheat;
 			}*/
 			UninstallFileSystemHooks();
+
+			Discord_Shutdown();
 		}
 	}
 
@@ -344,6 +346,9 @@ void DoInitStuff()
 			return;
 		}*/
 
+		OutputDebugString("Initializing Discord presence RPC");
+		Discord_Initialize(APPLICATION_ID, NULL, 1, NULL);
+
 		// Grab the real IDirect3DDevice9 * from the game.
 		pD3DDevice = (IDirect3DDevice9 *)pGame->GetD3DDevice();
 
@@ -409,6 +414,7 @@ void DoInitStuff()
 			pGame->EnableClock(0);
 			if (tSettings.szDebugScript[0] != '\0')
 				GameDebugLoadScript(tSettings.szDebugScript);
+			UpdateDiscordPresence("In debug mode", NULL);
 		}
 
 		bGameInited = true;
@@ -656,6 +662,22 @@ void d3d9RestoreDeviceObjects()
 		pDeathWindow->OnResetDevice();
 	
 	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnResetDevice();
+}
+
+void UpdateDiscordPresence(char* state, char* details)
+{
+	Discord_ClearPresence();
+
+	DiscordRichPresence discordPresence;
+	memset(&discordPresence, 0, sizeof(discordPresence));
+
+	discordPresence.state = state;
+	discordPresence.details = details;
+	discordPresence.largeImageKey = "default";
+	//discordPresence.smallImageKey = "default";
+	discordPresence.instance = 0;
+
+	Discord_UpdatePresence(&discordPresence);
 }
 
 //----------------------------------------------------

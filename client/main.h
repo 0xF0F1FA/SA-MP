@@ -27,6 +27,7 @@
 #define PSCANNER_DISTANCE		600.0f
 
 #define CHAT_LOG_FILE "chatlog.txt"
+#define APPLICATION_ID ""
 
 // 3x 100000 bytes to alloc for string is little bit overkill, isn't it?
 #define MAX_STRING_LENGTH 33000 // 100000
@@ -57,6 +58,8 @@ typedef struct _GAME_SETTINGS {
 #include <raknet/BitStream.h>
 #include <raknet/PacketEnumerations.h>
 #include <raknet/SAMPRPC.h>
+
+#include <discordrpc/discord_rpc.h>
 
 #include "net/localplayer.h"
 #include "net/remoteplayer.h"
@@ -95,6 +98,8 @@ typedef struct _GAME_SETTINGS {
 #include "audiostream.h"
 
 void QuitGame();
+void UpdateDiscordPresence(char* state, char* details);
+
 
 //void UnFuck(DWORD addr, int size);
 

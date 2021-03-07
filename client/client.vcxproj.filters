@@ -31,6 +31,9 @@
     <Filter Include="sdk\bass">
       <UniqueIdentifier>{aefa8bea-bc19-4c7b-b6fe-e21a92dd8e3a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sdk\discordrpc">
+      <UniqueIdentifier>{40b88e7b-b46b-449e-bd26-91d1bb45095b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="net\gangzonepool.cpp">
@@ -334,6 +337,21 @@
     </ClCompile>
     <ClCompile Include="net\actorpool.cpp">
       <Filter>net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\discordrpc\connection_win.cpp">
+      <Filter>sdk\discordrpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\discordrpc\discord_register_win.cpp">
+      <Filter>sdk\discordrpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\discordrpc\discord_rpc.cpp">
+      <Filter>sdk\discordrpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\discordrpc\rpc_connection.cpp">
+      <Filter>sdk\discordrpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\discordrpc\serialization.cpp">
+      <Filter>sdk\discordrpc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -752,6 +770,27 @@
     </ClInclude>
     <ClInclude Include="net\actorpool.h">
       <Filter>net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\backoff.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\connection.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\discord_register.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\discord_rpc.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\msg_queue.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\rpc_connection.h">
+      <Filter>sdk\discordrpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\discordrpc\serialization.h">
+      <Filter>sdk\discordrpc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

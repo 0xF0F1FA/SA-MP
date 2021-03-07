@@ -136,6 +136,7 @@ void InitGame(RPCParameters *rpcParams)
 
 	pChatWindow->AddDebugMessage("Connected to {B9C9BF}%.64s",pNetGame->m_szHostName);
 
+	UpdateDiscordPresence("Playing", pNetGame->m_szHostName);
 }
 
 //----------------------------------------------------

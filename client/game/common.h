@@ -136,7 +136,6 @@ typedef struct _PED_TYPE
 
 //-----------------------------------------------------------
 
-#pragma pack(1)
 typedef struct _VEHICLE_TYPE
 {
 	ENTITY_TYPE entity; // 0-184

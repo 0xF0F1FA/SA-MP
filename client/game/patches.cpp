@@ -481,9 +481,9 @@ void ApplyInGamePatches()
 	memset((PVOID)0x6BC9EB,0x90,2);
 
 	// Make ped stop chewing gum
-	*(BYTE*)0x4BC6C1 = 0xB0; // mov al, 0
-	*(BYTE*)0x4BC6C1 = 0x00;
-	*(BYTE*)0x4BC6C1 = 0x90;
+	//*(BYTE*)0x4BC6C1 = 0xB0; // mov al, 0
+	//*(BYTE*)0x4BC6C1 = 0x00;
+	//*(BYTE*)0x4BC6C1 = 0x90;
 
 	// This removes the random weapon pickups (e.g. on the hill near chilliad)
 	//UnFuck(0x5B47B0,1);

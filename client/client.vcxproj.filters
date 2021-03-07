@@ -338,6 +338,7 @@
     <ClCompile Include="net\actorpool.cpp">
       <Filter>net</Filter>
     </ClCompile>
+    <ClCompile Include="configfile.cpp" />
     <ClCompile Include="..\sdk\discordrpc\connection_win.cpp">
       <Filter>sdk\discordrpc</Filter>
     </ClCompile>
@@ -771,6 +772,7 @@
     <ClInclude Include="net\actorpool.h">
       <Filter>net</Filter>
     </ClInclude>
+    <ClInclude Include="configfile.h" />
     <ClInclude Include="..\sdk\discordrpc\backoff.h">
       <Filter>sdk\discordrpc</Filter>
     </ClInclude>

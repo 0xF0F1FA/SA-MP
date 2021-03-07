@@ -26,6 +26,7 @@
 #define CSCANNER_DISTANCE		200.0f
 #define PSCANNER_DISTANCE		600.0f
 
+#define CONFIG_FILE "sa-mp.cfg"
 #define CHAT_LOG_FILE "chatlog.txt"
 #define APPLICATION_ID ""
 
@@ -96,6 +97,7 @@ typedef struct _GAME_SETTINGS {
 #include "d3dhook.h"
 #include "cursor.h"
 #include "audiostream.h"
+#include "configfile.h"
 
 void QuitGame();
 void UpdateDiscordPresence(char* state, char* details);
@@ -119,6 +121,7 @@ extern CNetStats* pNetStats;
 extern CFileSystem* pFileSystem;
 extern CCursor* pCursor;
 extern CAudioStream* pAudioStream;
+extern CConfigFile* pConfigFile;
 
 extern CDXUTDialogResourceManager* pDialogResourceManager;
 extern CDXUTDialog* pGameUI;

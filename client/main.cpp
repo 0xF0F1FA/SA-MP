@@ -41,6 +41,7 @@ CNetStats				*pNetStats=NULL;
 //CSvrNetStats			*pSvrNetStats=NULL;
 //CHelpDialog				*pHelpDialog=NULL;
 CAudioStream			*pAudioStream=NULL;
+CConfigFile				*pConfigFile=NULL;
 
 bool					bShowDebugLabels = false;
 bool					bWantHudScaling = true;
@@ -330,6 +331,8 @@ void DoInitStuff()
 		OutputDebugString("Start of DoInitStuff()");
 
 		SetupModUserFilesDirs();
+
+		pConfigFile = new CConfigFile(szUserDocPath);
 
 		Util_GetTime();
 

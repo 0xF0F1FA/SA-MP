@@ -1450,12 +1450,20 @@ static void cmdShowMem(PCHAR szCmd)
 	pChatWindow->AddDebugMessage("Memory: %u", *(DWORD*)0x8A5A80);
 }
 
-// TODO: Add "nohudscalefix" config store here
 static void cmdHudScaleFix(PCHAR szCmd)
 {
 	(void)szCmd;
 
-	bWantHudScaling = !bWantHudScaling;
+	if (bWantHudScaling)
+	{
+		bWantHudScaling = false;
+		pConfigFile->SetInt("nohudscalefix", 1);
+	}
+	else
+	{
+		bWantHudScaling = true;
+		pConfigFile->SetInt("nohudscalefix", 1);
+	}
 }
 
 // TODO: Add "disableheadmove" config save here

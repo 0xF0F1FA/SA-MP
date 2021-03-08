@@ -370,6 +370,9 @@ void DoInitStuff()
 
 		AllocateBufferForColorEmbed();
 
+		if (pConfigFile->GetInt("nohudscalefix") == 1)
+			bWantHudScaling = false;
+
 		// DXUT GUI INITIALISATION
 		OutputDebugString("DXUTGUI creating..");
 

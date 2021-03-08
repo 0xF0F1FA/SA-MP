@@ -14,6 +14,8 @@ BOOL g_bTakeScreenshot = FALSE;
 static WNDPROC hOldProc;
 LRESULT APIENTRY NewWndProc(HWND,UINT,WPARAM,LPARAM);
 
+void cmdRawSave(PCHAR szCmd);
+
 //----------------------------------------------------
 
 static DWORD dwWorkingSkins[] =
@@ -138,6 +140,14 @@ BOOL HandleKeyPress(DWORD vKey)
 			}
 			break;
 		}
+
+		case VK_SUBTRACT:
+		{
+			if (!tSettings.bDebug) break;
+			cmdRawSave("");
+			break;
+		}
+
 		case VK_F11:
 		{
 			if(!tSettings.bDebug) break;

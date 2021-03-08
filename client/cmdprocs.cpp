@@ -234,7 +234,7 @@ void cmdSavePos(PCHAR szCmd)
 	fclose(fileOut);
 }
 
-static void cmdRawSave(PCHAR szCmd)
+/*static*/ void cmdRawSave(PCHAR szCmd)
 {
 	CPlayerPed* pPlayerPed;
 	FILE* f;

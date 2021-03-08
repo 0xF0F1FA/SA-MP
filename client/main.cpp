@@ -113,7 +113,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 		if(tSettings.bDebug || tSettings.bPlayOnline)
 		{
-			SetProcessAffinityMask(GetCurrentProcess(),1);
 			DisableThreadLibraryCalls(hinstDLL);
 			SetUnhandledExceptionFilter(exc_handler);
 			//dwGameLoop = (DWORD)TheGameLoop;
@@ -419,6 +418,11 @@ void DoInitStuff()
 				GameDebugLoadScript(tSettings.szDebugScript);
 			UpdateDiscordPresence("In debug mode", NULL);
 		}
+
+		if (!pConfigFile->IsValidKey("multicore"))
+			pConfigFile->SetInt("multicore", 1, false);
+		if (!pConfigFile->GetInt("multicore"))
+			SetProcessAffinityMask(GetCurrentProcess(), 1);
 
 		bGameInited = true;
 		OutputDebugString("End of DoInitStuff()");

@@ -84,9 +84,8 @@ void CAudioStream::Play(char* szURL,
 
 	BASS_ChannelPlay(m_hStream, FALSE);
 
-	// TODO: Add "audiomsgoff" config check for this
-	if (pChatWindow)
-		pChatWindow->AddInfoMessage("Audio stream: %.30s", szURL);
+	if (!pConfigFile->GetInt("audiomsgoff"))
+		pChatWindow->AddInfoMessage("Audio stream: %s", szURL);
 
 	m_Flags.bPlaying = true;
 }

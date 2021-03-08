@@ -54,6 +54,25 @@ void cmdDefaultCmdProc(PCHAR szCmd)
 
 //----------------------------------------------------
 
+// Note: Check for pChatWindow before AddInfoMessage call has been removed here
+void cmdAudioMessages(PCHAR szCmd)
+{
+	(void)szCmd;
+
+	if (pConfigFile->GetInt("audiomsgoff") == 1)
+	{
+		pConfigFile->SetInt("audiomsgoff", 0);
+		pChatWindow->AddInfoMessage("Audio messages: On");
+	}
+	else
+	{
+		pConfigFile->SetInt("audiomsgoff", 1);
+		pChatWindow->AddInfoMessage("Audio messages: Off");
+	}
+}
+
+//----------------------------------------------------
+
 void cmdOnfootCorrection(PCHAR szCmd)
 {
 	if(strlen(szCmd)) {
@@ -1518,6 +1537,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("incar_correct",cmdInCarCorrection);
 	pCmdWindow->AddCmdProc("inacc_multiplier",cmdInAccMultiplier);
 	pCmdWindow->AddCmdProc("fpslimit",cmdSetFrameLimit);
+	pCmdWindow->AddCmdProc("audiomsg",cmdAudioMessages);
 
 	// DEBUG COMMANDS
 #ifdef _DEBUG

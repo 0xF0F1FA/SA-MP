@@ -3194,6 +3194,47 @@ static cell n_PlayCrimeReportForPlayer(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SetPlayerChatBubble(playerid, text[], color, drawdistance, expiretime)
+static cell n_SetPlayerChatBubble(AMX* amx, cell* params)
+{
+	CPlayer* pPlayer;
+	cell* cstr;
+	int len;
+	char* szText;
+
+	CHECK_PARAMS(amx, "SetPlayerChatBubble", 5);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer &&
+			pPlayer->GetState() != PLAYER_STATE_NONE &&
+			pPlayer->GetState() != PLAYER_STATE_SPECTATING)
+		{
+			amx_GetAddr(amx, params[2], &cstr);
+			amx_StrLen(cstr, &len);
+
+			if (len != 0 && len <= MAX_CHAT_BUBBLE_TEXT && (szText = (char*)_alloca(len + 1)) != NULL)
+			{
+				amx_GetString(szText, cstr, 0, len + 1);
+
+				RakNet::BitStream bsSend;
+
+				bsSend.Write((WORD)params[1]); // playerid
+				bsSend.Write(params[3]); // color
+				bsSend.Write(params[4]); // drawdistance
+				bsSend.Write(params[5]); // expiretime
+				bsSend.Write((BYTE)len);
+				bsSend.Write(szText, len);
+
+				pNetGame->BroadcastData(RPC_ChatBubble, &bsSend, (WORD)params[1], 2);
+			}
+		}
+	}
+	return 0;
+}
+
 // native DisableRemoteVehicleCollisions(playerid, disable)
 static cell n_DisableRemoteVehicleCollisions(AMX* amx, cell* params)
 {
@@ -7700,6 +7741,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(PlayAudioStreamForPlayer),
 	DEFINE_NATIVE(StopAudioStreamForPlayer),
 	DEFINE_NATIVE(PlayCrimeReportForPlayer),
+	DEFINE_NATIVE(SetPlayerChatBubble),
 
 	// Player Variable
 	DEFINE_NATIVE(SetPVarInt),

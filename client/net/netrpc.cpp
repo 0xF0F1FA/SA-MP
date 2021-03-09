@@ -889,6 +889,42 @@ static void WorldRemoveActor(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void ChatBubble(RPCParameters* rpcParams)
+{
+	WORD wPlayerID;
+	DWORD dwColor;
+	float fDistance;
+	int iExpireTime;
+	BYTE byteTextLen;
+	char szText[MAX_CHAT_BUBBLE_TEXT + 1];
+
+	if (pChatBubble && pNetGame->GetPlayerPool())
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(wPlayerID);
+
+		if (pNetGame->GetPlayerPool()->GetSlotState(wPlayerID))
+		{
+			bsData.Read(dwColor);
+			bsData.Read(fDistance);
+			bsData.Read(iExpireTime);
+			bsData.Read(byteTextLen);
+
+			if (byteTextLen <= MAX_CHAT_BUBBLE_TEXT &&
+				byteTextLen == (BYTE)(bsData.GetNumberOfUnreadBits() / 8))
+			{
+				bsData.Read(szText, byteTextLen);
+				szText[byteTextLen] = 0;
+
+				pChatBubble->AddText(wPlayerID, szText, dwColor, fDistance, iExpireTime);
+			}
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakClientInterface * pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient,ServerJoin);
@@ -925,6 +961,7 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,ClientCheck);
 	REGISTER_STATIC_RPC(pRakClient,WorldAddActor);
 	REGISTER_STATIC_RPC(pRakClient,WorldRemoveActor);
+	REGISTER_STATIC_RPC(pRakClient,ChatBubble);
 }
 
 //----------------------------------------------------

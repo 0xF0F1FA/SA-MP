@@ -14,6 +14,54 @@
 
 //----------------------------------------------------
 
+int FormatChatBubbleText(char* szText, int iWidth, int iMaxWord)
+{
+	int s, i, r, w, c;
+	char buf[512];
+
+	r = strlen(szText);
+	w = iWidth;
+	i = 0;
+	c = 1;
+
+	memset(buf, 0, sizeof(buf));
+	
+	//if (strlen(szText) <= 512)
+	if (r <= (int)sizeof(buf))
+	{
+		while (r > iWidth)
+		{
+			s = iWidth;
+
+			while (s != 0 && szText[i + s] != ' ')
+				--s;
+
+			if (w - i - s <= iMaxWord)
+			{
+				i += s;
+				szText[i] = '\n';
+				r -= s;
+				w = i + iWidth;
+			}
+			else
+			{
+				strcpy(buf, szText + w);
+				szText[w + 1] = 0;
+				szText[w] = '\n';
+				memcpy(szText + strlen(szText), buf, strlen(buf) + 1);
+				i = w + 1;
+				r -= iWidth;
+				w += 1 + iWidth;
+			}
+			c++;
+		}
+		return c;
+	}
+	return -1;
+}
+
+//----------------------------------------------------
+
 void Util_UrlUnencode(char *enc)
 {
 	char *write_pos = enc;

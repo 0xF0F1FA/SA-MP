@@ -191,6 +191,7 @@
     <ClCompile Include="archive\Signer.cpp" />
     <ClCompile Include="archive\TinyEncrypt.cpp" />
     <ClCompile Include="audiostream.cpp" />
+    <ClCompile Include="chatbubble.cpp" />
     <ClCompile Include="chatwindow.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -604,6 +605,7 @@
     <ClInclude Include="archive\Signer.h" />
     <ClInclude Include="archive\TinyEncrypt.h" />
     <ClInclude Include="audiostream.h" />
+    <ClInclude Include="chatbubble.h" />
     <ClInclude Include="chatwindow.h" />
     <ClInclude Include="cmdprocs.h" />
     <ClInclude Include="cmdwindow.h" />

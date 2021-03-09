@@ -354,6 +354,7 @@
     <ClCompile Include="..\sdk\discordrpc\serialization.cpp">
       <Filter>sdk\discordrpc</Filter>
     </ClCompile>
+    <ClCompile Include="chatbubble.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -794,6 +795,7 @@
     <ClInclude Include="..\sdk\discordrpc\serialization.h">
       <Filter>sdk\discordrpc</Filter>
     </ClInclude>
+    <ClInclude Include="chatbubble.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

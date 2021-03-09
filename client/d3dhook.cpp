@@ -282,6 +282,7 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 		else
 		{
 			pGame->DisplayHud(TRUE);
+			if(pChatBubble) pChatBubble->Draw();
 			if(pGameUI) pGameUI->OnRender(10.0f);
 			if(pSpawnScreen) pSpawnScreen->Draw();
 			if(pChatWindow) pChatWindow->Draw();

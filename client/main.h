@@ -89,6 +89,7 @@ typedef struct _GAME_SETTINGS {
 //#include "newplayertags.h"
 #include "scoreboard.h"
 #include "label.h"
+#include "chatbubble.h"
 #include "netstats.h"
 //#include "svrnetstats.h"
 //#include "helpdialog.h"
@@ -122,6 +123,7 @@ extern CFileSystem* pFileSystem;
 extern CCursor* pCursor;
 extern CAudioStream* pAudioStream;
 extern CConfigFile* pConfigFile;
+extern CChatBubble* pChatBubble;
 
 extern CDXUTDialogResourceManager* pDialogResourceManager;
 extern CDXUTDialog* pGameUI;

@@ -781,6 +781,32 @@ int CNetGame::GetBroadcastSendRateFromPlayerDistance(float fDistance)
 
 //----------------------------------------------------
 
+void CNetGame::BroadcastData(UniqueID uniqueID, RakNet::BitStream* bitStream,
+	WORD wExcludedPlayer, char orderingStream)
+{
+	int x = 0;
+	CPlayer* pPlayer;
+
+	if (m_pPlayerPool)
+	{
+		while (x <= m_pPlayerPool->GetLastPlayerId())
+		{
+			if (m_pPlayerPool->GetSlotState(x) == TRUE && x != (int)wExcludedPlayer)
+			{
+				pPlayer = m_pPlayerPool->GetAt(x);
+				if (pPlayer /*&& pPlayer->IsPlayerStreamedIn(wExcludedPlayer)*/) // TODO!
+				{
+					m_pRak->RPC(uniqueID, bitStream, HIGH_PRIORITY, RELIABLE,
+						0, m_pRak->GetPlayerIDFromIndex(x), false, false);
+				}
+			}
+			x++;
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void CNetGame::BroadcastData( RakNet::BitStream *bitStream,
 							  PacketPriority priority,
 							  PacketReliability reliability,

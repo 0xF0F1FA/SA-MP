@@ -59,6 +59,7 @@ enum
 	RPC_WorldAddActor,
 	RPC_WorldRemoveActor,
 	RPC_ActorDamage,
+	RPC_ChatBubble,
 
 	RPC_ScrSetSpawnInfo = 100,
 	RPC_ScrSetPlayerTeam,

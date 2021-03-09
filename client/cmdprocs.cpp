@@ -1476,7 +1476,7 @@ static void cmdHudScaleFix(PCHAR szCmd)
 	if (bWantHudScaling)
 	{
 		bWantHudScaling = false;
-		pConfigFile->SetInt("nohudscalefix", 1);
+		pConfigFile->SetInt("nohudscalefix", 0);
 	}
 	else
 	{

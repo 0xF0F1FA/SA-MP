@@ -1699,7 +1699,7 @@ void GameInstallHooks()
 
 	InstallMethodHook(0x86D190,(DWORD)CPlayerPed_ProcessControl_Hook);
 	InstallMethodHook(0x86D744,(DWORD)TaskUseGun_Hook);
-	InstallMethodHook(0x7330A2,(DWORD)CPed_GetWeaponSkillIndex_Hook);
+	InstallCallHook(0x7330A2,(DWORD)CPed_GetWeaponSkillIndex_Hook);
 	InstallMethodHook(0x86D194,(DWORD)CPlayerPed_ProcessCollision_Hook);
 
 	//InstallMethodHook(0x870904,(DWORD)TaskOnFoot1_Hook);

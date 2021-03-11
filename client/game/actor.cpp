@@ -40,7 +40,7 @@ void CActor::Destroy()
 {
 	DWORD dwPed = (DWORD)m_pPed;
 
-	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) && m_pPed->entity.vtable == ADDR_PLACEABLE_VTBL)
+	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) && m_pPed->entity.vtable != ADDR_PLACEABLE_VTBL)
 	{
 		_asm
 		{

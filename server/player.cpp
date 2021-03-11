@@ -223,11 +223,10 @@ void CPlayer::ProcessStreaming()
 		for (i = 0; i <= pPickupPool->GetLastID(); i++) {
 			if (pPickupPool->IsActive(i) &&
 				(pPickupPool->GetVirtualWorld(i) == -1 || pPickupPool->GetVirtualWorld(i) == m_iVirtualWorld) &&
-				// In SA-MP, pickups are handled in 2D dimension, not sure why tho?
-				GetSquaredDistanceFrom3DPoint(pPickupPool->Get(i).fX, pPickupPool->Get(i).fY, pPickupPool->Get(i).fZ) <= fDistance &&
-				!m_bStreamedInPickup[i])
+				GetSquaredDistanceFrom2DPoint(pPickupPool->Get(i).fX, pPickupPool->Get(i).fY) <= fDistance)
 			{
-				StreamPickupIn(i);
+				if(!m_bStreamedInPickup[i])
+					StreamPickupIn(i);
 			} else if (m_bStreamedInPickup[i]) {
 				StreamPickupOut(i);
 			}

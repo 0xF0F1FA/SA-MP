@@ -102,3 +102,4 @@ native GetVehicleModelInfo(vehiclemodel, infotype, &Float:X, &Float:Y, &Float:Z)
 native GetVehicleParamsSirenState(vehicleid);
 native GetVehicleDamageStatus(vehicleid, &panels=0, &doors=0, &lights=0, &tires=0);
 native UpdateVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
+native GetVehicleRotationQuat(vehicleid, &Float:w, &Float:x, &Float:y, &Float:z);

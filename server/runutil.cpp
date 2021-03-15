@@ -821,3 +821,35 @@ int CanFileBeOpenedForReading(char * filename)
 }
 
 //----------------------------------------------------
+void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q)
+{
+	float t, w, x, y, z, s;
+	
+	t = m->right.X + m->up.Y + m->at.Z + 1.0f;
+	if (t < 0.0f) t = 0.0f;
+	w = sqrtf(t) * 0.5f;
+
+	t = m->right.X + 1.0f - m->up.Y - m->at.Z;
+	if (t < 0.0f) t = 0.0f;
+	x = sqrtf(t) * 0.5f;
+
+	s = 1.0f - m->right.X;
+	t = m->up.Y + s - m->at.Z;
+	if (t < 0.0f) t = 0.0f;
+	y = sqrtf(t) * 0.5f;
+
+	t = s - m->up.Y + m->at.Z;
+	if (t < 0.0f) t = 0.0f;
+	z = sqrtf(t) * 0.5f;
+
+	if (w < 0.0f) w = 0.0f;
+	if (x < 0.0f) x = 0.0f;
+	if (y < 0.0f) y = 0.0f;
+	if (z < 0.0f) z = 0.0f;
+
+	q->W = w;
+	q->X = _copysignf(x, m->at.Y - m->up.Z);
+	q->Y = _copysignf(y, m->right.Z - m->at.X);
+	q->Z = _copysignf(z, m->up.X - m->right.Y);
+}
+

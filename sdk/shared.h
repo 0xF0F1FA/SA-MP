@@ -226,6 +226,11 @@ typedef struct {
 	float X, Y;
 } VECTOR2D, *PVECTOR2D;
 
+typedef struct
+{
+	float W, X, Y, Z;
+} QUATERNION, *PQUATERNION;
+
 typedef struct {
 	VECTOR right;
 	unsigned long flags;

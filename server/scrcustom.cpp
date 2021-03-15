@@ -4151,6 +4151,41 @@ static cell n_SetVehicleZAngle(AMX *amx, cell *params)
 
 //----------------------------------------------------------------------------------
 
+// native GetVehicleRotationQuat(vehicleid, &Float:w, &Float:x, &Float:y, &Float:z)
+static cell n_GetVehicleRotationQuat(AMX* amx, cell* params)
+{
+	CVehicle* pVehicle;
+	QUATERNION quat;
+	cell* cptr;
+
+	CHECK_PARAMS(amx, "GetVehicleRotationQuat", 5);
+
+	if (pNetGame->GetVehiclePool() &&
+		pNetGame->GetVehiclePool()->GetSlotState(params[1]))
+	{
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+
+		if (pVehicle)
+		{
+			MatrixToQuaternion(&pVehicle->m_matWorld, &quat);
+
+			if (amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(quat.W);
+			if (amx_GetAddr(amx, params[3], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(quat.X);
+			if (amx_GetAddr(amx, params[4], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(quat.Y);
+			if (amx_GetAddr(amx, params[5], &cptr) == AMX_ERR_NONE)
+				*cptr = amx_ftoc(quat.Z);
+
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
+
 // native PlayerPlaySound(playerid, soundid, Float:x, Float:y, Float:z)
 static cell n_PlayerPlaySound(AMX *amx, cell *params)
 {	
@@ -7828,6 +7863,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetVehicleParamsSirenState),
 	DEFINE_NATIVE(GetVehicleDamageStatus),
 	DEFINE_NATIVE(UpdateVehicleDamageStatus),
+	DEFINE_NATIVE(GetVehicleRotationQuat),
 
 	// Messaging
 	{ "SendClientMessage",		n_SendClientMessage },

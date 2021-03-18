@@ -2159,7 +2159,7 @@ void CPlayerPed::LoadShoppingData(char* szSectionName)
 
 VECTOR* CPlayerPed::GetBonePosition(int iBoneID, VECTOR* pPos)
 {
-	if (m_pPed && m_pPed->entity.vtable != ADDR_PLACEABLE_VTBL) return 0;
+	if (!m_pPed || m_pPed->entity.vtable == ADDR_PLACEABLE_VTBL) return 0;
 
 	DWORD dwThis = (DWORD)m_pPed;
 	VECTOR* pReturn;
@@ -2168,7 +2168,7 @@ VECTOR* CPlayerPed::GetBonePosition(int iBoneID, VECTOR* pPos)
 		push 0
 		push iBoneID
 		push pPos
-		mov ecx, m_pPed
+		mov ecx, dwThis
 		mov edx, 0x5E4280
 		call edx
 		mov pReturn, eax

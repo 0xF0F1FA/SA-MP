@@ -59,6 +59,8 @@ enum
 	RPC_WorldAddActor,
 	RPC_WorldRemoveActor,
 	RPC_ActorDamage,
+	RPC_CreateLabel,
+	RPC_DestroyLabel,
 	RPC_ChatBubble,
 
 	RPC_ScrSetSpawnInfo = 100,

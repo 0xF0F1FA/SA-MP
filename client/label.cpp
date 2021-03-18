@@ -44,12 +44,8 @@ void CLabel::Draw(D3DXVECTOR3* ppos, char* szText, DWORD dwColor, bool bShadowed
 	m_pDevice->GetViewport(&Viewport);
 
 	D3DXVECTOR3 Out;
-	D3DXMATRIX matIdent = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
+	D3DXMATRIX matIdent;
+	D3DXMatrixIdentity(&matIdent);
 	D3DXVec3Project(&Out, ppos, &Viewport, &matProj, &matView, &matIdent);
 
 	if (Out.z >= 1.0f)

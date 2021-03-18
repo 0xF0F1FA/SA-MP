@@ -339,6 +339,9 @@
       <Filter>net</Filter>
     </ClCompile>
     <ClCompile Include="configfile.cpp" />
+    <ClCompile Include="net\labelpool.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
     <ClCompile Include="..\sdk\discordrpc\connection_win.cpp">
       <Filter>sdk\discordrpc</Filter>
     </ClCompile>
@@ -774,6 +777,9 @@
       <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="configfile.h" />
+    <ClInclude Include="net\labelpool.h">
+      <Filter>net</Filter>
+    </ClInclude>
     <ClInclude Include="..\sdk\discordrpc\backoff.h">
       <Filter>sdk\discordrpc</Filter>
     </ClInclude>

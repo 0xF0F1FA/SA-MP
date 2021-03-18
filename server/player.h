@@ -53,8 +53,9 @@ private:
 	int m_iStreamedActorCount;
 
 public:
-	CVariables* m_pVariables;
-	CPlayerTextDrawPool* m_pTextDraw;
+	CVariables				*m_pVariables;
+	CPlayerTextDrawPool		*m_pTextDraw;
+	CPlayerLabelPool		*m_pLabelPool;
 	PLAYER_SPAWN_INFO		m_SpawnInfo;
 	bool					m_bHasSpawnInfo;
 	BYTE					m_byteWantedLevel;
@@ -102,6 +103,8 @@ public:
 	AIM_SYNC_DATA* GetAimSyncData() { return &m_aimSync; }
 	SPECTATOR_SYNC_DATA* GetSpectatorSyncData() { return &m_spSync; }
 
+	CPlayerLabelPool* GetLabelPool() { return m_pLabelPool; };
+
 	void SetState(BYTE byteState);
 	BYTE GetState() { return m_byteState; };
 
@@ -121,19 +124,7 @@ public:
 		return false;
 	};
 	
-	void Deactivate() {	
-		m_bHasSpawnInfo = false;
-		memset(&m_SpawnInfo,0,sizeof(PLAYER_SPAWN_INFO));
-		m_dwColor = 0;
-		m_byteState = PLAYER_STATE_NONE;
-		m_byteTime = 0;
-		m_fGameTime = 720.0f; // 12 o'clock in minutes	
-		m_fHealth = 0.0f;
-		m_fArmour = 0.0f;
-
-		memset(m_bIsActorStreamedIn, 0, sizeof(bool) * MAX_ACTORS);
-		m_iStreamedActorCount = 0;
-	};
+	void Deactivate();
 
 	bool IsPickupStreamedIn(int iPickupID);
 	void StreamPickupIn(int iPickupID);
@@ -150,7 +141,12 @@ public:
 	void Process(float fElapsedTime);
 	void BroadcastSyncData();
 	void Say(unsigned char * szText, size_t byteTextLength);
-	void SetID(BYTE bytePlayerID) { m_bytePlayerID = bytePlayerID; };
+	void SetID(BYTE bytePlayerID)
+	{
+		m_bytePlayerID = bytePlayerID;
+		if (m_pLabelPool)
+			m_pLabelPool->SetPlayerID(m_bytePlayerID);
+	};
 	
 	void StoreOnFootFullSyncData(ONFOOT_SYNC_DATA * pofSync);
 	void StoreInCarFullSyncData(INCAR_SYNC_DATA * picSync);

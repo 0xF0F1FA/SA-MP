@@ -6908,6 +6908,108 @@ static cell n_PlayerTextDrawDestroy(AMX* amx, cell* params)
 	return 0;
 }
 
+// native CreatePlayer3DTextLabel(playerid, text[], color, Float:X, Float:Y, Float:Z, Float:DrawDistance, attachedplayer, attachedvehicle, testLOS);
+static cell n_CreatePlayer3DTextLabel(AMX* amx, cell* params)
+{
+	CPlayer* pPlayer;
+	cell* phys_addr;
+	int length;
+	char* szText;
+	WORD wPlayerID, wVehicleID;
+
+	CHECK_PARAMS(amx, "CreatePlayer3DTextLabel", 10);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer && pPlayer->GetLabelPool())
+		{
+			amx_GetAddr(amx, params[2], &phys_addr);
+			amx_StrLen(phys_addr, &length);
+
+			length = (length > MAX_LABEL_TEXT) ? MAX_LABEL_TEXT : length;
+
+			if (length > 0 && (szText = (char*)alloca(length + 1)) != NULL)
+				amx_GetString(szText, phys_addr, 0, length + 1);
+			else
+				szText = "";
+
+			wPlayerID = (params[8] >= 0 && params[8] < MAX_PLAYERS) ? (WORD)params[8] : INVALID_PLAYER_ID;
+			wVehicleID = (params[9] >= 0 && params[9] < MAX_VEHICLES) ? (WORD)params[9] : INVALID_VEHICLE_ID;
+
+			return pPlayer->GetLabelPool()->New(
+				szText,
+				params[3],
+				amx_ctof(params[4]),
+				amx_ctof(params[5]),
+				amx_ctof(params[6]),
+				amx_ctof(params[7]),
+				wPlayerID,
+				wVehicleID,
+				params[10] != 0);
+		}
+	}
+	return 0;
+}
+
+// native DeletePlayer3DTextLabel(playerid, id);
+static cell n_DeletePlayer3DTextLabel(AMX* amx, cell* params)
+{
+	CPlayer* pPlayer;
+
+	CHECK_PARAMS(amx, "DeletePlayer3DTextLabel", 2);
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer &&
+			pPlayer->GetLabelPool() &&
+			pPlayer->GetLabelPool()->GetSlotState(params[2]))
+		{
+			return pPlayer->GetLabelPool()->Delete((WORD)params[2]);
+		}
+	}
+	return 0;
+}
+
+// native UpdatePlayer3DTextLabelText(playerid, id, color, text[]);
+static cell n_UpdatePlayer3DTextLabelText(AMX* amx, cell* params)
+{
+	CPlayer* pPlayer;
+	cell* phys_addr;
+	int length;
+	char* szText;
+
+	CHECK_PARAMS(amx, "UpdatePlayer3DTextLabelText", 4);
+
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer &&
+			pPlayer->GetLabelPool() &&
+			pPlayer->GetLabelPool()->GetSlotState(params[2]))
+		{
+			amx_GetAddr(amx, params[4], &phys_addr);
+			amx_StrLen(phys_addr, &length);
+
+			length = (length > MAX_LABEL_TEXT) ? MAX_LABEL_TEXT : length;
+
+			if (length > 0 && (szText = (char*)alloca(length + 1)) != NULL)
+				amx_GetString(szText, phys_addr, 0, length + 1);
+			else
+				szText = "";
+
+			return pPlayer->GetLabelPool()->UpdateText((WORD)params[2], params[3], szText);
+		}
+	}
+	return 0;
+}
+
 static cell n_GangZoneCreate(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GangZoneCreate", 4);
@@ -7620,6 +7722,12 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetNameTagDrawDistance", n_SetNameTagDrawDistance },
 	DEFINE_NATIVE(DisableNameTagLOS),
 	DEFINE_NATIVE(SetPlayerBlurLevel),
+
+
+	// Per-player 3D Text Labels
+	DEFINE_NATIVE(CreatePlayer3DTextLabel),
+	DEFINE_NATIVE(DeletePlayer3DTextLabel),
+	DEFINE_NATIVE(UpdatePlayer3DTextLabelText),
 
 	// Zones
 	{ "EnableZoneNames",		n_EnableZoneNames },

@@ -578,3 +578,188 @@ int ConvertMultiToWideString(LPCSTR szSource, LPWSTR szDest, int iLen)
 
 	return iResult;
 }
+
+//----------------------------------------------------
+
+/*
+	Index	Location	Text								Default key
+	-----------------------------------------------------------------------
+	0.		0xB703BC	PED_FIREWEAPON						"LMB"
+	1.		0xB703E4	PED_FIREWEAPON_ALT					"\"
+	2.		0xB7040C	PED_CYCLE_WEAPON_RIGHT				"MS WHEEL DN"
+	3.		0xB70434	PED_CYCLE_WEAPON_LEFT				"MS WHEEL UP"
+	4.		0xB7045C	GO_FORWARD							"UP"
+	5.		0xB70484	GO_BACK								"DOWN"
+	6.		0xB704AC	GO_LEFT								"LEFT"
+	7.		0xB704D4	GO_RIGHT							"RIGHT"
+	8.		0xB704FC	PED_SNIPER_ZOOM_IN					"MS WHEEL UP"
+	9.		0xB70524	PED_SNIPER_ZOOM_OUT					"MS WHEEL DN"
+	10.		0xB7054C	VEHICLE_ENTER_EXIT					"RETURN"
+	11.		0xB70574	CAMERA_CHANGE_VIEW_ALL_SITUATIONS	"V"
+	12.		0xB7059C	PED_JUMPING							"LSHIFT"
+	13.		0xB705C4	PED_SPRINT							"SPACE"
+	14.		0xB705EC	PED_LOOKBEHIND						"MMB"
+	15.		0xB70614	PED_DUCK							"C"
+	16.		0xB7063C	PED_ANSWER_PHONE					"TAB"
+	17.		0xB70664	SNEAK_ABOUT							"LALT"
+	18.		0xB7068C	VEHICLE_FIREWEAPON					"LMB"
+	19.		0xB706B4	VEHICLE_FIREWEAPON_ALRT				"LCTRL"
+	20.		0xB706DC	VEHICLE_STEERLEFT					"A"
+	21.		0xB70704	VEHICLE_STEERRIGHT					"D"
+	22.		0xB7072C	VEHICLE_STEERUP						"UP"
+	23.		0xB70754	VEHICLE_STEERDOWN					"DOWN"
+	24.		0xB7077C	VEHICLE_ACCELERATE					"W"
+	25.		0xB707A4	VEHICLE_BRAKE						"S"
+	26.		0xB707CC	VEHICLE_RADIO_STATION_UP			"MS WHEEL UP"
+	27.		0xB707F4	VEHICLE_RADIO_STATION_DOWN			"MS WHEEL DN"
+	28.		0xB7081C										"F5"
+	29.		0xB70844	VEHICLE_HORN						"CAPSLOCK"
+	30.		0xB7086C	TOGGLE_SUBMISSIONS					"2"
+	31.		0xB70894	VEHICLE_HANDBRAKE					"SPACE"
+	32.		0xB708BC	PED_1RST_PERSON_LOOK_LEFT			"NUM4"
+	33.		0xB708E4	PED_1RST_PERSON_LOOK_RIGHT			"NUM6"
+	34.		0xB7090C	VEHICLE_LOOKLEFT					"Q"
+	35.		0xB70934	VEHICLE_LOOKRIGHT					"E"
+	36.		0xB7095C	VEHICLE_LOOKBEHIND					"MMB"
+	37.		0xB70984	VEHICLE_MOUSELOOK					"RMB"
+	38.		0xB709AC	VEHICLE_TURRETLEFT					"NUM4"
+	39.		0xB709D4	VEHICLE_TURRETRIGHT					"NUM6"
+	40.		0xB709FC	VEHICLE_TURRETUP					"NUM2"
+	41.		0xB70A24	VEHICLE_TURRETDOWN					"NUM8"
+	42.		0xB70A4C	PED_CYCLE_TARGET_LEFT				"["
+	43.		0xB70A74	PED_CYCLE_TARGET_RIGHT				"]"
+	44.		0xB70A9C	PED_CENTER_CAMERA_BEHIND_PLAYER		"#"
+	45.		0xB70AC4	PED_LOCK_TARGET						"RMB"
+	46.		0xB70AEC	NETWORK_TALK						""
+	47.		0xB70B14	CONVERSATION_YES					"Y"
+	48.		0xB70B3C	CONVERSATION_NO						"N"
+	49.		0xB70B64	GROUP_CONTROL_FWD					"G"
+	50.		0xB70B8C	GROUP_CONTROL_BWD					"H"
+	51.		0xB70BB4	PED_1RST_PERSON_LOOK_UP				"NUM2"
+	52.		0xB70BDC	PED_1RST_PERSON_LOOK_DOWN			"NUM8"
+	53.		0xB70C04										""
+	54.		0xB70C2C	TOGGLE_DPAD							""
+	55.		0xB70C54	SWITCH_DEBUG_CAM_ON					""
+	56.		0xB70C7C	TAKE_SCREEN_SHOT					""
+	57.		0xB70CA4	SHOW_MOUSE_POINTER_TOGGLE			""
+	58.		0xB70CCC										""
+*/
+
+void FormatGameKeysInString(PCHAR buf)
+{
+	char output[2049];
+	char gxt[50];
+
+	if (!buf) return;
+
+	typedef struct
+	{
+		char szNames[59][40];
+	} ACTIONS;
+
+	// byte_B703BC[59][40]; ~ size=2360
+	ACTIONS* pActions = (ACTIONS*)0xB703BC;
+
+	size_t buflen = strlen(buf);
+	size_t k = 0;
+	memset(gxt, 0, sizeof(gxt));
+
+	for (size_t i = 0; i < buflen; i++)
+	{
+		if ((i + 3) < buflen &&
+			buf[i] == '~' &&
+			buf[i + 1] == 'k' &&
+			buf[i + 2] == '~' &&
+			buf[i + 3] == '~')
+		{
+			bool found = false;
+			i += 4;
+			for (size_t j = 0; j < 53 && !found; j++)
+			{
+				size_t keylen = strlen(pActions->szNames[j]);
+
+				if (keylen != 0 &&
+					strncmp(&buf[i], pActions->szNames[j], keylen) == 0 &&
+					buf[i + keylen] == '~')
+				{
+					found = true;
+
+					if (j != 46) // NETWORK_TALK
+					{
+						_asm push 50
+						_asm lea edx, gxt
+						_asm push edx
+						_asm push j
+						_asm mov ecx, 0xB70198
+						_asm mov edx, 0x5303D0
+						_asm call edx
+					}
+
+					i += keylen;
+
+					size_t gxtlen = strlen(gxt);
+					if (gxtlen)
+					{
+						for (size_t l = 0; l < gxtlen; l++)
+						{
+							if (k >= sizeof(output) - 1)
+								break;
+							output[k] = gxt[l];
+							k++;
+						}
+						gxt[0] = '\0';
+					}
+				}
+			}
+			if (!found)
+			{
+				output[k++] = '~';
+				output[k++] = 'k';
+				output[k++] = '~';
+				output[k++] = '~';
+				i--;
+			}
+		}
+		else
+		{
+			if (k >= sizeof(output) - 1)
+				break;
+
+			output[k] = buf[i];
+			k++;
+		}
+	}
+	output[k] = '\0';
+
+	strcpy_s(buf, 2048, output);
+}
+
+//----------------------------------------------------
+
+// This only supports the maximum 400 characters
+DWORD FormatGameTextKey(PCHAR szBuf, DWORD dwMaxLen)
+{
+	if (szBuf && strlen(szBuf) < 400 && strstr(szBuf, "~k~"))
+	{
+		char tmp_buf[2048];
+		memset(tmp_buf, 0, sizeof(tmp_buf));
+		strcpy_s(tmp_buf, szBuf);
+
+		_asm lea edx, tmp_buf
+		_asm push edx
+		_asm mov edx, 0x69E160
+		_asm call edx
+		_asm pop edx
+
+		DWORD dwLen = strlen(tmp_buf);
+		if (dwLen <= dwMaxLen)
+		{
+			strcpy_s(szBuf, dwMaxLen, tmp_buf);
+			return dwLen; //strlen(tmp_buf);
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------
+

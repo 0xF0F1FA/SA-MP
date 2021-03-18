@@ -59,6 +59,7 @@ typedef struct _GAME_SETTINGS {
 #include <raknet/BitStream.h>
 #include <raknet/PacketEnumerations.h>
 #include <raknet/SAMPRPC.h>
+#include <raknet/StringCompressor.h>
 
 #include <discordrpc/discord_rpc.h>
 
@@ -73,6 +74,7 @@ typedef struct _GAME_SETTINGS {
 #include "net/menupool.h"
 #include "net/textdrawpool.h"
 #include "net/actorpool.h"
+#include "net/labelpool.h"
 #include "net/netgame.h"
 #include "net/scriptrpc.h"
 

@@ -96,6 +96,7 @@ typedef struct _SERVER_SETTINGS {
 #include <raknet/BitStream.h>
 #include <raknet/PacketEnumerations.h>
 #include <raknet/SAMPRPC.h>
+#include <raknet/StringCompressor.h>
 #include <raknet/DS_Map.h>
 
 // amx
@@ -120,6 +121,7 @@ typedef struct _SERVER_SETTINGS {
 #include "gamemodes.h"
 #include "filterscripts.h"
 #include "netrpc.h"
+#include "playerlabelpool.h"
 #include "playertextdrawpool.h"
 #include "player.h"
 #include "playerpool.h"

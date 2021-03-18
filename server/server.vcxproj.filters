@@ -198,6 +198,7 @@
     <ClCompile Include="actor.cpp" />
     <ClCompile Include="threadedhttp.cpp" />
     <ClCompile Include="httpclient.cpp" />
+    <ClCompile Include="playerlabelpool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h" />
@@ -489,6 +490,7 @@
     <ClInclude Include="actor.h" />
     <ClInclude Include="threadedhttp.h" />
     <ClInclude Include="httpclient.h" />
+    <ClInclude Include="playerlabelpool.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sdk">

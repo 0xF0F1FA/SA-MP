@@ -89,6 +89,7 @@ CPlayer::CPlayer()
 
 	m_pVariables = new CVariables;
 	m_pTextDraw = new CPlayerTextDrawPool(m_bytePlayerID);
+	m_pLabelPool = NULL;
 
 	m_bInCheckpoint = false;
 	m_bInRaceCheckpoint = false;
@@ -121,7 +122,27 @@ CPlayer::~CPlayer()
 {
 	SAFE_DELETE(m_pVariables);
 	SAFE_DELETE(m_pTextDraw);
+	SAFE_DELETE(m_pLabelPool);
 }
+
+//----------------------------------------------------
+
+void CPlayer::Deactivate()
+{
+	m_bHasSpawnInfo = false;
+	memset(&m_SpawnInfo, 0, sizeof(PLAYER_SPAWN_INFO));
+	m_dwColor = 0;
+	m_byteState = PLAYER_STATE_NONE;
+	m_byteTime = 0;
+	m_fGameTime = 720.0f; // 12 o'clock in minutes	
+	m_fHealth = 0.0f;
+	m_fArmour = 0.0f;
+
+	SAFE_DELETE(m_pLabelPool);
+	m_pLabelPool = new CPlayerLabelPool();
+}
+
+//----------------------------------------------------
 
 void CPlayer::SetName(const char* szName, unsigned char ucLength)
 {

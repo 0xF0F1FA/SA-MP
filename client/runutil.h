@@ -31,6 +31,8 @@ bool IsHexCharW(wchar_t c);
 unsigned long GetColorFromStringEmbed(char* szString);
 unsigned long GetColorFromStringEmbedW(wchar_t* wszString);
 void RemoveColorEmbedsFromString(char* szString);
+void FormatGameKeysInString(PCHAR buf);
+DWORD FormatGameTextKey(PCHAR szBuf, DWORD dwMaxLen);
 int ConvertMultiToWideString(LPCSTR szSource, LPWSTR szDest, int iLen);
 
 //----------------------------------------------------

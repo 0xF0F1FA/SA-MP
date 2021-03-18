@@ -216,6 +216,7 @@
     <ClCompile Include="objectpool.cpp" />
     <ClCompile Include="pickuppool.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="playerlabelpool.cpp" />
     <ClCompile Include="playerpool.cpp" />
     <ClCompile Include="playertextdrawpool.cpp" />
     <ClCompile Include="plugins.cpp" />
@@ -335,6 +336,7 @@
     <ClInclude Include="objectpool.h" />
     <ClInclude Include="pickuppool.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="playerlabelpool.h" />
     <ClInclude Include="playerpool.h" />
     <ClInclude Include="playertextdrawpool.h" />
     <ClInclude Include="plugincommon.h" />

@@ -925,6 +925,65 @@ static void ChatBubble(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void CreateLabel(RPCParameters* rpcParams)
+{
+	WORD wLabelID = INVALID_LABEL_ID;
+	char szText[MAX_LABEL_TEXT+1];
+	DWORD dwColor;
+	VECTOR vecPos;
+	float fDistance;
+	BYTE byteTestLOS;
+	WORD wAttachedPlayerID = INVALID_PLAYER_ID;
+	WORD wAttachedVehicleID = INVALID_PLAYER_ID;
+
+	if (pNetGame->GetLabelPool() &&
+		rpcParams->numberOfBitsOfData >= 216)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		bsData.Read(wLabelID);
+
+		if (!pNetGame->GetLabelPool()->GetSlotState(wLabelID))
+		{
+			SecureZeroMemory(szText, sizeof(szText));
+
+			bsData.Read(dwColor);
+			bsData.Read(vecPos);
+			bsData.Read(fDistance);
+			bsData.Read(byteTestLOS);
+			bsData.Read(wAttachedPlayerID);
+			bsData.Read(wAttachedVehicleID);
+
+			if (stringCompressor->DecodeString(szText, sizeof(szText), &bsData))
+			{
+				pNetGame->GetLabelPool()->New(wLabelID, szText, dwColor, vecPos,
+					fDistance, byteTestLOS, wAttachedPlayerID, wAttachedVehicleID);
+			}
+		}
+	}
+}
+
+//----------------------------------------------------
+
+static void DestroyLabel(RPCParameters* rpcParams)
+{
+	if (pNetGame->GetLabelPool() &&
+		rpcParams->numberOfBitsOfData == 16)
+	{
+		RakNet::BitStream bsData(rpcParams);
+		WORD wLabelID = INVALID_LABEL_ID;
+
+		bsData.Read(wLabelID);
+
+		if (pNetGame->GetLabelPool()->GetSlotState(wLabelID))
+		{
+			pNetGame->GetLabelPool()->Delete(wLabelID);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakClientInterface * pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient,ServerJoin);
@@ -962,6 +1021,8 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,WorldAddActor);
 	REGISTER_STATIC_RPC(pRakClient,WorldRemoveActor);
 	REGISTER_STATIC_RPC(pRakClient,ChatBubble);
+	REGISTER_STATIC_RPC(pRakClient,CreateLabel);
+	REGISTER_STATIC_RPC(pRakClient,DestroyLabel);
 }
 
 //----------------------------------------------------

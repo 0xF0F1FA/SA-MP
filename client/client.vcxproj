@@ -400,6 +400,7 @@
     </ClCompile>
     <ClCompile Include="net\actorpool.cpp" />
     <ClCompile Include="net\gangzonepool.cpp" />
+    <ClCompile Include="net\labelpool.cpp" />
     <ClCompile Include="net\localplayer.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -644,6 +645,7 @@
     <ClInclude Include="netstats.h" />
     <ClInclude Include="net\actorpool.h" />
     <ClInclude Include="net\gangzonepool.h" />
+    <ClInclude Include="net\labelpool.h" />
     <ClInclude Include="net\localplayer.h" />
     <ClInclude Include="net\menupool.h" />
     <ClInclude Include="net\netgame.h" />

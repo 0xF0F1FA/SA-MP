@@ -292,6 +292,12 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 
 		if (pCursor) pCursor->Process();
 
+		if (pNetGame)
+		{
+			if (pNetGame->GetLabelPool())
+				pNetGame->GetLabelPool()->Draw();
+		}
+
 #ifndef _DEBUG
 		if(tSettings.bDebug)
 			GameDebugDrawDebugScreens();

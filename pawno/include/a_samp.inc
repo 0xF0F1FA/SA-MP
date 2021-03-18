@@ -32,9 +32,12 @@
 #define MAX_MENU_LINE		(32)
 #define MAX_COLUMNS 		(2)
 #define MAX_PICKUPS 		(400)
+#define MAX_3DTEXT_GLOBAL	(1024)
+#define MAX_3DTEXT_PLAYER	(1024)
 #define INVALID_MENU		(255)
 #define INVALID_TEXT_DRAW	(0xFFFF)
 #define INVALID_GANG_ZONE	(0xFFFF)
+#define INVALID_3DTEXT_ID	(0xFFFF)
 #define MAX_CMD_INPUT 		(128)
 #define MAX_TEXT_DRAW_LINE	(256)
 #define MAX_FILTER_SCRIPTS 	(16)
@@ -450,6 +453,12 @@ native GangZoneFlashForPlayer(playerid, gangzoneid, color);
 native GangZoneFlashForAll(gangzoneid, color);
 native GangZoneStopFlashForPlayer(playerid, gangzoneid);
 native GangZoneStopFlashForAll(gangzoneid);
+
+
+// Per-player 3D Text Labels
+native PlayerText3D:CreatePlayer3DTextLabel(playerid, text[], color, Float:X, Float:Y, Float:Z, Float:DrawDistance, attachedplayer=INVALID_PLAYER_ID, attachedvehicle=INVALID_VEHICLE_ID, testLOS=0);
+native DeletePlayer3DTextLabel(playerid, PlayerText3D:id);
+native UpdatePlayer3DTextLabelText(playerid, PlayerText3D:id, color, text[]);
 
 native SetSVarInt(varname[], int_value);
 native SetSVarString(varname[], string_value[]);

@@ -263,7 +263,7 @@ private:
 	void InitializeVariables( void );
 
 	/// Given the current time, is this time so old that we should consider it a timeout?
-	bool IsExpiredTime(unsigned int input, RakNet::Time64 currentTime) const;
+	//bool IsExpiredTime(unsigned int input, RakNet::Time64 currentTime) const;
 
 	// Make it so we don't do resends within a minimum threshold of time
 	void UpdateNextActionTime(void);
@@ -366,6 +366,7 @@ private:
 
 	// This has to be a member because it's not threadsafe when I removed the mutexes
 	InternalPacketPool internalPacketPool;
+	unsigned int reliabilitySize;
 };
 
 #endif

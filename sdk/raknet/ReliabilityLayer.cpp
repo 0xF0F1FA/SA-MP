@@ -179,6 +179,7 @@ void ReliabilityLayer::InitializeVariables( void )
 	availableBandwidth=0;
 	lastUpdateTime= RakNet::GetTime64();
 	currentBandwidth=STARTING_SEND_BPS;
+	reliabilitySize = 4;
 	// lastPacketSendTime=retransmittedFrames=sentPackets=sentFrames=receivedPacketsCount=bytesSent=bytesReceived=0;
 
 	deadConnection = cheater = false;
@@ -1587,7 +1588,8 @@ int ReliabilityLayer::GetBitStreamHeaderLength( const InternalPacket *const inte
 
 	// Write the PacketReliability.  This is encoded in 3 bits
 	//bitStream->WriteBits((unsigned char*)&(internalPacket->reliability), 3, true);
-	bitLength += 3;
+	// SA-MP: reliability will require 4 bits, because PacketReliability constants are pushed by 6
+	bitLength += reliabilitySize;
 
 	// If the reliability requires an ordering channel and ordering index, we Write those.
 	if ( internalPacket->reliability == UNRELIABLE_SEQUENCED || internalPacket->reliability == RELIABLE_SEQUENCED || internalPacket->reliability == RELIABLE_ORDERED )
@@ -1661,7 +1663,7 @@ int ReliabilityLayer::WriteToBitStreamFromInternalPacket( RakNet::BitStream *bit
 #endif
 
 	// Write the PacketReliability.  This is encoded in 3 bits
-	bitStream->WriteBits( (const unsigned char *)&c, 3, true );
+	bitStream->WriteBits( (const unsigned char *)&c, reliabilitySize, true );
 
 	// If the reliability requires an ordering channel and ordering index, we Write those.
 	if ( internalPacket->reliability == UNRELIABLE_SEQUENCED || internalPacket->reliability == RELIABLE_SEQUENCED || internalPacket->reliability == RELIABLE_ORDERED )
@@ -1753,7 +1755,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	// Read the PacketReliability. This is encoded in 3 bits
 	unsigned char reliability;
 
-	bitStreamSucceeded = bitStream->ReadBits( ( unsigned char* ) ( &( reliability ) ), 3 );
+	bitStreamSucceeded = bitStream->ReadBits( ( unsigned char* ) ( &( reliability ) ), reliabilitySize );
 
 	internalPacket->reliability = ( const PacketReliability ) reliability;
 
@@ -1762,7 +1764,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	// assert( bitStreamSucceeded );
 #endif
 
-	if ( bitStreamSucceeded == false )
+	if (internalPacket->reliability < UNRELIABLE || bitStreamSucceeded == false )
 	{
 		internalPacketPool.ReleasePointer( internalPacket );
 		return 0;
@@ -1816,6 +1818,11 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 
 	if ( isSplitPacket )
 	{
+#ifdef SAMPSRV
+		logprintf("[warning] dropping a split packet from client");
+		internalPacketPool.ReleasePointer(internalPacket);
+		return 0;
+#else
 		bitStreamSucceeded = bitStream->Read( internalPacket->splitPacketId );
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
@@ -1851,6 +1858,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 			internalPacketPool.ReleasePointer( internalPacket );
 			return 0;
 		}
+#endif
 	}
 
 	else
@@ -1883,7 +1891,8 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	// 10/08/05 - Disabled assert since this hits from offline packets arriving when the sender does not know we just connected, which is an unavoidable condition sometimes
 	//	assert( internalPacket->dataBitLength > 0 && BITS_TO_BYTES( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE );
 #endif
-	if ( ! ( internalPacket->dataBitLength > 0 && BITS_TO_BYTES( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE ) )
+	unsigned dataLengthInBytes = BITS_TO_BYTES(internalPacket->dataBitLength);
+	if ( ! ( internalPacket->dataBitLength > 0 && dataLengthInBytes < MAXIMUM_MTU_SIZE ) )
 	{
 		// 10/08/05 - internalPacket->data wasn't allocated yet
 		//	delete [] internalPacket->data;
@@ -1892,14 +1901,14 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	}
 
 	// Allocate memory to hold our data
-	internalPacket->data = new unsigned char [ BITS_TO_BYTES( internalPacket->dataBitLength ) ];
+	internalPacket->data = new unsigned char [ dataLengthInBytes ];
 	//printf("Allocating %i\n",  internalPacket->data);
 
 	// Set the last byte to 0 so if ReadBits does not read a multiple of 8 the last bits are 0'ed out
-	internalPacket->data[ BITS_TO_BYTES( internalPacket->dataBitLength ) - 1 ] = 0;
+	internalPacket->data[ dataLengthInBytes - 1 ] = 0;
 
 	// Read the data the packet holds
-	bitStreamSucceeded = bitStream->ReadAlignedBytes( ( unsigned char* ) internalPacket->data, BITS_TO_BYTES( internalPacket->dataBitLength ) );
+	bitStreamSucceeded = bitStream->ReadAlignedBytes( ( unsigned char* ) internalPacket->data, dataLengthInBytes );
 
 	//bitStreamSucceeded = bitStream->ReadBits((unsigned char*)internalPacket->data, internalPacket->dataBitLength);
 #ifdef _DEBUG

@@ -39,6 +39,7 @@ bool g_bDBLogQueries = true;
 bool bQueryLogging = false;
 
 int iSleepTime = 5;
+int iPlayerTimeOutTime = 10000;
 
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
@@ -152,26 +153,6 @@ void ServerInstagibChanged()
 {
 	if (pNetGame) {
 		pNetGame->UpdateInstagib();
-	}
-}
-
-void ServerTimeOutChanged()
-{
-	if (!pNetGame)
-		return;
-
-	int iTime = pConsole->GetIntVariable("playertimeout");
-	if (iTime <= 0)
-		pConsole->SetIntVariable("playertimeout", 10000);
-
-	CPlayerPool* pPool = pNetGame->GetPlayerPool();
-	RakServerInterface* pServer = pNetGame->GetRakServer();
-	for (int iIdx = 0; iIdx < (int)pPool->GetLastPlayerId(); iIdx++)
-	{
-		if (!pPool->GetSlotState(iIdx))
-			continue;
-
-		pServer->SetTimeoutTime(iTime, pServer->GetPlayerIDFromIndex(iIdx));
 	}
 }
 
@@ -301,7 +282,6 @@ int main (int argc, char** argv)
 	bool bAllowQuery = true;
 	int iMTUSize = MAXIMUM_MTU_SIZE;
 	int iChatLogging = 1;
-	int iPlayerTimeout = 10000;
 	int iOnFootRate = 40;
 	int iInCarRate = 40;
 	int iMaxPlayerPerIP = 3;
@@ -400,7 +380,7 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("instagib", CON_VARTYPE_BOOL, CON_VARFLAG_RULE, &bEnableInstagib, ServerInstagibChanged);
 	//pConsole->AddVariable("myriad", CON_VARTYPE_BOOL, 0, &bGameMod);
 	pConsole->AddVariable("chatlogging", CON_VARTYPE_INT, 0, &iChatLogging);
-	pConsole->AddVariable("playertimeout", CON_VARTYPE_INT, 0, &iPlayerTimeout, ServerTimeOutChanged);
+	pConsole->AddVariable("playertimeout", CON_VARTYPE_INT, 0, &iPlayerTimeOutTime);
 	pConsole->AddVariable("db_logging", CON_VARTYPE_INT, 0, &g_bDBLogging);
 	pConsole->AddVariable("db_log_queries", CON_VARTYPE_INT, 0, &g_bDBLogQueries);
 	pConsole->AddVariable("onfoot_rate", CON_VARTYPE_INT, 0, &iOnFootRate);

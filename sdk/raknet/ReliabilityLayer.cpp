@@ -41,6 +41,10 @@ static const RakNet::Time MIN_PING_TO_RESEND=30; // So system timer changes and 
 static const RakNet::Time64 TIME_TO_NEW_SAMPLE=500000; // How many ns to wait before starting a new sample.  This way buffers have time to overflow or relax at the new send rate, if they are indeed going to overflow.
 static const RakNet::Time64 MAX_TIME_TO_SAMPLE=250000; // How many ns to sample the connection before deciding on a course of action(increase or decrease throughput). You must be at full send rate the whole time
 
+#ifdef SAMPSRV
+extern int iPlayerTimeOutTime;
+#endif
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #endif
@@ -77,11 +81,15 @@ int SplitPacketIndexComp( SplitPacketIndexType const &key, InternalPacket* const
 ReliabilityLayer::ReliabilityLayer() : updateBitStream( DEFAULT_MTU_SIZE )   // preallocate the update bitstream so we can avoid a lot of reallocs at runtime
 {
 	freeThreadedMemoryOnNextUpdate = false;
+#ifdef SAMPSRV
+	timeoutTime=(RakNet::Time)iPlayerTimeOutTime;
+#else
 #ifdef _DEBUG
 	// Wait longer to disconnect in debug so I don't get disconnected while tracing
 	timeoutTime=20000;
 #else
 	timeoutTime=10000;
+#endif
 #endif
 
 #ifndef _RELEASE
@@ -1736,11 +1744,11 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	//assert( bitStreamSucceeded );
 #endif
 
-	if ( bitStreamSucceeded == false )
+	/*if ( bitStreamSucceeded == false )
 	{
 		internalPacketPool.ReleasePointer( internalPacket );
 		return 0;
-	}
+	}*/
 
 	// Read the PacketReliability. This is encoded in 3 bits
 	unsigned char reliability;
@@ -1917,7 +1925,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 //-------------------------------------------------------------------------------------------------------
 // Get the SHA1 code
 //-------------------------------------------------------------------------------------------------------
-void ReliabilityLayer::GetSHA1( unsigned char * const buffer, unsigned int
+/*void ReliabilityLayer::GetSHA1( unsigned char * const buffer, unsigned int
 				nbytes, char code[ SHA1_LENGTH ] )
 {
 	CSHA1 sha1;
@@ -1926,12 +1934,12 @@ void ReliabilityLayer::GetSHA1( unsigned char * const buffer, unsigned int
 	sha1.Update( ( unsigned char* ) buffer, nbytes );
 	sha1.Final();
 	memcpy( code, sha1.GetHash(), SHA1_LENGTH );
-}
+}*/
 
 //-------------------------------------------------------------------------------------------------------
 // Check the SHA1 code
 //-------------------------------------------------------------------------------------------------------
-bool ReliabilityLayer::CheckSHA1( char code[ SHA1_LENGTH ], unsigned char *
+/*bool ReliabilityLayer::CheckSHA1( char code[ SHA1_LENGTH ], unsigned char *
 				  const buffer, unsigned int nbytes )
 {
 	char code2[ SHA1_LENGTH ];
@@ -1942,7 +1950,7 @@ bool ReliabilityLayer::CheckSHA1( char code[ SHA1_LENGTH ], unsigned char *
 			return false;
 
 	return true;
-}
+}*/
 
 //-------------------------------------------------------------------------------------------------------
 // Search the specified list for sequenced packets on the specified ordering

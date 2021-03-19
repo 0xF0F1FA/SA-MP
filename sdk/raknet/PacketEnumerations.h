@@ -75,7 +75,7 @@ enum
 	/// 11: Offline message response so we know when to reset and start a new connection
 	ID_OPEN_CONNECTION_REPLY,
 
-	ID_DUMMY_7,
+	ID_OPEN_CONNECTION_COOKIE_REQUEST, // ID_DUMMY_7,
 
 	/// 12: Remote procedure call (internal use only)
 	ID_RPC,

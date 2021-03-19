@@ -29,6 +29,8 @@ bool		bQuitApp = false;
 bool		bGameModeFinished=false;
 
 unsigned int _uiRndSrvChallenge;
+unsigned int _uiRndCookieChallenge;
+RakNet::Time _timeCookieLastUpdated;
 
 float g_fStreamDistance = 200.f;
 int g_iStreamRate = 1000;
@@ -40,6 +42,9 @@ bool bQueryLogging = false;
 
 int iSleepTime = 5;
 int iPlayerTimeOutTime = 10000;
+int iConnSeedTime = 300000;
+int iConnCookies = 1;
+int iCookieLogging = 1;
 
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
@@ -317,6 +322,8 @@ int main (int argc, char** argv)
 	// Create a challenge number for the clients to be able to connect
 	srand(time(NULL));
 	_uiRndSrvChallenge = (unsigned int)rand();
+	_uiRndCookieChallenge = (unsigned int)rand();
+	_timeCookieLastUpdated = RakNet::GetTime();
     
 	// Create the Console
 	pConsole = new CConsole();
@@ -389,6 +396,9 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("stream_rate", CON_VARTYPE_INT, 0, &g_iStreamRate, ServerStreamRateChanged);
 	pConsole->AddVariable("stream_distance", CON_VARTYPE_FLOAT, 0, &g_fStreamDistance, ServerStreamDistanceChanged);
 	pConsole->AddVariable("sleep", CON_VARTYPE_INT, 0, &iSleepTime);
+	pConsole->AddVariable("connseedtime", CON_VARTYPE_INT, 0, &iConnSeedTime);
+	pConsole->AddVariable("conncookies", CON_VARTYPE_INT, 0, &iConnCookies);
+	pConsole->AddVariable("cookielogging", CON_VARTYPE_INT, 0, &iCookieLogging);
 
 	// Add 16 gamemode variables.
 	int x=0;
@@ -482,6 +492,13 @@ int main (int argc, char** argv)
 			SetEvent(hConsoleExecuteEvent);
 			WaitForSingleObject(hConsoleExecuteEvent, INFINITE);
 		#endif
+
+		RakNet::Time now = RakNet::GetTime();
+		if (now - _timeCookieLastUpdated > iConnSeedTime)
+		{
+			_uiRndCookieChallenge = (unsigned int)rand();
+			_timeCookieLastUpdated = now;
+		}
 
 		SLEEP(iSleepTime);
 	}

@@ -120,6 +120,13 @@ int PlayerIDAndIndexComp( const PlayerID &key, const PlayerIDAndIndex &data )
 	}
 #endif
 
+#ifdef SAMPSRV
+	void logprintf(char* format, ...);
+#else
+	unsigned int uiIncomeCookieExchange;
+#endif
+
+static const unsigned int COOKIE_XOR_KEY = 0x6969; // Nice!
 static const unsigned int SYN_COOKIE_OLD_RANDOM_NUMBER_DURATION = 5000;
 static const int MAX_OFFLINE_DATA_LENGTH=400; // I set this because I limit ID_CONNECTION_REQUEST to 512 bytes, and the password is appended to that packet.
 
@@ -3856,10 +3863,50 @@ void ProcessNetworkPacket( const unsigned int binaryAddress, const unsigned shor
 			rakPeer->AddPacketToProducer(packet);
 		}
 	}
+#ifndef SAMPSRV
+	// Client only - Original placement is the end of the function
+	else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_COOKIE_REQUEST && length == sizeof(unsigned char) * 3)
+	{
+#ifdef DEBUG
+		OutputDebugString("Cookie exchanged!");
+#endif
+		uiIncomeCookieExchange = *(unsigned short*)&data[1];
+	}
+#endif
 	// We didn't check this datagram to see if it came from a connected system or not yet.
 	// Therefore, this datagram must be under 17 bits - otherwise it may be normal network traffic as the min size for a raknet send is 17 bits
-	else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST && length == sizeof(unsigned char)*2)
+	else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST && length == sizeof(unsigned char)*3)
 	{
+#ifdef SAMPSRV
+		extern int iConnCookies;
+		extern int iCookieLogging;
+		extern unsigned int _uiRndCookieChallenge;
+
+		// TODO: Maybe add attempt count? Be like this, connected clients will get stuck in a loop requesting.
+		if (iConnCookies)
+		{
+			unsigned short a = *(unsigned short*)&data[1];
+			unsigned short b = (unsigned short)_uiRndCookieChallenge ^ (unsigned short)binaryAddress;
+
+			if ((a ^ COOKIE_XOR_KEY) != b)
+			{
+				if (iCookieLogging)
+					logprintf("[connection] %s requests connection cookie.", playerId.ToString());
+
+				char c[3];
+				c[0] = ID_OPEN_CONNECTION_COOKIE_REQUEST;
+				*(unsigned short*)&c[1] = b;
+
+				unsigned i;
+				for (i = 0; i < rakPeer->messageHandlerList.Size(); i++)
+					rakPeer->messageHandlerList[i]->OnDirectSocketSend((char*)&c, 24, playerId);
+
+				SocketLayer::Instance()->SendTo(rakPeer->connectionSocket, (char*)&c, 3, playerId.binaryAddress, playerId.port);
+				return;
+			}
+		}
+#endif
+
 		for (i=0; i < rakPeer->messageHandlerList.Size(); i++)
 			rakPeer->messageHandlerList[i]->OnDirectSocketReceive(data, length*8, playerId);
 
@@ -3944,7 +3991,8 @@ void ProcessNetworkPacket( const unsigned int binaryAddress, const unsigned shor
 			// These kinds of packets may have been duplicated and incorrectly determined to be
 			// cheat packets.  Anything else really is a cheat packet
 			if ( !(
-			( (unsigned char)data[0] == ID_OPEN_CONNECTION_REQUEST && length <= 2 ) ||
+			( (unsigned char)data[0] == ID_OPEN_CONNECTION_REQUEST && length <= 3 ) ||
+			( (unsigned char)data[0] == ID_OPEN_CONNECTION_COOKIE_REQUEST && length <= 3) ||
 			( (unsigned char)data[0] == ID_OPEN_CONNECTION_REPLY && length <= 2 ) ||
 			( (unsigned char)data[0] == ID_CONNECTION_ATTEMPT_FAILED && length <= 2 ) ||
 			( ((unsigned char)data[0] == ID_PING_OPEN_CONNECTIONS || (unsigned char)data[0] == ID_PING || (unsigned char)data[0] == ID_PONG) && length >= sizeof(unsigned char)+sizeof(RakNet::Time) ) ||
@@ -4193,14 +4241,18 @@ bool RakPeer::RunUpdateCycle( void )
 
 			rcs->requestsMade++;
 			rcs->nextRequestTime=timeMS+1000;
-			char c[2];
+			char c[3];
 			c[0] = ID_OPEN_CONNECTION_REQUEST;
-			c[1] = 0; // Pad - apparently some routers block 1 byte packets
-
+			// c[1] = 0; // Pad - apparently some routers block 1 byte packets
+#ifndef SAMPSRV
+			*(unsigned short*)&c[1] = (unsigned short)(uiIncomeCookieExchange ^ COOKIE_XOR_KEY);
+#else
+			c[1] = c[2] = 0;
+#endif
 			unsigned i;
 			for (i=0; i < messageHandlerList.Size(); i++)
-				messageHandlerList[i]->OnDirectSocketSend((char*)&c, 16, rcs->playerId);
-			SocketLayer::Instance()->SendTo( connectionSocket, (char*)&c, 2, rcs->playerId.binaryAddress, rcs->playerId.port );
+				messageHandlerList[i]->OnDirectSocketSend((char*)&c, 24, rcs->playerId);
+			SocketLayer::Instance()->SendTo( connectionSocket, (char*)&c, 3, rcs->playerId.binaryAddress, rcs->playerId.port );
 		}
 
 		rcs=requestedConnectionList.ReadLock();

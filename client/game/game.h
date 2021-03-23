@@ -155,6 +155,9 @@ public:
 	int GetScreenHeight() { return *(int*)0xC17048; };
 	float GetHudVertScale() { return *(float *)0x859524; };
 	float GetHudHorizScale() { return *(float *)0x859520; };
+	
+	DWORD GetUsedStreamingMemory() { return *(DWORD*)0x8E4CB4; };
+	DWORD GetStreamingMemory() { return *(DWORD*)0x8A5A80; };
 
 	void SetWeaponSkill(unsigned char ucSkill, unsigned int uiLevel);
 	DWORD GetWeaponInfo(int iWeapon, int iUnk);

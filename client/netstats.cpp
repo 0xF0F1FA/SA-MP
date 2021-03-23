@@ -63,6 +63,21 @@ void CNetStats::Draw()
 		strcat_s(szDispBuf,szStatBuf);
 	}
 
+	if (pGame)
+	{
+		extern DWORD dwTotalSystemMemoryInMB;
+		DWORD dwStreamingMemory = pGame->GetUsedStreamingMemory();
+		DWORD dwTotal = pGame->GetStreamingMemory();
+		if (dwStreamingMemory && dwTotal)
+		{
+			sprintf_s(szStatBuf, "Streaming Mem: %uMB Total: %uMB System: %uMB\n",
+				dwStreamingMemory >> 20,
+				dwTotal >> 20,
+				dwTotalSystemMemoryInMB);
+		}
+		strcat_s(szDispBuf, szStatBuf);
+	}
+
 #ifdef _DEBUG
 	StatisticsToString(pRakStats,szStatBuf,2);
 #else

@@ -9,6 +9,9 @@
 
 #include "../main.h"
 
+DWORD dwTotalSystemMemoryInMB = 0;
+DWORD dwStreamingMemory = 0;
+
 void InstallSCMEventsProcessor();
 void RelocateScanListHack();
 void RelocatePedsListHack();
@@ -268,8 +271,24 @@ bool ApplyPreGamePatches()
 	strcpy_s((PCHAR)0x866CCC,8,"title");
 
 	// Modify the streaming memory hardcoded values
+	MEMORYSTATUSEX state;
+	state.dwLength = sizeof(state);
+	GlobalMemoryStatusEx(&state);
+
+	dwTotalSystemMemoryInMB = (DWORD)(state.ullTotalPhys >> 20);
+	if (dwTotalSystemMemoryInMB > 4000)
+		dwStreamingMemory = 0x40000000;
+	else if (dwTotalSystemMemoryInMB > 2000)
+		dwStreamingMemory = 0x20000000;
+	else if (dwTotalSystemMemoryInMB > 1000)
+		dwStreamingMemory = 0x10000000;
+	else if (dwTotalSystemMemoryInMB > 500)
+		dwStreamingMemory = 0x08000000;
+	else
+		dwStreamingMemory = 0x06000000;
+
 	//UnFuck(0x5B8E6A,4);
-	*(DWORD *)0x5B8E6A = 134217728; // 128MB
+	*(DWORD *)0x5B8E6A = dwStreamingMemory;
 
 	// For SCM disable/enable
 	//UnFuck(0x469EF5,2);

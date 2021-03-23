@@ -52,6 +52,7 @@ private:
 	bool m_bIsActorStreamedIn[MAX_ACTORS];
 	int m_iStreamedActorCount;
 
+	RakNet::Time32			m_ConnectedTime;
 public:
 	CVariables				*m_pVariables;
 	CPlayerTextDrawPool		*m_pTextDraw;
@@ -217,6 +218,8 @@ public:
 	}
 
 	unsigned long GetCurrentWeaponAmmo();
+
+	void UpdateTimer();
 };
 
 #endif

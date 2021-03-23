@@ -103,6 +103,8 @@ CPlayer::CPlayer()
 	m_fWorldBounds[2] = 20000.0f;
 	m_fWorldBounds[3] = -20000.0f;
 
+	m_ConnectedTime = RakNet::GetTime32();
+
 	m_uiMsgRecv = 0;
 
 	BYTE i;
@@ -1344,6 +1346,14 @@ void CPlayer::SetTeam(unsigned char ucTeam)
 	bsParams.Write(m_bytePlayerID); // playerid
 	bsParams.Write(ucTeam); // team id
 	pNetGame->SendToAll(RPC_ScrSetPlayerTeam, &bsParams);
+}
+
+void CPlayer::UpdateTimer()
+{
+	RakNet::BitStream bsSend;
+	DWORD dwTime = (DWORD)(RakNet::GetTime32() - m_ConnectedTime);
+	bsSend.Write(dwTime);
+	pNetGame->SendToPlayer(m_bytePlayerID, RPC_SetTimer, &bsSend);
 }
 
 //----------------------------------------------------

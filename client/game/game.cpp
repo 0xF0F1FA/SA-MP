@@ -46,6 +46,7 @@ CGame::CGame()
 	m_bDisableVehMapIcons = false;
 	m_bMissionAudioLoaded = false;
 	m_bDisableInteriorAmbient = false;
+	m_bPassingOfTime = false;
 }
 
 //-----------------------------------------------------------
@@ -291,9 +292,11 @@ void CGame::ToggleThePassingOfTime(BYTE byteOnOff)
 
 	if(byteOnOff) {
 		*(PBYTE)0x52CF10 = 0x56; // push esi
+		m_bPassingOfTime = true;
 	}
 	else {
 		*(PBYTE)0x52CF10 = 0xC3; // ret
+		m_bPassingOfTime = false;
 	}
 }
 
@@ -499,6 +502,17 @@ void CGame::PlaySoundFX(int iSound, float fX, float fY, float fZ)
 		}
 		CGame::StopAmbientSound();
 		m_bDisableInteriorAmbient = false;
+	}
+}
+
+//-----------------------------------------------------------
+
+void CGame::SetTimer(DWORD dwTime)
+{
+	if (!m_bPassingOfTime)
+	{
+		*(DWORD*)0xB7CB84 = dwTime & 0x3FFFFFFF;
+		//byte_1015051C = 1; // Set to 1 here, then never used anywhere?
 	}
 }
 

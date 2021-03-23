@@ -20,6 +20,7 @@ CPlayerPool::CPlayerPool()
 	}
 	m_iPlayerCount = 0;
 	m_iLastPlayerId = -1;
+	m_fLastTimerTime = 0.0f;
 }
 
 //----------------------------------------------------
@@ -85,6 +86,8 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion)
 		pRcon->GetRakServer()->RPC( RPC_ServerJoin, &bsSend, HIGH_PRIORITY, RELIABLE, 0,
 			UNASSIGNED_PLAYER_ID, true, false );
 #endif*/
+
+		m_pPlayers[bytePlayerID]->UpdateTimer();
 
 		pNetGame->GetFilterScripts()->OnPlayerConnect(bytePlayerID);
 		CGameMode *pGameMode = pNetGame->GetGameMode();
@@ -175,7 +178,30 @@ bool CPlayerPool::Process(float fElapsedTime)
 			m_pPlayers[bytePlayerID]->Process(fElapsedTime);
 		}
 	}
+
+	m_fLastTimerTime += fElapsedTime;
+	if (m_fLastTimerTime > 30.0f) // 30 sec
+	{
+		UpdateTimersForAll();
+		m_fLastTimerTime = 0.0f;
+	}
 	return true;
+}
+
+//----------------------------------------------------
+
+void CPlayerPool::UpdateTimersForAll()
+{
+	if (m_iLastPlayerId == -1)
+		return;
+
+	for (WORD x = 0; x <= (WORD)m_iLastPlayerId; x++)
+	{
+		if (m_bPlayerSlotState[x] && m_pPlayers[x])
+		{
+			m_pPlayers[x]->UpdateTimer();
+		}
+	}
 }
 
 //----------------------------------------------------

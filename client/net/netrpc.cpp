@@ -984,6 +984,22 @@ static void DestroyLabel(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+void SetTimer(RPCParameters* rpcParams)
+{
+	if (rpcParams->numberOfBitsOfData != 32)
+		return;
+
+	RakNet::BitStream bsData(rpcParams);
+	DWORD dwTime;
+
+	if (bsData.Read(dwTime))
+	{
+		pGame->SetTimer(dwTime);
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakClientInterface * pRakClient)
 {
 	REGISTER_STATIC_RPC(pRakClient,ServerJoin);
@@ -1023,6 +1039,7 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,ChatBubble);
 	REGISTER_STATIC_RPC(pRakClient,CreateLabel);
 	REGISTER_STATIC_RPC(pRakClient,DestroyLabel);
+	REGISTER_STATIC_RPC(pRakClient,SetTimer);
 }
 
 //----------------------------------------------------

@@ -30,6 +30,7 @@ private:
 	//BYTE	m_byteVirtualWorld[MAX_PLAYERS];
 	int		m_iPlayerCount;
 	int		m_iLastPlayerId;
+	float	m_fLastTimerTime;
 
 public:
 	
@@ -108,6 +109,8 @@ public:
 	int GetPlayerCount() { return m_iPlayerCount; };
 
 	void DestroyActorForPlayers(unsigned short usActorID);
+
+	void UpdateTimersForAll();
 
 	void DeactivateAll();
 	int GetLastPlayerId() const { return m_iLastPlayerId; }

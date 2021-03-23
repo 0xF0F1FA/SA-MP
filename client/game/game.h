@@ -61,7 +61,7 @@ private:
 	DWORD			m_dwRaceCheckpointMarker;
 	DWORD			m_dwRaceCheckpointHandle;
 	bool			m_bMissionAudioLoaded;
-
+	bool			m_bPassingOfTime;
 public:
 	bool m_bDisableVehMapIcons;
 	bool m_bDisableInteriorAmbient;
@@ -110,7 +110,8 @@ public:
 	void   UpdateCheckpoints();
 	void   ToggleCheckpoints(bool bEnabled){ m_bCheckpointsEnabled = bEnabled; };
 	void   SetCheckpointInformation(VECTOR *pos, VECTOR *extent);
-	
+	void	SetTimer(DWORD dwTime);
+
 	void	MakeRaceCheckpoint();
 	void	DisableRaceCheckpoint();
 	void   ToggleRaceCheckpoints(bool bEnabled){ m_bRaceCheckpointsEnabled = bEnabled; };

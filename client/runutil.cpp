@@ -763,3 +763,20 @@ DWORD FormatGameTextKey(PCHAR szBuf, DWORD dwMaxLen)
 
 //----------------------------------------------------
 
+void Transform(VECTOR* vecOut, MATRIX4X4* matIn, VECTOR* vecIn)
+{
+	vecOut->X = matIn->at.X * vecIn->Z +
+				matIn->up.X * vecIn->Y + 
+				matIn->right.X * vecIn->X +
+				matIn->pos.X;
+	vecOut->Y = matIn->at.Y * vecIn->Z +
+				matIn->up.Y * vecIn->Y +
+				matIn->right.Y * vecIn->X +
+				matIn->pos.Y;
+	vecOut->Z = matIn->at.Z * vecIn->Z +
+				matIn->up.Z * vecIn->Y +
+				matIn->right.Z * vecIn->X +
+				matIn->pos.X;
+}
+
+//----------------------------------------------------

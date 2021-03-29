@@ -39,15 +39,14 @@ void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 	m_pGameUI = pGameUI;
 
 	if(pGameUI) {
-		// TODO: Change AddEditBox to AddIMEEditBox (currently CDXUTIMEEditBox is not disassembled yet)
-		pGameUI->AddEditBox(IDC_CMDEDIT,"",10,175,570,40,true,&m_pEditControl);
+		pGameUI->AddIMEEditBox(IDC_CMDEDIT,"",10,175,570,40,true,&m_pEditControl);
 
-		// TODO: Uncomment when, CConfig class is done
-		/*if(pConfig->GetNumber("ime"))
+		if (pConfigFile->GetInt("ime"))
 		{
-			CDXUTIMEEditBox::EnableImeSystem(true);
-			CDXUTIMEEditBox::StaticOnCreateDevice();
-		}*/
+			m_pEditControl->EnableImeSystem(true);
+			m_pEditControl->StaticOnCreateDevice();
+		}
+
 		m_pEditControl->GetElement(0)->TextureColor.Init(D3DCOLOR_ARGB(240, 5, 5, 5));
 		m_pEditControl->SetTextColor(D3DCOLOR_ARGB(255, 255, 255, 255));
 		m_pEditControl->SetCaretColor(D3DCOLOR_ARGB(255, 150, 150, 150));
@@ -62,20 +61,41 @@ void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 
 void CCmdWindow::Enable()
 {
-	m_bEnabled = TRUE;
-	if(m_pEditControl) {
-		m_pEditControl->SetEnabled(true);
-		m_pEditControl->SetVisible(true);
-		m_pEditControl->SetLocation(20,pChatWindow->GetChatWindowBottom());
-	}
-	pGame->ToggleKeyInputsDisabled(TRUE);
-	pGame->DisableCamera(true);
-	pCursor->m_ucShowForChatbox = true;
+	if (!m_bEnabled)
+	{
+		if (m_pEditControl) {
+			RECT rect;
+			LONG lWidth, lHeight;
+			GetClientRect(pGame->GetMainWindowHwnd(), &rect);
 
-	if (pNetGame) {
-		RakNet::BitStream out;
-		out.Write1();
-		pNetGame->Send(RPC_TypingEvent, &out);
+			lWidth = (LONG)(rect.right * 0.6f);
+			lHeight = (LONG)(m_pGameUI->GetFont(0)->nHeight * -1.5f);
+
+			if (lWidth > 800)
+				lWidth = 800;
+
+			m_pEditControl->SetEnabled(true);
+			m_pEditControl->SetVisible(true);
+
+			m_pEditControl->SetLocation(40, pChatWindow->GetChatWindowBottom());
+			m_pEditControl->SetSize(lWidth, 14 - lHeight);
+			m_pGameUI->RequestFocus(m_pEditControl);
+			m_pEditControl->OnFocusIn();
+
+			m_pGameUI->SetSize(lWidth + 100, pChatWindow->GetChatWindowBottom() + 50);
+		}
+
+		pGame->ToggleKeyInputsDisabled(TRUE);
+		pGame->DisableCamera(true);
+		pCursor->m_ucShowForChatbox = true;
+
+		if (pNetGame) {
+			RakNet::BitStream out;
+			out.Write1();
+			pNetGame->Send(RPC_TypingEvent, &out);
+		}
+
+		m_bEnabled = TRUE;
 	}
 }
 
@@ -83,20 +103,25 @@ void CCmdWindow::Enable()
 
 void CCmdWindow::Disable()
 {
-	m_bEnabled = FALSE;
-	if(m_pEditControl) {
-		m_pEditControl->SetEnabled(false);
-		m_pEditControl->SetVisible(false);
-	}
-	pGame->ToggleKeyInputsDisabled(FALSE);
-	pGame->DisableCamera(false);
-	pCursor->m_ucShowForChatbox = false;
+	if (m_bEnabled)
+	{
+		if (m_pEditControl) {
+			m_pEditControl->SetEnabled(false);
+			m_pEditControl->SetVisible(false);
+		}
 
-	if (pNetGame) {
-		RakNet::BitStream out;
-		out.Write0();
-		pNetGame->Send(RPC_TypingEvent, &out);
-	}
+		pGame->ToggleKeyInputsDisabled(FALSE);
+		pGame->DisableCamera(false);
+		pCursor->m_ucShowForChatbox = false;
+
+		if (pNetGame) {
+			RakNet::BitStream out;
+			out.Write0();
+			pNetGame->Send(RPC_TypingEvent, &out);
+		}
+
+		m_bEnabled = FALSE;
+	}	
 }
 
 //----------------------------------------------------
@@ -269,15 +294,7 @@ void CCmdWindow::AddCmdProc(PCHAR szCmdName, CMDPROC cmdHandler)
 
 int CCmdWindow::MsgProc(UINT uMsg, DWORD wParam, DWORD lParam)
 {
-	if(m_bEnabled && m_pEditControl) {
-		m_pEditControl->MsgProc(uMsg,wParam,lParam);
-		m_pEditControl->HandleKeyboard(uMsg,wParam,lParam);
-
-		POINT p;
-		GetCursorPos(&p);
-		m_pEditControl->HandleMouse(uMsg,p,wParam,lParam);
-	}
-	return 0;
+	return (m_bEnabled && m_pEditControl && m_pEditControl->StaticMsgProc(uMsg, wParam, lParam));
 }
 
 //----------------------------------------------------

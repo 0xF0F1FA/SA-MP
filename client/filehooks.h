@@ -31,13 +31,15 @@ typedef struct _ARCH_FILE_RECORD
 typedef DWORD (WINAPI *def_GetFileSize)(HANDLE,PDWORD);
 typedef DWORD (WINAPI *def_SetFilePointer)(HANDLE,LONG,PLONG,DWORD);
 typedef HANDLE (WINAPI *def_CreateFileA)(LPCTSTR,DWORD,DWORD,LPSECURITY_ATTRIBUTES,DWORD,DWORD,HANDLE);
-typedef HANDLE (WINAPI *def_CreateFileW)(PWORD,DWORD,DWORD,LPSECURITY_ATTRIBUTES,DWORD,DWORD,HANDLE);
+//typedef HANDLE (WINAPI *def_CreateFileW)(PWORD,DWORD,DWORD,LPSECURITY_ATTRIBUTES,DWORD,DWORD,HANDLE);
 typedef BOOL (WINAPI *def_ReadFile)(HANDLE,LPVOID,DWORD,LPDWORD,LPOVERLAPPED);
 
 typedef BOOL (WINAPI *def_CloseHandle)(HANDLE);
 typedef DWORD (WINAPI *def_GetFileType)(HANDLE);
 typedef HMODULE (WINAPI *def_GetModuleHandleA)(LPCTSTR);
 
-typedef SHORT (WINAPI *def_GetAsyncKeyState)(INT);
+//typedef SHORT (WINAPI *def_GetAsyncKeyState)(INT);
+
+typedef int (WINAPI *def_ShowCursor)(BOOL);
 
 //----------------------------------------------------------

@@ -3,25 +3,13 @@
 
 class CCursor
 {
-public:
-	CCursor();
-	//~CCursor();
+private:
+	IDirect3DDevice9* m_pD3DDevice;
+	IDirect3DSurface9* m_pSurface;
 
-	void Init();
+public:
+	CCursor(IDirect3DDevice9* pD3DDevice);
+
 	void DeleteDeviceObjects();
 	void RestoreDeviceObjects();
-	void Process();
-
-	union {
-		unsigned char m_ucVisible;
-		struct {
-			unsigned char m_ucShowForChatbox : 1;
-			unsigned char m_ucShowForSpawnScreen : 1;
-		};
-	};
-
-	IDirect3DTexture9* m_pTexture;
-	//ID3DXFont* m_pFont;
-	ID3DXSprite* m_pSprite;
-	int m_iSize;
 };

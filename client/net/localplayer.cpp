@@ -1003,6 +1003,15 @@ bool CLocalPlayer::Spawn()
 {
 	if(!m_bHasSpawnInfo) return false;
 
+	if (m_bControlsVisible)
+	{
+		m_bControlsVisible = false;
+		pSpawnScreen->ToggleVisibility(false);
+		pGame->ToggleKeyInputsDisabled(0, false);
+	}
+
+	pGame->GetCamera()->Restore();
+	pGame->GetCamera()->SetBehindPlayer();
 	pGame->DisplayHud(true);
 	m_pPlayerPed->TogglePlayerControllable(1);
 
@@ -1049,9 +1058,6 @@ bool CLocalPlayer::Spawn()
 
 	m_pPlayerPed->SetTargetRotation(m_SpawnInfo.fRotation);
 	
-	pGame->GetCamera()->Restore(); // Restore camera without jump-cut
-	//pGame->GetCamera();->SetBehindPlayer(); // will be handled by SetInitialState()
-
 	if (!bFirstSpawn)
 		m_pPlayerPed->SetInitialState();
 	else
@@ -1066,11 +1072,6 @@ bool CLocalPlayer::Spawn()
 		RELIABLE_SEQUENCED,0,false);
 
 	m_iDisplayZoneTick = GetTickCount() + 1000;
-
-	if (pSpawnScreen)
-		pSpawnScreen->ToggleVisibility(false);
-
-	m_bControlsVisible = false;
 	
 	return true;
 }
@@ -1229,7 +1230,12 @@ void CLocalPlayer::ProcessClassSelection(int iControlID)
 	MATRIX4X4		matPlayer;
 
 	dwTickNow = GetTickCount();
-	pGame->DisplayHud(false);
+
+	if (!pGame->IsMenuActive())
+	{
+		pGame->DisplayHud(false);
+		pGame->ToggleKeyInputsDisabled(2, false);
+	}
 
 	// DONT ALLOW ANY ACTIONS IF WE'RE STILL FADING OR WAITING.
 	if((dwTickNow - m_dwInitialSelectionTick) < 2000) return;

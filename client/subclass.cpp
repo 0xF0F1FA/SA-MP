@@ -253,9 +253,29 @@ bool SubclassGameWindow()
 LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 							 WPARAM wParam,LPARAM lParam ) 
 {
+	if (uMsg == WM_ACTIVATEAPP && wParam == VK_LBUTTON && pGame && pD3DDevice
+		&& !pGame->IsMenuActive() && !pGame->m_byteDisabledInputType)
+	{
+		pD3DDevice->ShowCursor(FALSE);
+	}
+
 	if(pCmdWindow) {
 		pCmdWindow->MsgProc(uMsg,wParam,lParam);
 	}
+
+	if (pGameUI && pCmdWindow && pCmdWindow->isEnabled())
+	{
+		if (!pGame->IsMenuActive())
+		{
+			if (pGameUI->MsgProc(hwnd, uMsg, wParam, lParam) ||
+				(uMsg == WM_KEYUP || uMsg == WM_KEYDOWN) && wParam == VK_RETURN ||
+				uMsg == WM_CHAR && wParam == 0xA /* ??? */)
+			{
+				return 0;
+			}
+		}
+	}
+
 	if (pSpawnScreen)
 		pSpawnScreen->MsgProc(hwnd, uMsg, wParam, lParam);
 
@@ -266,7 +286,8 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 			break;
 		case WM_KEYDOWN:
 			if(wParam == VK_ESCAPE) {
-				if(pCmdWindow->isEnabled()) {
+				if(pCmdWindow && pCmdWindow->isEnabled())
+				{
 					return 0;
 				}
 			}
@@ -276,6 +297,21 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 			break;
 		case WM_CHAR:
 			HandleCharacterInput((DWORD)wParam);
+			break;
+		case WM_SETCURSOR:
+			extern bool bCursorRemoved;
+			if (!bCursorRemoved)
+			{
+				SetCursor(NULL);
+				bCursorRemoved = true;
+			}
+			return 1;
+		case WM_KILLFOCUS:
+			if (pCmdWindow && pCmdWindow->isEnabled())
+				pCmdWindow->Disable();
+			if (pSpawnScreen && pSpawnScreen->IsVisible())
+				pGame->ToggleKeyInputsDisabled(0, true);
+			pGame->ProcessInputDisabling();
 			break;
 	}
 

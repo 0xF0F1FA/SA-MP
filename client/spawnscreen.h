@@ -25,6 +25,8 @@ public:
 	static VOID CALLBACK OnEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 	void Draw();
 
+	bool IsVisible() { return m_pDialog->GetVisible(); };
+
 	CSpawnScreen();
 	~CSpawnScreen();
 

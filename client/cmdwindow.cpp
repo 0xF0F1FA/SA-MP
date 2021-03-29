@@ -85,10 +85,6 @@ void CCmdWindow::Enable()
 			m_pGameUI->SetSize(lWidth + 100, pChatWindow->GetChatWindowBottom() + 50);
 		}
 
-		pGame->ToggleKeyInputsDisabled(TRUE);
-		pGame->DisableCamera(true);
-		pCursor->m_ucShowForChatbox = true;
-
 		if (pNetGame) {
 			RakNet::BitStream out;
 			out.Write1();
@@ -110,9 +106,7 @@ void CCmdWindow::Disable()
 			m_pEditControl->SetVisible(false);
 		}
 
-		pGame->ToggleKeyInputsDisabled(FALSE);
-		pGame->DisableCamera(false);
-		pCursor->m_ucShowForChatbox = false;
+		pGame->ToggleKeyInputsDisabled(0, true);
 
 		if (pNetGame) {
 			RakNet::BitStream out;
@@ -179,6 +173,8 @@ void CCmdWindow::RecallDown()
 
 void CCmdWindow::Draw()
 {
+	if (m_bEnabled)
+		pGame->ToggleKeyInputsDisabled(2);
 }
 
 //----------------------------------------------------

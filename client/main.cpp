@@ -47,6 +47,7 @@ CChatBubble				*pChatBubble=NULL;
 bool					bShowDebugLabels = false;
 bool					bWantHudScaling = true;
 bool 					bHeadMove = true;
+bool					bCursorRemoved = false;
 
 CGame					*pGame=0;
 //DWORD					dwGameLoop=0;
@@ -134,6 +135,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			OutputDebugString("Installing filesystem hooks.");
 
 			InstallFileSystemHooks();
+			InstallShowCursorHook();
 
 			_beginthread(LaunchMonitor,0,NULL);	
 			OutputDebugString("SA:MP Inited\n");			
@@ -252,7 +254,7 @@ void SetupGameUI()
 	//pGameUI->AddButton(2,"Test Button",30,390,80,35,0);
 	//pGameUI->AddEditBox(3,"",20,pGame->GetScreenHeight()-40,pGame->GetScreenWidth()-40,36,true);
 
-	pGameUI->EnableMouseInput(false);
+	pGameUI->EnableMouseInput(true);
 	pGameUI->EnableKeyboardInput(true);
 
 	if(pChatWindow) pChatWindow->ResetDialogControls(pGameUI);
@@ -362,6 +364,8 @@ void DoInitStuff()
 
 		*(IDirect3DDevice9Hook**)ADDR_ID3D9DEVICE = new IDirect3DDevice9Hook();
 
+		pD3DDevice->ShowCursor(FALSE);
+
 		OutputDebugString("Font and chat window creating..");
 
 		// Create instances of the chat and input classes.
@@ -385,8 +389,8 @@ void DoInitStuff()
 
 		SetupGameUI();
 
-		pCursor = new CCursor;
-		pCursor->Init();
+		pCursor = new CCursor(pD3DDevice);
+		pCursor->RestoreDeviceObjects();
 
 		if(tSettings.bPlayOnline) {
 			pDeathWindow = new CDeathWindow(pD3DDevice);
@@ -626,6 +630,9 @@ void InitSettings()
 
 void d3d9DestroyDeviceObjects()
 {
+	if (pCmdWindow && pCmdWindow->isEnabled())
+		pCmdWindow->Disable();
+
 	if (pDialogResourceManager)
 		pDialogResourceManager->OnLostDevice();
 
@@ -648,6 +655,7 @@ void d3d9DestroyDeviceObjects()
 		pDeathWindow->OnLostDevice();
 
 	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnLostDevice();
+	bCursorRemoved = false;
 }
 
 void d3d9RestoreDeviceObjects()
@@ -674,6 +682,12 @@ void d3d9RestoreDeviceObjects()
 		pDeathWindow->OnResetDevice();
 	
 	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnResetDevice();
+	if (pGame->IsMenuActive())
+	{
+		pGame->ToggleKeyInputsDisabled(2, true);
+		pGame->ToggleKeyInputsDisabled(0, true);
+		pGame->ProcessInputDisabling();
+	}
 }
 
 void UpdateDiscordPresence(char* state, char* details)

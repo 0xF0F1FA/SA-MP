@@ -19,8 +19,7 @@ void ApplyInGamePatches();
 
 char *szGameTextMessage;
 
-static bool bInputsDisabled = false;
-static int iInputDisableWaitFrames=0;
+static DWORD dwDummy;
 
 PED_TYPE CrimeReportPed;
 
@@ -47,6 +46,8 @@ CGame::CGame()
 	m_bMissionAudioLoaded = false;
 	m_bDisableInteriorAmbient = false;
 	m_bPassingOfTime = false;
+	m_iInputDisableWaitFrames = 0;
+	m_byteDisabledInputType = 0;
 }
 
 //-----------------------------------------------------------
@@ -113,34 +114,167 @@ float CGame::FindGroundZForCoord(float x, float y, float z)
 
 //-----------------------------------------------------------
 
+void CGame::ClearMouseState()
+{
+	*(DWORD*)0xB73424 = 0;
+	*(DWORD*)0xB73428 = 0;
+
+	_asm mov edx, 0x541BD0
+	_asm call edx
+}
+
+//-----------------------------------------------------------
+
+void CGame::UpdateControls()
+{
+	_asm mov edx, 0x541DD0
+	_asm call edx
+}
+
+//-----------------------------------------------------------
+
+void CGame::DisableMousePositionSet()
+{
+	*(DWORD*)0xB7340C = 0;
+	*(DWORD*)0xB73410 = 0;
+	*(DWORD*)0xB73414 = 0;
+
+	*(DWORD*)0x53F47A = (DWORD)&dwDummy;
+	*(DWORD*)0x53F49A = (DWORD)&dwDummy;
+	*(DWORD*)0x53F4B3 = (DWORD)&dwDummy;
+}
+
+//-----------------------------------------------------------
+
+void CGame::RestoreMousePositionSet()
+{
+	*(DWORD*)0x53F47A = 0xB73410;
+	*(DWORD*)0x53F49A = 0xB73414;
+	*(DWORD*)0x53F4B3 = 0xB7340C;
+}
+
+//-----------------------------------------------------------
+
+void CGame::DisableMouseProcessing()
+{
+	// .text:0053F417  E8 B4 7A 20 00		call sub_746ED0
+	memset((void*)0x53F417, 0x90, 5);
+
+	// Changes these
+	// .text:0053F41F  85 C0                test eax, eax
+	// .text:0053F421  0F 8C FF 00 00 00	jl loc_53F526
+	// To
+	// .text:0053F41F  33 C0				xor	eax, eax
+	// .text:0053F421  0F 84 FF 00 00 00	jz loc_53F526
+	*(BYTE*)0x53F41F = 0x33;
+	*(BYTE*)0x53F420 = 0xC0;
+	*(BYTE*)0x53F421 = 0x0F;
+	*(BYTE*)0x53F422 = 0x84;
+}
+
+//-----------------------------------------------------------
+
 BYTE byteGetKeyStateFunc[] = { 0xE8,0x46,0xF3,0xFE,0xFF };
+BYTE byteGetMouseStateFuncEU10[] = { 0xE8,0xB4,0x7A,0x20,0x00 };
+BYTE byteGetMouseStateFuncUSA10[] = { 0xE8,0xB4,0x7A,0x20,0x00 };
 
 void CGame::ProcessInputDisabling()
 {
-	if(bInputsDisabled) {
-		//UnFuck(0x541DF5,5);
-		memset((PVOID)0x541DF5,0x90,5);	// disable call	
-		//GameResetInternalKeys(); // set keys to 0
-	} else {
-		if(!iInputDisableWaitFrames) {
-			//UnFuck(0x541DF5,5);
-			memcpy((PVOID)0x541DF5,byteGetKeyStateFunc,5);
-			//GameResetInternalKeys(); // set keys to 0
-		} else {
-			iInputDisableWaitFrames--;
+	if (!m_byteDisabledInputType)
+	{
+		if (m_iInputDisableWaitFrames)
+		{
+			if (m_iInputDisableWaitFrames > 0)
+				m_iInputDisableWaitFrames--;
+		}
+		else
+		{
+			memcpy((PVOID)0x541DF5, byteGetKeyStateFunc, 5);
+
+			if (iGtaVersion == GTASA_VERSION_USA10)
+				memcpy((PVOID)0x53F417, byteGetMouseStateFuncUSA10, 5);
+			else
+				memcpy((PVOID)0x53F417, byteGetMouseStateFuncEU10, 5);
+
+			RestoreMousePositionSet();
+
+			*(BYTE*)0x53F41F = 0x85;
+			*(BYTE*)0x53F420 = 0xC0;
+			*(BYTE*)0x53F421 = 0x0F;
+			*(BYTE*)0x53F422 = 0x8C;
+
+			ClearMouseState();
+			UpdateControls();
+			ClearMouseState();
+
+			*(BYTE*)0x6194A0 = 0xE9;
+
+			pD3DDevice->ShowCursor(FALSE);
+
+			m_iInputDisableWaitFrames--;
 		}
 	}
 }
 
 //-----------------------------------------------------------
 
-void CGame::ToggleKeyInputsDisabled(bool bDisable)
+/*
+	Types:
+		0 - Restore game inputs
+		1 - Disables only game keyboard input
+		2 - Disables game keyboard input and mouse movement
+		3 - Disables only mouse movement
+		4 - Same as 3, but without showing the cursor
+*/
+void CGame::ToggleKeyInputsDisabled(BYTE byteType, bool bWait)
 {
-	if(bDisable) {
-		bInputsDisabled = true;
-	} else {
-		bInputsDisabled = false;
-		iInputDisableWaitFrames = 2;
+	switch (byteType)
+	{
+	case 2:
+		memset((PVOID)0x541DF5, 0x90, 5);
+		DisableMouseProcessing();
+		ClearMouseState();
+		UpdateControls();
+		*(BYTE*)0x6194A0 = 0xC3;
+		pD3DDevice->ShowCursor(TRUE);
+		m_byteDisabledInputType = 2;
+		break;
+	case 1:
+		if (m_byteDisabledInputType != 1)
+		{
+			memset((PVOID)0x541DF5, 0x90, 5);
+			m_byteDisabledInputType = 1;
+		}
+		break;
+	case 3:
+		if (m_byteDisabledInputType != 3)
+		{
+			DisableMouseProcessing();
+			ClearMouseState();
+			UpdateControls();
+			*(BYTE*)0x6194A0 = 0xC3;
+			pD3DDevice->ShowCursor(TRUE);
+			m_byteDisabledInputType = 3;
+		}
+		break;
+	case 4:
+		if (m_byteDisabledInputType != 4)
+		{
+			DisableMousePositionSet();
+			ClearMouseState();
+			UpdateControls();
+			*(BYTE*)0x6194A0 = 0xC3;
+			m_byteDisabledInputType = 4;
+		}
+		break;
+	default:
+		if (!byteType && m_byteDisabledInputType)
+		{
+			m_iInputDisableWaitFrames = (bWait != false) ? 0 : 10;
+			pD3DDevice->ShowCursor(FALSE);
+			m_byteDisabledInputType = 0;
+		}
+		break;
 	}
 }
 
@@ -980,29 +1114,6 @@ void CGame::SetGameSpeed(float fSpeed)
 float CGame::GetGameSpeed()
 {
 	return *(float*)0xB7CB64;
-}
-
-void CGame::DisableCamera(bool bDisable)
-{
-	memset((void*)0xB73424, 0, 8);
-
-	if (bDisable) {
-		memcpy((void*)0x53F41F, "\x33\xC0\x0F\x84", 4); // skip
-		//memset((void*)0x53F417, 0x90, 5);
-
-		_asm mov edx, 0x541BD0 // reset mouse
-		_asm call edx
-		_asm mov edx, 0x541DD0 // CPad::Update()
-		_asm call edx
-
-		*(BYTE*)0x531140 = 0xC3; // ret (keyboard event process)
-	} else {
-		memcpy((void*)0x53F41F, "\x85\xC0\x0F\x8C", 4);
-		//BYTE bOriginal[] = { 0xE8, 0xB4, 0x7A, 0x20, 0x00 };
-		//memcpy((void*)0x53F417, bOriginal, sizeof(bOriginal));
-		*(BYTE*)0x531140 = 0x83; // sub (keyboard event process)
-		SetCursor(NULL);
-	}
 }
 
 float CGame::GetFPS()

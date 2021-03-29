@@ -62,9 +62,11 @@ private:
 	DWORD			m_dwRaceCheckpointHandle;
 	bool			m_bMissionAudioLoaded;
 	bool			m_bPassingOfTime;
+	int				m_iInputDisableWaitFrames;
 public:
 	bool m_bDisableVehMapIcons;
 	bool m_bDisableInteriorAmbient;
+	BYTE m_byteDisabledInputType;
 
 	CPlayerPed *NewPlayer(int iPlayerID, int iSkin,float fPosX,float fPosY,float fPosZ,float fRotation,BYTE byteCreateMarker = 1);
 	CVehicle *NewVehicle(int iType,float fPosX,float fPosY,float fPosZ,float fRotation, PCHAR szNumberPlate);
@@ -72,7 +74,12 @@ public:
 	int		GetWeaponModelIDFromWeapon(int iWeaponID);
 	bool	IsKeyPressed(int iKeyIdentifier);
 	float	FindGroundZForCoord(float x, float y, float z);
-	void	ToggleKeyInputsDisabled(bool bDisable);
+	void	ClearMouseState();
+	void	UpdateControls();
+	void	DisableMousePositionSet();
+	void	RestoreMousePositionSet();
+	void	DisableMouseProcessing();
+	void	ToggleKeyInputsDisabled(BYTE byteType, bool bWait = false);
 	void	StartGame();
 	void	InitGame();
 	bool	IsMenuActive();
@@ -175,8 +182,6 @@ public:
 
 	CGame();
 	//~CGame() {};
-
-	void DisableCamera(bool bDisable);
 
 	static float GetFPS();
 	static float GetAspectRatio();

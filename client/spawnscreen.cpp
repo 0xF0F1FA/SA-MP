@@ -68,7 +68,7 @@ void CSpawnScreen::SetupUI()
 
 void CSpawnScreen::MsgProc(HWND hwnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pDialog)
+	if (m_pDialog && m_pDialog->GetVisible())
 		m_pDialog->MsgProc(hwnd, uiMsg, wParam, lParam);
 }
 
@@ -90,6 +90,4 @@ void CSpawnScreen::ToggleVisibility(bool bVisible)
 	if (m_pDialog) {
 		m_pDialog->SetVisible(bVisible);
 	}
-	if (pCursor)
-		pCursor->m_ucShowForSpawnScreen = bVisible;
 }

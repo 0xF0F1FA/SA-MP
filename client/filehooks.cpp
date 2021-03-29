@@ -22,12 +22,13 @@
 static def_GetFileSize Real_GetFileSize = NULL;
 static def_SetFilePointer Real_SetFilePointer = NULL;
 static def_CreateFileA Real_CreateFileA = NULL;
-static def_CreateFileW Real_CreateFileW = NULL;
+//static def_CreateFileW Real_CreateFileW = NULL;
 static def_ReadFile Real_ReadFile = NULL;
 static def_CloseHandle Real_CloseHandle = NULL;
 static def_GetFileType Real_GetFileType = NULL;
-static def_GetAsyncKeyState Real_GetAsyncKeyState = NULL;
+//static def_GetAsyncKeyState Real_GetAsyncKeyState = NULL;
 static def_GetModuleHandleA Real_GetModuleHandleA = NULL;
+static def_ShowCursor Real_ShowCursor = NULL;
 
 extern CFileSystem *pFileSystem;
 
@@ -150,18 +151,18 @@ HANDLE WINAPI Arch_CreateFileA( LPCTSTR lpFileName,DWORD dwDesiredAccess,
 
 //----------------------------------------------------------
 
-HANDLE WINAPI Arch_CreateFileW( WORD * lpFileName,DWORD dwDesiredAccess,
+/*HANDLE WINAPI Arch_CreateFileW( WORD * lpFileName,DWORD dwDesiredAccess,
 							   DWORD dwShareMode,LPSECURITY_ATTRIBUTES lpSecurityAttributes,
 							   DWORD dwCreationDisposition,DWORD dwFlagsAndAttributes,
 							   HANDLE hTemplateFile )
 {
 
 #ifdef _DEBUG
-/*
+/ *
 	wchar_t wszBuffer[FILENAME_MAX];
 	swprintf(wszBuffer, L"CreateFileW: %s\n", lpFileName);
 	OutputDebugStringW(wszBuffer);
-*/
+* /
 #endif
 
 	HANDLE ret=Real_CreateFileW(lpFileName,dwDesiredAccess,dwShareMode,
@@ -171,7 +172,7 @@ HANDLE WINAPI Arch_CreateFileW( WORD * lpFileName,DWORD dwDesiredAccess,
 		CheckFileHash(GetFileNameHash(strtolower(FileNameOnly((PCHAR)lpFileName))), ret);
 	}
 	return ret;
-}
+}*/
 
 //----------------------------------------------------------
 
@@ -320,10 +321,8 @@ BOOL WINAPI Arch_CloseHandle( HANDLE hObject )
 
 DWORD WINAPI Arch_GetFileType( HANDLE hFile )
 {
-	int iArch;
-
 	if( IsCustomFileHandle((DWORD)hFile) && 
-		((iArch = FindArchRecordIndexFromHandle(hFile)) != (-1)))
+		FindArchRecordIndexFromHandle(hFile) != (-1))
 	{
 		return FILE_TYPE_DISK;
 	}
@@ -333,7 +332,7 @@ DWORD WINAPI Arch_GetFileType( HANDLE hFile )
 
 //----------------------------------------------------------
 
-DWORD dwCaller=0;
+/*DWORD dwCaller=0;
 char dbgmsg[256];
 
 SHORT WINAPI Arch_GetAsyncKeyState( int hKey )
@@ -345,7 +344,7 @@ SHORT WINAPI Arch_GetAsyncKeyState( int hKey )
 	OutputDebugStringA(dbgmsg);
 
 	return Real_GetAsyncKeyState(hKey);
-}
+}*/
 
 //----------------------------------------------------------
 
@@ -360,6 +359,13 @@ HMODULE WINAPI Arch_GetModuleHandleA(LPCTSTR lpszModule)
 	}
 
     return Real_GetModuleHandleA(lpszModule);
+}
+
+//----------------------------------------------------------
+
+int WINAPI Arch_ShowCursor(BOOL bShow)
+{
+	return (bShow != FALSE) - 1;
 }
 
 //----------------------------------------------------------
@@ -430,6 +436,15 @@ void InstallFileSystemHooks()
 
 //----------------------------------------------------------
 
+void InstallShowCursorHook()
+{
+	Real_ShowCursor = (def_ShowCursor)DetourFunction(
+		(PBYTE)DetourFindFunction("user32.dll", "ShowCursor"),
+		(PBYTE)Arch_ShowCursor);
+}
+
+//----------------------------------------------------------
+
 void UninstallFileSystemHooks()
 {
 	if(bFileHooksInstalled) {
@@ -441,6 +456,7 @@ void UninstallFileSystemHooks()
 		DetourRemove((PBYTE)Real_GetFileType,(PBYTE)Arch_GetFileType);
 		DetourRemove((PBYTE)Real_GetModuleHandleA,(PBYTE)Arch_GetModuleHandleA);
 		//DetourRemove((PBYTE)Real_GetAsyncKeyState,(PBYTE)Arch_GetAsyncKeyState);
+		DetourRemove((PBYTE)Real_ShowCursor,(PBYTE)Arch_ShowCursor);
 		bFileHooksInstalled = FALSE;
 	}
 }

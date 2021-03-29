@@ -785,9 +785,6 @@ void ApplyInGamePatches()
 	*(BYTE*)0x8D477C = 0;
 	*(BYTE*)0x8D477D = 0; 
 
-	// Disable Renderware's SetCursorPosition
-	*(BYTE*)0x6194A0 = 0xC3; // ret
-
 	// Disable cinematic camera for trains
 	*(BYTE*)0x52A535 = 0;
 

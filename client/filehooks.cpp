@@ -7,14 +7,11 @@
 //
 //----------------------------------------------------------
 
-#include <windows.h>
-#include <stdio.h>
+#include "main.h"
 #include <detours/detours.h>
 #include "filehooks.h"
 #include "filesystem.h"
 #include "filechecks.h"
-#include "outputdebugstring.h"
-#include "runutil.h"
 
 //----------------------------------------------------------
 

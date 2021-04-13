@@ -4688,8 +4688,8 @@ static cell n_ApplyAnimation(AMX *amx, cell *params)
 	amx_StrParam(amx, params[2], szAnimLib);
 	amx_StrParam(amx, params[3], szAnimName);
 
-	byteAnimLibLen = strlen(szAnimLib);
-	byteAnimNameLen = strlen(szAnimName);
+	byteAnimLibLen = (BYTE)strlen(szAnimLib);
+	byteAnimNameLen = (BYTE)strlen(szAnimName);
 
 	fS = amx_ctof(params[4]);
 	opt1 = (bool)params[5];

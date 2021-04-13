@@ -10,6 +10,7 @@
 #pragma once
 
 void InstallFileSystemHooks();
+void InstallShowCursorHook();
 void UninstallFileSystemHooks();
 
 #define MAX_OPEN_ARCH_FILES		50

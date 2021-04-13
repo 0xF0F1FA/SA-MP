@@ -90,6 +90,7 @@ typedef struct _GAME_SETTINGS {
 #include "spawnscreen.h"
 #include "playertags.h"
 //#include "newplayertags.h"
+#include "dialog.h"
 #include "scoreboard.h"
 #include "label.h"
 #include "chatbubble.h"

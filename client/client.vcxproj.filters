@@ -358,6 +358,7 @@
       <Filter>sdk\discordrpc</Filter>
     </ClCompile>
     <ClCompile Include="chatbubble.cpp" />
+    <ClCompile Include="dialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -802,6 +803,7 @@
       <Filter>sdk\discordrpc</Filter>
     </ClInclude>
     <ClInclude Include="chatbubble.h" />
+    <ClInclude Include="dialog.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

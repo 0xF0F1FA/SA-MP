@@ -663,6 +663,7 @@ bool CDXUTDialog::MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
     }
 
     // If caption is enable, check for clicks in the caption area.
+    // SA-MP: Seems to be this part (the caption) is missing in 0.3.7
     if( m_bCaption )
     {
         static bool bDrag;
@@ -5609,7 +5610,7 @@ CGrowableArray< CDXUTIMEEditBox::CInputLocale > CDXUTIMEEditBox::s_Locale; // Ar
 #if defined(DEBUG) | defined(_DEBUG)
 bool      CDXUTIMEEditBox::m_bIMEStaticMsgProcCalled = false;
 #endif
-
+DWORD     CDXUTIMEEditBox::s_dwIMEEventTick;
 
 //--------------------------------------------------------------------------------------
 CDXUTIMEEditBox::CDXUTIMEEditBox( CDXUTDialog *pDialog )
@@ -6615,6 +6616,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
             s_bHideCaret = false;
             // Hide reading window
             s_bShowReadingWindow = false;
+            s_dwIMEEventTick = GetTickCount();
             break;
 
         case WM_IME_NOTIFY:
@@ -6634,6 +6636,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                     DXUTTRACE( wParam == IMN_CHANGECANDIDATE ? "  IMN_CHANGECANDIDATE\n" : "  IMN_OPENCANDIDATE\n" );
 
                     s_CandList.bShowWindow = true;
+                    s_dwIMEEventTick = GetTickCount();
                     *trapped = true;
                     if( NULL == ( hImc = _ImmGetContext( DXUTGetHWND() ) ) )
                         break;
@@ -6743,6 +6746,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                 {
                     DXUTTRACE( "  IMN_CLOSECANDIDATE\n" );
                     s_CandList.bShowWindow = false;
+                    s_dwIMEEventTick = GetTickCount();
                     if( !s_bShowReadingWindow )
                     {
                         s_CandList.dwCount = 0;
@@ -7201,6 +7205,17 @@ void CDXUTIMEEditBox::RenderIndicator( IDirect3DDevice9* pd3dDevice, float fElap
 
     m_pDialog->CalcTextRect( pwszIndicator, pElement, &rcCalc );
     m_pDialog->DrawText( pwszIndicator, pElement, &rc );
+}
+
+
+//--------------------------------------------------------------------------------------
+bool CDXUTIMEEditBox::IsCandicateActive()
+{
+    if (s_CandList.bShowWindow || s_bShowReadingWindow)
+    {
+        return true;
+    }
+    return (GetTickCount() - s_dwIMEEventTick) < 300;
 }
 
 
@@ -7677,6 +7692,8 @@ void CDXUTIMEEditBox::Initialize()
         return;
 
     FARPROC Temp;
+
+    s_dwIMEEventTick = GetTickCount();
 
     s_CompString.SetBufferSize( MAX_COMPSTRING_SIZE );
 

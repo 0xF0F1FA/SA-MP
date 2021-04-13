@@ -996,6 +996,8 @@ public:
     virtual void RenderComposition( IDirect3DDevice9* pd3dDevice, float fElapsedTime );
     virtual void RenderIndicator( IDirect3DDevice9* pd3dDevice, float fElapsedTime );
 
+    static bool IsCandicateActive();
+
 protected:
     static WORD GetLanguage() { return LOWORD( s_hklCurrent ); }
     static WORD GetPrimaryLanguage() { return PRIMARYLANGID( LOWORD( s_hklCurrent ) ); }
@@ -1063,6 +1065,7 @@ protected:
     static bool    s_bHorizontalReading;  // Indicates whether the reading window is vertical or horizontal
     static bool    s_bChineseIME;
     static CGrowableArray< CInputLocale > s_Locale; // Array of loaded keyboard layout on system
+    static DWORD   s_dwIMEEventTick;
 
     // Color of various IME elements
     D3DCOLOR       m_ReadingColor;        // Reading string color

@@ -568,34 +568,30 @@ void GameModeRestart(RPCParameters *rpcParams)
 void ConnectionRejected(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
-	BYTE byteRejectReason;
+	BYTE byteRejectReason = REJECT_REASON_BAD_VERSION;
 
 	bsData.Read(byteRejectReason);
 
-	if(byteRejectReason==REJECT_REASON_BAD_VERSION) {
-		pChatWindow->AddInfoMessage("DISCONNECTED. THE SERVER DID NOT ALLOW A CONNECTION.");
-	}
-	else if(byteRejectReason==REJECT_REASON_BAD_NICKNAME)
+	switch (byteRejectReason)
 	{
-		pChatWindow->AddInfoMessage("CONNECTION REJECTED. BAD NICKNAME!");
-		pChatWindow->AddInfoMessage("Please choose another nick between 3-" STR(MAX_PLAYER_NAME) " characters");
-		pChatWindow->AddInfoMessage("containing only A-Z a-z 0-9 [ ] or _");
+	case REJECT_REASON_BAD_VERSION:
+		pChatWindow->AddInfoMessage("CONNECTION REJECTED: Incorrect Version.");
+		break;
+	case REJECT_REASON_BAD_NICKNAME:
+		pChatWindow->AddInfoMessage("CONNECTION REJECTED: Unacceptable NickName");
+		pChatWindow->AddInfoMessage("Please choose another nick between and 3-20 characters");
+		pChatWindow->AddInfoMessage("Please use only a-z, A-Z, 0-9");
 		pChatWindow->AddInfoMessage("Use /quit to exit or press ESC and select Quit Game");
-	}
-	else if(byteRejectReason==REJECT_REASON_BAD_MOD)
-	{
-		pChatWindow->AddInfoMessage("CONNECTION REJECTED");
-		pChatWindow->AddInfoMessage("YOUR'RE USING AN INCORRECT MOD!");
-	}
-	else if(byteRejectReason==REJECT_REASON_BAD_PLAYERID)
-	{
-		pChatWindow->AddInfoMessage("Connection was closed by the server.");
-		pChatWindow->AddInfoMessage("Unable to allocate a player slot. Try again.");
-	}
-	else if (byteRejectReason == REJECT_REASON_IP_LIMIT_REACHED)
-	{
-		pChatWindow->AddInfoMessage("Connection was closed by the server.");
-		pChatWindow->AddInfoMessage("Maximum connection limit reached. Try again later.");
+		break;
+	case REJECT_REASON_BAD_MOD:
+		pChatWindow->AddInfoMessage("CONNECTION REJECTED: Bad mod version.");
+		break;
+	case REJECT_REASON_BAD_PLAYERID:
+		pChatWindow->AddInfoMessage("CONNECTION REJECTED: Unable to allocate a player slot.");
+		break;
+	case REJECT_REASON_IP_LIMIT_REACHED:
+		pChatWindow->AddInfoMessage("CONNECTION REJECTED: IP limit reached.");
+		break;
 	}
 
 	pNetGame->GetRakClient()->Disconnect(500);

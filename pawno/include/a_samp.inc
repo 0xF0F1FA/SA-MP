@@ -456,6 +456,7 @@ native GangZoneStopFlashForAll(gangzoneid);
 
 // Npc
 native ConnectNPC(name[], script[]);
+native IsPlayerNPC(playerid);
 
 
 // Per-player 3D Text Labels

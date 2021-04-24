@@ -4675,6 +4675,24 @@ static cell n_ConnectNPC(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native IsPlayerNPC(playerid)
+
+static cell n_IsPlayerNPC(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "IsPlayerNPC", 1);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer && pPlayer->m_bIsNPC)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 // native SetVehicleHealth(vehicleid, Float:health)
 
 static cell n_SetVehicleHealth(AMX *amx, cell *params)
@@ -7708,6 +7726,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 
 	// NPC
 	DEFINE_NATIVE(ConnectNPC),
+	DEFINE_NATIVE(IsPlayerNPC),
 
 	// Hash
 	DEFINE_NATIVE(SHA256_PassHash),

@@ -75,6 +75,7 @@ public:
 	unsigned char			m_ucTeam;
 	unsigned char			m_ucFightingStyle;
 	unsigned char			m_ucFightingMove;
+	bool					m_bIsNPC;
 
 	// Weapon data
 	DWORD					m_dwSlotAmmo[13];

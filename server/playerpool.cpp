@@ -35,7 +35,7 @@ CPlayerPool::~CPlayerPool()
 
 //----------------------------------------------------
 
-bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion)
+bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion, bool bIsNPC)
 {
 	if(bytePlayerID > MAX_PLAYERS) return false;
 	size_t len = strlen(szPlayerName);
@@ -50,6 +50,7 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion)
 		strcpy(m_pPlayers[bytePlayerID]->m_szClientVersion, szVersion);
 
 		m_pPlayers[bytePlayerID]->SetID(bytePlayerID);
+		m_pPlayers[bytePlayerID]->m_bIsNPC = bIsNPC;
 		m_bPlayerSlotState[bytePlayerID] = true;
 		//m_iPlayerScore[bytePlayerID] = 0;
 		//m_iPlayerMoney[bytePlayerID] = 0;
@@ -76,7 +77,12 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion)
 		int iTime = pConsole->GetIntVariable("playertimeout");
 		pNetGame->GetRakServer()->SetTimeoutTime(iTime, Player);
 
-		logprintf("[join] %s has joined the server (%u:%s)",szPlayerName,bytePlayerID, inet_ntoa(in));
+		if (bIsNPC)
+			logprintf("[npc:join] %s has joined the server (%u:%s)",
+				szPlayerName, bytePlayerID, inet_ntoa(in));
+		else
+			logprintf("[join] %s has joined the server (%u:%s)",
+				szPlayerName, bytePlayerID, inet_ntoa(in));
 
 /*#ifdef RAKRCON
 		bsSend.Reset();

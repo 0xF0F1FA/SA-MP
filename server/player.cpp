@@ -86,6 +86,7 @@ CPlayer::CPlayer()
 	m_nLastPingUpdate = 0;
 	m_ucFightingStyle = 4; // FIGHT_STYLE_NORMAL
 	m_ucFightingMove = 0;
+	m_bIsNPC = false;
 
 	m_pVariables = new CVariables;
 	m_pTextDraw = new CPlayerTextDrawPool(m_bytePlayerID);

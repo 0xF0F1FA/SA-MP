@@ -4627,6 +4627,53 @@ static cell n_SetGravity(AMX *amx, cell *params)
 	return 1;
 }
 
+//----------------------------------------------------
+// native ConnectNPC(name[], script[])
+
+static cell n_ConnectNPC(AMX* amx, cell* params)
+{
+	PCHAR szName, szScript, szBindAddress, szPassword;
+	CHAR szCmd[256], szHost[256];
+	int iPort;
+
+	CHECK_PARAMS(amx, "ConnectNPC", 2);
+
+	amx_StrParam(amx, params[1], szName);
+	amx_StrParam(amx, params[2], szScript);
+
+	if (szName == NULL || szScript == NULL)
+	{
+		logprintf("ConnectNPC: Bad parameters");
+		return 0;
+	}	
+
+	szBindAddress = pConsole->GetStringVariable("bind");
+	if (szBindAddress && szBindAddress[0] != '\0')
+		strcpy(szHost, szBindAddress);
+	else
+		strcpy(szHost, "127.0.0.1");
+
+	iPort = pConsole->GetIntVariable("port");
+	sprintf(szCmd, "-h %s -p %d -n %s -m %s", szHost, iPort, szName, szScript);
+
+	szPassword = pConsole->GetStringVariable("password");
+	if (szPassword && szPassword[0] != '\0')
+	{
+		strcat(szCmd, " -z ");
+		strcat(szCmd, szPassword);
+	}
+
+#ifdef WIN32
+	ShellExecute(0, "open", "samp-npc.exe", szCmd, NULL, SW_HIDE);
+#else
+	char szDir[MAX_PATH];
+	getcwd(szDir, MAX_PATH);
+	sprintf(szCmd, "%s/samp-npc %s &", szDir, szCmd);
+	system(szCmd);
+#endif
+	return 1;
+}
+
 //----------------------------------------------------------------------------------
 // native SetVehicleHealth(vehicleid, Float:health)
 
@@ -7658,6 +7705,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "acos",					n_acos },
 	{ "atan2",					n_atan2 },
 	{ "atan",					n_atan },
+
+	// NPC
+	DEFINE_NATIVE(ConnectNPC),
 
 	// Hash
 	DEFINE_NATIVE(SHA256_PassHash),

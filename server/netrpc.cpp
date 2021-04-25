@@ -11,6 +11,8 @@
 //#include "vehmods.h"
 //#include "anticheat.h"
 
+#include <ttmath/ttmath.h>
+
 RakServerInterface		*pRak=0;
 
 // Removed for RakNet upgrade
@@ -29,31 +31,61 @@ void ClientJoin(RPCParameters *rpcParams)
 	RakNet::BitStream bsReject;
 	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
 
-	CHAR szPlayerName[256];
-	BYTE bytePlayerID;
-	int  iVersion;
-	//BYTE byteMod;
-	BYTE byteNickLen;
+	CHAR szPlayerName[MAX_PLAYER_NAME];
+	WORD wPlayerID;
+	int  iVersion=0;
+	BYTE byteMod=0;
+	BYTE byteNickLen=0;
 	BYTE byteRejectReason;
-	size_t uiVersionLen = 0;
-	char szVersion[12];
+	BYTE byteVersionLen=0;
+	CHAR szVersion[MAX_VERSION_NAME]="unknown";
 	unsigned int uiChallengeResponse=0;
 	PlayerID otherPlayerId = UNASSIGNED_PLAYER_ID;
-	size_t uiCount = 0;
+	int iCount=0;
+	BYTE byteSerialLen=0;
+	CHAR szSerial[100];
+	std::string serial;
+	in_addr in;
+	wPlayerID = pRak->GetIndexFromPlayerID(sender);
+	PlayerID MyPlayerID = pRak->GetPlayerIDFromIndex(wPlayerID);
 
-	bytePlayerID = pRak->GetIndexFromPlayerID(sender);
-	PlayerID MyPlayerID = pRak->GetPlayerIDFromIndex(bytePlayerID);
+	memset(szPlayerName, 0, sizeof(szPlayerName));
+	memset(szSerial, 0, sizeof(szSerial));
 
-	for (size_t i = 0; i < MAX_PLAYERS; i++) {
+	if (UNASSIGNED_PLAYER_ID == MyPlayerID)
+	{
+		in.s_addr = sender.binaryAddress;
+		logprintf("(0) Invalid client connecting from %s", inet_ntoa(in));
+		pRak->Kick(MyPlayerID);
+		return;
+	}
+
+	if (!pRak->IsActivePlayerID(sender) || wPlayerID > MAX_PLAYERS)
+	{
+		byteRejectReason = REJECT_REASON_BAD_PLAYERID;
+		bsReject.Write(byteRejectReason);
+		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,false,false);
+		pRak->Kick(sender);
+		return;
+	}
+
+	if (pPlayerPool->GetSlotState(wPlayerID))
+	{
+		logprintf("Player slot (%u) is taken. Kicking %s.", wPlayerID, sender.ToString());
+		pNetGame->KickPlayer(wPlayerID);
+		return;
+	}
+
+	for (int i = 0; i < MAX_PLAYERS; i++) {
 		if (pPlayerPool->GetSlotState(i)) {
 			otherPlayerId = pRak->GetPlayerIDFromIndex(i);
 			if (otherPlayerId != UNASSIGNED_PLAYER_ID &&
 				otherPlayerId.binaryAddress == MyPlayerID.binaryAddress)
-				uiCount++;
+				iCount++;
 		}
 	}
 
-	if (pConsole->GetIntVariable("maxplayerperip") < (int)uiCount)
+	if (pConsole->GetIntVariable("maxplayerperip") <= iCount)
 	{
 		byteRejectReason = REJECT_REASON_IP_LIMIT_REACHED;
 		bsReject.Write(byteRejectReason);
@@ -62,19 +94,7 @@ void ClientJoin(RPCParameters *rpcParams)
 		return;
 	}
 
-	in_addr in;
-
-	memset(szPlayerName,0,256);
-
-	bsData.Read(iVersion);
-	//bsData.Read(byteMod);
-	bsData.Read(byteNickLen);
-	bsData.Read(szPlayerName,byteNickLen);
-	szPlayerName[byteNickLen] = '\0';
-	bsData.Read(uiChallengeResponse);
-
-	bsData.Read(uiVersionLen);
-	if (uiVersionLen < 1 || 11 < uiVersionLen)
+	if (!bsData.Read(iVersion) || iVersion != NETGAME_VERSION)
 	{
 		byteRejectReason = REJECT_REASON_BAD_VERSION;
 		bsReject.Write(byteRejectReason);
@@ -82,26 +102,29 @@ void ClientJoin(RPCParameters *rpcParams)
 		pRak->Kick(sender);
 		return;
 	}
-	bsData.Read(szVersion, uiVersionLen);
-	szVersion[uiVersionLen] = '\0';
 
-	if(UNASSIGNED_PLAYER_ID == MyPlayerID) {
-		in.s_addr = sender.binaryAddress;
-		logprintf("Detected possible bot from (%s)",inet_ntoa(in));
-		pRak->Kick(MyPlayerID);
-		return;
-	}
-
-	if( !pRak->IsActivePlayerID(sender) || 
-		bytePlayerID > MAX_PLAYERS ) {
-		byteRejectReason = REJECT_REASON_BAD_PLAYERID;
+	if (!bsData.Read(byteMod) || byteMod != pNetGame->m_byteMod)
+	{
+		byteRejectReason = REJECT_REASON_BAD_MOD;
 		bsReject.Write(byteRejectReason);
 		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,false,false);
 		pRak->Kick(sender);
 		return;
-	}	
+	}
 
-	if(iVersion != NETGAME_VERSION || _uiRndSrvChallenge != (uiChallengeResponse ^ NETGAME_VERSION)) {
+	if (!bsData.Read(byteNickLen) || (byteNickLen < 3 || byteNickLen > 20) ||
+		!bsData.Read(szPlayerName, byteNickLen), szPlayerName[byteNickLen] = '\0' ||
+		ContainsInvalidNickChars(szPlayerName) || pPlayerPool->IsNickInUse(szPlayerName))
+	{
+		byteRejectReason = REJECT_REASON_BAD_NICKNAME;
+		bsReject.Write(byteRejectReason);
+		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,false,false);
+		pRak->Kick(sender);
+		return;
+	}
+	
+	if (!bsData.Read(uiChallengeResponse) || _uiRndSrvChallenge != (uiChallengeResponse ^ NETGAME_VERSION))
+	{
 		byteRejectReason = REJECT_REASON_BAD_VERSION;
 		bsReject.Write(byteRejectReason);
 		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,false,false);
@@ -109,30 +132,63 @@ void ClientJoin(RPCParameters *rpcParams)
 		return;
 	}
 	
-	/*if(byteMod != pNetGame->m_byteMod) {
-		byteRejectReason = REJECT_REASON_BAD_MOD;
-		bsReject.Write(byteRejectReason);
-		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,FALSE,FALSE);
+	if (!bsData.Read(byteSerialLen) || byteSerialLen == 0 || byteSerialLen >= 50)
+	{
+		in.s_addr = sender.binaryAddress;
+		logprintf("(0) Invalid client connecting from %s", inet_ntoa(in));
 		pRak->Kick(sender);
 		return;
-	}*/
+	}
 
-	if(ContainsInvalidNickChars(szPlayerName) ||
-		byteNickLen < 3 || byteNickLen > MAX_PLAYER_NAME || pPlayerPool->IsNickInUse(szPlayerName)) {
-		byteRejectReason = REJECT_REASON_BAD_NICKNAME;
-		bsReject.Write(byteRejectReason);
-		pRak->RPC(RPC_ConnectionRejected,&bsReject,HIGH_PRIORITY,RELIABLE,0,sender,false,false);
-		pRak->Kick(sender);
+	bool bSerialCheckFailed = true;
+	if (bsData.Read(szSerial, byteSerialLen) && szSerial[0] != '\0')
+	{
+		szSerial[byteSerialLen] = 0;
+
+		ttmath::UInt<100> m;
+		ttmath::uint remainder = 0;
+
+		m.FromString(szSerial, 16);
+		m.DivInt(1001, remainder);
+
+		if (!remainder)
+		{
+			serial = m.ToString(16);
+			if (!serial.empty() && serial.length() < 50)
+			{
+				bSerialCheckFailed = false;
+			}
+		}
+	}
+
+	if (bSerialCheckFailed)
+	{
+		in.s_addr = sender.binaryAddress;
+		logprintf("Invalid client connecting from %s", inet_ntoa(in));
+		pRak->Kick(MyPlayerID);
 		return;
+	}
+
+	if (!bsData.Read(byteVersionLen) || byteVersionLen >= MAX_VERSION_NAME)
+	{
+		in.s_addr = sender.binaryAddress;
+		logprintf("(1) Invalid client connecting from %s", inet_ntoa(in));
+		pRak->Kick(MyPlayerID);
+		return;
+	}
+
+	if (bsData.Read(szVersion, byteVersionLen))
+	{
+		szVersion[byteVersionLen] = '\0';
 	}
 
 	// Add this client to the player pool.
-	if(!pPlayerPool->New(bytePlayerID, szPlayerName, szVersion)) {
+	if(!pPlayerPool->New(wPlayerID, szPlayerName, (char*)serial.c_str(), szVersion)) {
 		pRak->Kick(sender);
 		return;
 	}
 
-	pNetGame->ProcessClientJoin(bytePlayerID);
+	pNetGame->ProcessClientJoin(wPlayerID);
 }
 
 //----------------------------------------------------

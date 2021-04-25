@@ -282,7 +282,7 @@ int main (int argc, char** argv)
 	bool bLanModeEnable = false;
 	bool bEnableTimestamp = true;
 	bool bEnableInstagib = false;
-	//bool bGameMod = false;
+	bool bGameMod = false;
 	//bool bEnableAC = false;
 	bool bAllowQuery = true;
 	int iMTUSize = MAXIMUM_MTU_SIZE;
@@ -385,7 +385,7 @@ int main (int argc, char** argv)
 	//pConsole->AddStringVariable("nosign", 0, "");
 	//pConsole->AddVariable("anticheat",CON_VARTYPE_BOOL, /* CON_VARFLAG_RULE */ 0, &bEnableAC);
 	pConsole->AddVariable("instagib", CON_VARTYPE_BOOL, CON_VARFLAG_RULE, &bEnableInstagib, ServerInstagibChanged);
-	//pConsole->AddVariable("myriad", CON_VARTYPE_BOOL, 0, &bGameMod);
+	pConsole->AddVariable("myriad", CON_VARTYPE_BOOL, 0, &bGameMod);
 	pConsole->AddVariable("chatlogging", CON_VARTYPE_INT, 0, &iChatLogging);
 	pConsole->AddVariable("playertimeout", CON_VARTYPE_INT, 0, &iPlayerTimeOutTime);
 	pConsole->AddVariable("db_logging", CON_VARTYPE_INT, 0, &g_bDBLogging);

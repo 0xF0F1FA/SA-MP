@@ -76,6 +76,7 @@ public:
 	unsigned char			m_ucFightingStyle;
 	unsigned char			m_ucFightingMove;
 	bool					m_bIsNPC;
+	char					m_szSerial[100];
 
 	// Weapon data
 	DWORD					m_dwSlotAmmo[13];
@@ -89,7 +90,7 @@ public:
 
 	RakNet::Time			m_tmLastStreamRateTick;
 
-	char m_szClientVersion[12];
+	char m_szClientVersion[MAX_VERSION_NAME];
 	unsigned int m_uiRconAttempt;
 	unsigned int m_uiMsgRecv;
 

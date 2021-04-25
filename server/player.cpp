@@ -118,6 +118,8 @@ CPlayer::CPlayer()
 	m_tmLastStreamRateTick = 0;
 	m_usPickupLimitCount = 0;
 
+	memset(m_szSerial, 0, sizeof(m_szSerial));
+
 	Deactivate();
 }
 

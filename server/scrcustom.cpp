@@ -7697,9 +7697,29 @@ static cell n_HTTP(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native gpci(playerid, const serial[], length)
+
+static cell n_gpci(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "gpci", 3);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer)
+		{
+			return set_amxstring(amx, params[2], pPlayer->m_szSerial, params[3]);
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
 {
+	DEFINE_NATIVE(gpci),
+
 	// Util
 	{ "print",					n_print },
 	{ "printf",					n_printf },

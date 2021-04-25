@@ -744,16 +744,10 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *p)
 {
 	RakNet::BitStream bsReturnParams(p);
 
-	unsigned int binaryAddr=0;
-	unsigned short port=0;
-	unsigned short playerId=0;
 	unsigned int uiChallenge=0;
 	CLocalPlayer* pPlayer = m_pPlayerPool->GetLocalPlayer();
 
-	bsReturnParams.IgnoreBits(8);
-	bsReturnParams.Read(binaryAddr);
-	bsReturnParams.Read(port);
-	bsReturnParams.Read(playerId);
+	bsReturnParams.IgnoreBits(72);
 	bsReturnParams.Read(uiChallenge);
 
 	uiChallenge ^= NETGAME_VERSION;
@@ -765,19 +759,29 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *p)
 	m_iGameState = GAMESTATE_AWAIT_JOIN;
 
 	int iVersion = NETGAME_VERSION;
-	//BYTE byteMod = MOD_VERSION;
+	BYTE byteMod = MOD_VERSION;
 	BYTE byteNameLen = (BYTE)strlen(pPlayer->GetName());
+	char szVersion[] = SAMP_VERSION;
 
 	RakNet::BitStream bsSend;
 	bsSend.Write(iVersion);
-	//bsSend.Write(byteMod);
+	bsSend.Write(byteMod);
 	bsSend.Write(byteNameLen);
 	bsSend.Write(pPlayer->GetName(),byteNameLen);
 	bsSend.Write(uiChallenge);
-	
-	size_t uiVersionLen = strlen(SAMP_VERSION);
-	bsSend.Write(uiVersionLen);
-	bsSend.Write(SAMP_VERSION, uiVersionLen);
+
+	CHAR szCID[100];
+	memset(szCID, 0, sizeof(szCID));
+	GenerateComputerID(szCID, (char*)0xC9236C, GPCI_KEY);
+	BYTE byteCIDLen = (BYTE)strlen(szCID);
+	bsSend.Write(byteCIDLen);
+	bsSend.Write(szCID, byteCIDLen);
+
+	bsSend.Write((BYTE)sizeof(szVersion));
+	bsSend.Write(szVersion, sizeof(szVersion));
+
+	// Seems like challenge write is defined twice, but server doesn't read this one
+	//bsSend.Write(uiChallenge);
 
 	m_pRakClient->RPC(RPC_ClientJoin,&bsSend,HIGH_PRIORITY,RELIABLE,0,false);
 }

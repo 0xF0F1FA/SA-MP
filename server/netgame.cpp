@@ -59,7 +59,7 @@ CNetGame::CNetGame()
 	m_pVariable = NULL;
 	m_pActorPool = NULL;
 	m_bLanMode = false;
-	//m_byteMod = 0x01;
+	m_byteMod = 0x01;
 	//m_bACEnabled = pConsole->GetBoolVariable("anticheat");
 
 	m_bLimitGlobalChatRadius = false;

@@ -100,6 +100,7 @@
 #define MAPICON_LOCAL_CHECKPOINT 	(2)
 #define MAPICON_GLOBAL_CHECKPOINT	(3)
 
+native gpci(playerid, const cid[], cid_length);
 native IsPickupStreamedIn(pickupid, forplayerid);
 native GetPlayerCount();
 native GetPlayerIDFromName(const name[]);

@@ -4,8 +4,11 @@
 
 #define SAMP_VERSION "1.0-alpha"
 #define NETGAME_VERSION 4242
+#define GPCI_KEY 1001
 
 #define MAX_PLAYER_NAME 24
+#define MAX_COMPUTER_ID 40
+#define MAX_VERSION_NAME 24
 #define MAX_PLAYERS 200
 #define MAX_VEHICLES 700
 #define MAX_OBJECTS 255

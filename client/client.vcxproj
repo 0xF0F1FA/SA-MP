@@ -371,6 +371,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="hash.cpp" />
     <ClCompile Include="label.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -640,6 +641,7 @@
     <ClInclude Include="game\txdstuff.h" />
     <ClInclude Include="game\util.h" />
     <ClInclude Include="game\vehicle.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="label.h" />
     <ClInclude Include="licenseplate.h" />
     <ClInclude Include="main.h" />

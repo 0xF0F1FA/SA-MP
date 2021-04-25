@@ -38,7 +38,7 @@ public:
 	~CPlayerPool();
 
 	bool Process(float fElapsedTime);
-	bool New(BYTE bytePlayerID, PCHAR szPlayerName, char* szVersion, bool bIsNPC = false);
+	bool New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC = false);
 	bool Delete(BYTE bytePlayerID, BYTE byteReason);
 		
 	// Retrieve a player

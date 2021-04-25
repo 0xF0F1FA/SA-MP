@@ -103,6 +103,7 @@ typedef struct _GAME_SETTINGS {
 #include "cursor.h"
 #include "audiostream.h"
 #include "configfile.h"
+#include "hash.h"
 
 void QuitGame();
 void UpdateDiscordPresence(char* state, char* details);

@@ -359,6 +359,7 @@
     </ClCompile>
     <ClCompile Include="chatbubble.cpp" />
     <ClCompile Include="dialog.cpp" />
+    <ClCompile Include="hash.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -804,6 +805,7 @@
     </ClInclude>
     <ClInclude Include="chatbubble.h" />
     <ClInclude Include="dialog.h" />
+    <ClInclude Include="hash.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

@@ -108,6 +108,9 @@ typedef struct _GAME_SETTINGS {
 void QuitGame();
 void UpdateDiscordPresence(char* state, char* details);
 
+char* GetFontFace();
+int GetFontWeight();
+int GetDeathWindowFontSize();
 
 //void UnFuck(DWORD addr, int size);
 

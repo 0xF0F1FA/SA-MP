@@ -28,7 +28,7 @@ static CHAR SpriteIDForWeapon(BYTE byteWeaponID)
 	case WEAPON_SHOVEL:
 		return '&';
 	case WEAPON_POOLSTICK:
-		return '\\';
+		return '"'; //return '\\';
 	case WEAPON_KATANA:
 		return '!';
 	case WEAPON_CHAINSAW:
@@ -113,14 +113,18 @@ static CHAR SpriteIDForWeapon(BYTE byteWeaponID)
 
 CDeathWindow::CDeathWindow(IDirect3DDevice9 *pD3DDevice)
 {
-	m_bFailed = TRUE; 
-	m_bEnabled = TRUE;
+	m_bEnabled = true;
 	m_pD3DFont = NULL;
 	m_pWeaponFont = NULL;
 	m_pSprite = NULL;
+	m_pRoundedBoxFont = NULL;
+	m_bAuxFontInited = false;
+	m_pD3DAuxFont = NULL;
+	m_pD3DAuxBoxFont = NULL;
 
 	m_pD3DDevice = pD3DDevice;
 
+	CreateFonts();
 	ClearWindow();
 }
 
@@ -129,6 +133,11 @@ CDeathWindow::~CDeathWindow()
 	SAFE_RELEASE(m_pSprite);
 	SAFE_RELEASE(m_pD3DFont);
 	SAFE_RELEASE(m_pWeaponFont);
+	SAFE_RELEASE(m_pRoundedBoxFont);
+	
+	// additional
+	SAFE_RELEASE(m_pD3DAuxFont);
+	SAFE_RELEASE(m_pD3DAuxBoxFont);
 }
 
 void CDeathWindow::CreateFonts()
@@ -138,41 +147,58 @@ void CDeathWindow::CreateFonts()
 	HRESULT hResult = S_OK;
 	RECT rectLongestNick = {0,0,0,0};
 	int	iFontSize;
+	char* szFontFace;
+	int iFontWeight;
 
-	SAFE_RELEASE(m_pSprite);
 	SAFE_RELEASE(m_pD3DFont);
 	SAFE_RELEASE(m_pWeaponFont);
+	SAFE_RELEASE(m_pRoundedBoxFont);
+	SAFE_RELEASE(m_pSprite);
 
 	// Create a sprite to use when drawing text
-	hResult = D3DXCreateSprite(m_pD3DDevice, &m_pSprite);
-	if (hResult != S_OK)
-		return;
+	D3DXCreateSprite(m_pD3DDevice, &m_pSprite);
 
-	int iWidth = pGame->GetScreenWidth();
-	if (iWidth < 1024)
-		iFontSize = 14;
-	else if (iWidth == 1024)
-		iFontSize = 16;
-	else
-		iFontSize = 18;
+	iFontSize = GetDeathWindowFontSize();
+	szFontFace = GetFontFace();
+	iFontWeight = GetFontWeight();
 
-	hResult = D3DXCreateFontA(m_pD3DDevice, iFontSize, 0, FW_BOLD, 1, FALSE,
-		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, "Arial", &m_pD3DFont);
-	if (hResult != S_OK)
-		return;
+	D3DXCreateFontA(m_pD3DDevice, iFontSize, 0, iFontWeight, 1, FALSE,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, szFontFace, &m_pD3DFont);
 
 	// Store the rect for right aligned name (DT_RIGHT fucks the text)
-	if(m_pD3DFont)
-		m_pD3DFont->DrawTextA(0,"LONGESTNICKNICKK",-1,&rectLongestNick,DT_CALCRECT|DT_LEFT,0xFF000000);
-		
-	m_iLongestNickLength = rectLongestNick.right - rectLongestNick.left;
-	
-	hResult = D3DXCreateFontA(m_pD3DDevice, 20, 0, FW_NORMAL, 1, FALSE,
-		SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, "GTAWEAPON3", &m_pWeaponFont);
-	if (hResult != S_OK)
-		return;
+	if (m_pD3DFont)
+		m_pD3DFont->DrawTextA(0, "LONGESTNICKNICK_NICKNICK", -1, &rectLongestNick, DT_CALCRECT | DT_LEFT, 0xFF000000);
 
-	m_bFailed = FALSE;
+	m_iLongestNickLength = rectLongestNick.right - rectLongestNick.left;
+
+	D3DXCreateFontA(m_pD3DDevice, iFontSize+8, 0, FW_NORMAL, 1, FALSE,
+		SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "GTAWEAPON3", &m_pWeaponFont);
+	D3DXCreateFontA(m_pD3DDevice, iFontSize+12, 0, FW_NORMAL, 1, FALSE,
+		SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "GTAWEAPON3", &m_pRoundedBoxFont);
+
+	SIZE size;
+	GetRoundedBoxSize(&size);
+	m_lRoundedBoxSizeX = size.cx;
+	m_lRoundedBoxSizeY = size.cy;
+}
+
+SIZE* CDeathWindow::GetRoundedBoxSize(SIZE* pOutSize)
+{
+	SIZE size = {100,100};
+	RECT rect = {0,0,100,100};
+
+	if (m_pRoundedBoxFont)
+	{
+		m_pRoundedBoxFont->DrawTextA(NULL, "G", -1, &rect, DT_VCENTER | DT_NOCLIP | DT_CALCRECT, 0xFF000000);
+
+		size.cx = rect.right;
+		size.cy = rect.bottom;
+	}
+
+	pOutSize->cx = size.cx - rect.left;
+	pOutSize->cy = size.cy - rect.top;
+
+	return pOutSize;
 }
 
 void CDeathWindow::OnLostDevice()
@@ -183,6 +209,12 @@ void CDeathWindow::OnLostDevice()
 		m_pD3DFont->OnLostDevice();
 	if (m_pWeaponFont)
 		m_pWeaponFont->OnLostDevice();
+	if (m_pRoundedBoxFont)
+		m_pRoundedBoxFont->OnLostDevice();
+	if (m_pD3DAuxFont)
+		m_pD3DAuxFont->OnLostDevice();
+	if (m_pD3DAuxBoxFont)
+		m_pD3DAuxBoxFont->OnLostDevice();	
 }
 
 void CDeathWindow::OnResetDevice()
@@ -193,13 +225,19 @@ void CDeathWindow::OnResetDevice()
 		m_pD3DFont->OnResetDevice();
 	if (m_pWeaponFont)
 		m_pWeaponFont->OnResetDevice();
+	if (m_pRoundedBoxFont)
+		m_pRoundedBoxFont->OnResetDevice();
+	if (m_pD3DAuxFont)
+		m_pD3DAuxFont->OnResetDevice();
+	if (m_pD3DAuxBoxFont)
+		m_pD3DAuxBoxFont->OnResetDevice();
 }
 
 //----------------------------------------------------
 
 void CDeathWindow::Draw()
 {
-	if (m_bEnabled && !m_bFailed)
+	if (m_pD3DFont && m_pWeaponFont && m_bEnabled)
 	{
 		RECT
 			rect,
@@ -209,20 +247,22 @@ void CDeathWindow::Draw()
 			iScreenWidth = pGame->GetScreenWidth(),
 			iVerticalBase = (int)(iScreenHeight * 0.3f),
 			iHorizontalBase = (int)(iScreenWidth * 0.75f),
+			iBaseX = m_lRoundedBoxSizeX + 2 * m_iLongestNickLength,
 			x = 0;
 
-		if (iScreenWidth <= 800)
-			iHorizontalBase = (int)(iScreenWidth * 0.65f);
+		if ((iBaseX + iHorizontalBase) > iScreenWidth)
+			iHorizontalBase = iScreenWidth - iBaseX;
 
 		rect.top = iVerticalBase;
 		rect.left = iHorizontalBase;
 		rect.bottom = rect.top + 30;
 		rect.right = rect.left + 60;
 
-		m_pSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE);
+		m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
 
 		while (x != MAX_DISP_DEATH_MESSAGES)
 		{
+			//if(strlen(m_DeathWindowEntries[x].szKiller) && strlen(m_DeathWindowEntries[x].szKillee))
 			if (m_DeathWindowEntries[x].szKiller[0] != '\0' && m_DeathWindowEntries[x].szKillee[0] != '\0')
 			{
 				// Get the rect length of the killee's nick so we can right justify.
@@ -235,20 +275,19 @@ void CDeathWindow::Draw()
 				RenderText(m_DeathWindowEntries[x].szKiller, rect,
 					m_DeathWindowEntries[x].dwKillerColor, DT_LEFT);
 
-				rect.left = iHorizontalBase + m_iLongestNickLength + 5;
-				rect.right = rect.left + 30;
+				rect.left = iHorizontalBase + m_iLongestNickLength + 3;
+				rect.right = rect.left + 35;
 
-				rect.top -= 3;
 				RenderWeaponSprite(SpriteIDForWeapon(m_DeathWindowEntries[x].byteWeaponType),
 					rect, 0xFFFFFFFF);
-				rect.top += 3;
 
-				rect.left += 30;
-				rect.right += 30;
+				rect.left += m_lRoundedBoxSizeX;
+				rect.right += m_lRoundedBoxSizeX + 35;
 
 				RenderText(m_DeathWindowEntries[x].szKillee, rect, m_DeathWindowEntries[x].dwKilleeColor, DT_LEFT);
 			}
-			else if(m_DeathWindowEntries[x].szKiller[0] == '\0' && m_DeathWindowEntries[x].szKillee[0] != '\0')
+			//else if(!strlen(m_DeathWindowEntries[x].szKiller) && strlen(m_DeathWindowEntries[x].szKillee))
+			else if (m_DeathWindowEntries[x].szKiller[0] == '\0' && m_DeathWindowEntries[x].szKillee[0] != '\0')
 			{
 				DWORD dwColor = 0xFFFFFFFF;
 
@@ -262,21 +301,19 @@ void CDeathWindow::Draw()
 				RenderText(m_DeathWindowEntries[x].szKillee, rect,
 					m_DeathWindowEntries[x].dwKilleeColor, DT_LEFT);
 
-				rect.left = iHorizontalBase + m_iLongestNickLength + 5;
-				rect.right = rect.left + 30;
+				rect.left = iHorizontalBase + m_iLongestNickLength + 3;
+				rect.right = iHorizontalBase + m_iLongestNickLength + 38;
 
 				if (m_DeathWindowEntries[x].byteWeaponType == SPECIAL_ENTRY_CONNECT)
-					dwColor = 0xFF000044;
+					dwColor = 0xFF1111AA;
 				else if (m_DeathWindowEntries[x].byteWeaponType == SPECIAL_ENTRY_DISCONNECT)
-					dwColor = 0xFF440000;
+					dwColor = 0xFFAA1111;
 
-				rect.top -= 3;
 				RenderWeaponSprite(SpriteIDForWeapon(m_DeathWindowEntries[x].byteWeaponType), rect, dwColor);
-				rect.top += 3;
 			}
 
-			rect.top += 30;
-			rect.bottom += 30;
+			rect.top += m_lRoundedBoxSizeY + 5;
+			rect.bottom += m_lRoundedBoxSizeY + 5;
 			rect.left = iHorizontalBase;
 			rect.right = rect.left + 60;
 
@@ -305,40 +342,46 @@ void CDeathWindow::AddMessage(PCHAR szKiller, PCHAR szKillee,
 	else m_DeathWindowEntries[n].szKillee[0] = '\0';
 }
 
+// Used by CPlayerTags for drawing sandglass icon when player is inactive
+void CDeathWindow::CreateAuxiliaryFont()
+{
+	D3DXCreateFontA(m_pD3DDevice, 20, 0, FW_NORMAL, 1, FALSE,
+		SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "SAMPAUX3", &m_pD3DAuxFont);
+	D3DXCreateFontA(m_pD3DDevice, 22, 0, FW_NORMAL, 1, FALSE,
+		SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "SAMPAUX3", &m_pD3DAuxBoxFont);
+
+	m_bAuxFontInited = true;
+}
+
 void CDeathWindow::PushBack()
 {
-	int x=0;
-	while(x!=(MAX_DISP_DEATH_MESSAGES - 1)) {
-		memcpy(&m_DeathWindowEntries[x],&m_DeathWindowEntries[x+1],sizeof(DEATH_WINDOW_ENTRY));
-		x++;
-	}
+	memcpy(&m_DeathWindowEntries[0], &m_DeathWindowEntries[1], sizeof(DEATH_WINDOW_ENTRY) * (MAX_DISP_DEATH_MESSAGES - 1));
 }
 
 void CDeathWindow::RenderText(PCHAR sz,RECT rect,DWORD dwColor,DWORD dwParams)
 {
-	rect.left += 1;
+	rect.top -= 1;
 	m_pD3DFont->DrawText(m_pSprite, sz, -1, &rect, DT_NOCLIP | dwParams, 0xFF000000);
-	rect.left -= 2;
+	rect.top += 2;
 	m_pD3DFont->DrawText(m_pSprite, sz, -1, &rect, DT_NOCLIP | dwParams, 0xFF000000);
-	rect.left += 1;
-	rect.top += 1;
+	rect.left -= 1;
+	rect.top -= 1;
 	m_pD3DFont->DrawText(m_pSprite, sz, -1, &rect, DT_NOCLIP | dwParams, 0xFF000000);
-	rect.top -= 2;
+	rect.left += 2;
 	m_pD3DFont->DrawText(m_pSprite, sz, -1, &rect, DT_NOCLIP | dwParams, 0xFF000000);
-	rect.top += 1;
+	rect.left -= 1;
 
 	m_pD3DFont->DrawText(m_pSprite,sz,-1,&rect,DT_NOCLIP|dwParams,dwColor);	
 }
 
 void CDeathWindow::RenderWeaponSprite(CHAR WeaponChar,RECT rect,DWORD dwColor)
 {
-	rect.top += 1;
-	rect.left -= 1;
-	m_pWeaponFont->DrawTextA(m_pSprite,"G",-1,&rect,DT_NOCLIP|DT_LEFT,0xFF000000);
-	rect.top -= 1;
-	rect.left += 1;
+	rect.top -= 5;
+	m_pRoundedBoxFont->DrawTextA(m_pSprite,"G",-1,&rect,DT_NOCLIP|DT_LEFT,0xFF000000);
 
-	m_pWeaponFont->DrawText(m_pSprite,&WeaponChar,-1,&rect,DT_NOCLIP|DT_LEFT,dwColor);
+	m_pRoundedBoxFont->DrawTextA(m_pSprite,"G",-1,&rect,DT_NOCLIP|DT_LEFT|DT_CALCRECT,0xFF000000);
+
+	m_pWeaponFont->DrawText(m_pSprite,&WeaponChar,-1,&rect,DT_CENTER|DT_VCENTER|DT_NOCLIP,dwColor);
 }
 
 void CDeathWindow::ClearWindow()
@@ -357,6 +400,7 @@ void CDeathWindow::ChangeNick(PCHAR szOldNick, PCHAR szNewNick)
 		if (m_DeathWindowEntries[x].szKillee[0] != '\0' && 
 			strcmp(m_DeathWindowEntries[x].szKillee, szOldNick) == 0)
 			strcpy_s(m_DeathWindowEntries[x].szKillee, szNewNick);
+		x++;
 	}
 }
 

@@ -53,16 +53,38 @@ int GetFontSize()
 
 int GetFontWeight()
 {
-	int r = 0; // TODO: 0 should be replaced with pConfig->GetInt("fontweight");
-
-	return r != 1 ? FW_BOLD : FW_NORMAL;
+	int iWeight = pConfigFile->GetInt("fontweight");
+	
+	if (iWeight)
+	{
+		return iWeight != 1 ? FW_BOLD : FW_NORMAL;
+	}
+	return FW_BOLD;
 }
 
 char* GetFontFace()
 {
-	// TODO: Add pConfig->GetString("fontface");
-	// If pConfig and "fontface" is NULL, then returns "Arial"
+	char* szFontFace;
+	if (pConfigFile &&
+		(szFontFace = pConfigFile->GetString("fontface")) != NULL)
+	{
+		//return pConfigFile->GetString("fontface");
+		return szFontFace; 
+	}
 	return "Arial";
+}
+
+int GetDeathWindowFontSize()
+{
+	int iSize, iResult;
+
+	iSize = 14;
+	if (pGame->GetScreenWidth() < 1024)
+		iSize = 12;
+
+	iResult = iSize + 2 * pConfigFile->GetInt("fontsize");
+
+	return (iResult < iSize) ? iSize : iResult;
 }
 
 void CFontRender::CreateFonts()

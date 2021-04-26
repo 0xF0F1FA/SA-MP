@@ -132,6 +132,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			pFileSystem = new CArchiveFS();
 			if(!pFileSystem->Load(szArchiveFile)) _asm int 3
 
+			AddFontResource("gtaweap3.ttf");
+			AddFontResource("sampaux3.ttf");
+
 			OutputDebugString("Installing filesystem hooks.");
 
 			InstallFileSystemHooks();
@@ -150,6 +153,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 				delete pAntiCheat;
 			}*/
 			UninstallFileSystemHooks();
+
+			RemoveFontResource("gtaweap3.ttf");
+			RemoveFontResource("sampaux3.ttf");
 
 			Discord_Shutdown();
 		}

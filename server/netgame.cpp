@@ -586,8 +586,14 @@ void CNetGame::MasterServerAnnounce(float fElapsedTime)
 #else
 		char szCurrentDir[256];
 		char szAnnounceCmd[256];
+		char* szBindAddress = pConsole->GetStringVariable("bind");
+		if (szBindAddress && szBindAddress[0] == 0)
+			szBindAddress = NULL;
 		getcwd(szCurrentDir,256);
-		sprintf(szAnnounceCmd,"%s/announce %s &",szCurrentDir,szPort);
+		if(szBindAddress)
+			sprintf(szAnnounceCmd,"%s/announce %s %s &",szCurrentDir,szPort,szBindAddress);
+		else
+			sprintf(szAnnounceCmd,"%s/announce %s &",szCurrentDir,szPort);
 		//printf("Running announce. %s",szAnnounceCmd);
 		system(szAnnounceCmd);
 #endif

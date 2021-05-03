@@ -60,6 +60,7 @@ typedef struct _GAME_SETTINGS {
 #include <raknet/BitStream.h>
 #include <raknet/PacketEnumerations.h>
 #include <raknet/SAMPRPC.h>
+#include <raknet/SAMPCipher.h>
 #include <raknet/StringCompressor.h>
 
 #include <discordrpc/discord_rpc.h>

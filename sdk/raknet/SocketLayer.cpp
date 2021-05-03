@@ -27,8 +27,8 @@
 #include <assert.h>
 #include "MTUSize.h"
 
-#include <zlib/zlib.h>
-#define COMPRESS_DECOMPRESS_BUFFERSIZE  50000 // TODO?: Do we actually need 50000 bytes?
+#include "SAMPCipher.h"
+char szDestBuffer[MAXIMUM_MTU_SIZE + 1];
 
 #ifdef _WIN32
 #include <process.h>
@@ -307,25 +307,15 @@ const char* SocketLayer::DomainNameToIP( const char *domainName )
 unsigned long _sendtoUncompressedTotal=0;
 unsigned long _sendtoCompressedTotal=0;
 
+// unused
 void SocketLayer::Write( const SOCKET writeSocket, const char* data, const int length )
 {
 #ifdef _DEBUG
 	assert( writeSocket != INVALID_SOCKET );
 #endif
-//----------------------------------------------
-// Kye Added: Zlib in socketlayer headend (client compresses)
-  #ifndef SAMPSRV
-	unsigned char pCompressBuffer[COMPRESS_DECOMPRESS_BUFFERSIZE] = { 0 };
-	uLongf destLen = COMPRESS_DECOMPRESS_BUFFERSIZE;
-	if(compress2(pCompressBuffer,&destLen,(Bytef *)data,length,1) != Z_OK) {
-		return;
-	}
 	_sendtoUncompressedTotal+=length;
-	_sendtoCompressedTotal+=destLen;
-	send( writeSocket, (char*)pCompressBuffer, destLen, 0 );
-  #else
+	_sendtoCompressedTotal+=length;
 	send( writeSocket, data, length, 0 );
-  #endif
 }
 
 #ifdef SAMPSRV
@@ -398,10 +388,8 @@ int SocketLayer::RecvFrom( const SOCKET s, RakPeer *rakPeer, int *errorCode )
 		//----------------------------------------------
 		// Kye Added: Zlib in socketlayer headend.
 #ifdef SAMPSRV
-			unsigned char pDecompressBuffer[COMPRESS_DECOMPRESS_BUFFERSIZE] = { 0 };
-			uLongf destLen = COMPRESS_DECOMPRESS_BUFFERSIZE;
-		
-			if(uncompress(pDecompressBuffer,&destLen,(Bytef *)data,len) != Z_OK) {
+			if (!DecryptData(szDestBuffer, data, &len))
+			{
 				*errorCode = 0;
 				return 1;
 			}
@@ -409,7 +397,7 @@ int SocketLayer::RecvFrom( const SOCKET s, RakPeer *rakPeer, int *errorCode )
 			//_recvfromCompressedTotal+=len;
 			//_recvfromUncompressedTotal+=destLen;
 
-			ProcessNetworkPacket( sa.sin_addr.s_addr, portnum, (char*)pDecompressBuffer, destLen, rakPeer );
+			ProcessNetworkPacket( sa.sin_addr.s_addr, portnum, szDestBuffer, len, rakPeer );
 #else
 			ProcessNetworkPacket( sa.sin_addr.s_addr, portnum, data, len, rakPeer );  
 #endif
@@ -484,18 +472,15 @@ int SocketLayer::SendTo( SOCKET s, const char *data, int length, unsigned int bi
 // Kye Added: Zlib in socketlayer headend. (client sends compressed)
 
 #ifndef SAMPSRV
-	unsigned char pCompressBuffer[COMPRESS_DECOMPRESS_BUFFERSIZE] = { 0 };
-	uLongf destLen = COMPRESS_DECOMPRESS_BUFFERSIZE;
-	if(compress2(pCompressBuffer,&destLen,(Bytef *)data,length,1) != Z_OK) {
-		return 1;
-	}
+	EncryptData(szDestBuffer, (char*)data, &length);
+
 	_sendtoUncompressedTotal+=length;
-	_sendtoCompressedTotal+=destLen;
+	_sendtoCompressedTotal+=length;
 #endif
 
 	do {
 #ifndef SAMPSRV
-		len = sendto( s, (char *)pCompressBuffer, destLen, 0, ( const sockaddr* ) & sa, sizeof( struct sockaddr_in ) );
+		len = sendto( s, szDestBuffer, length, 0, ( const sockaddr* ) & sa, sizeof( struct sockaddr_in ) );
 #else
 		len = sendto( s, data, length, 0, ( const sockaddr* ) & sa, sizeof( struct sockaddr_in ) );
 #endif

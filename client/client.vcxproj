@@ -161,6 +161,7 @@
     <ClCompile Include="..\sdk\raknet\ReliabilityLayer.cpp" />
     <ClCompile Include="..\sdk\raknet\rijndael.cpp" />
     <ClCompile Include="..\sdk\raknet\RPCMap.cpp" />
+    <ClCompile Include="..\sdk\raknet\SAMPCipher.cpp" />
     <ClCompile Include="..\sdk\raknet\SHA1.cpp" />
     <ClCompile Include="..\sdk\raknet\SimpleMutex.cpp" />
     <ClCompile Include="..\sdk\raknet\SocketLayer.cpp" />
@@ -171,18 +172,6 @@
     <ClCompile Include="..\sdk\raknet\TCPInterface.cpp" />
     <ClCompile Include="..\sdk\raknet\TEABlockEncryptor.cpp" />
     <ClCompile Include="..\sdk\raknet\_findfirst.cpp" />
-    <ClCompile Include="..\sdk\zlib\adler32.c" />
-    <ClCompile Include="..\sdk\zlib\compress.c" />
-    <ClCompile Include="..\sdk\zlib\crc32.c" />
-    <ClCompile Include="..\sdk\zlib\deflate.c" />
-    <ClCompile Include="..\sdk\zlib\gzio.c" />
-    <ClCompile Include="..\sdk\zlib\infback.c" />
-    <ClCompile Include="..\sdk\zlib\inffast.c" />
-    <ClCompile Include="..\sdk\zlib\inflate.c" />
-    <ClCompile Include="..\sdk\zlib\inftrees.c" />
-    <ClCompile Include="..\sdk\zlib\trees.c" />
-    <ClCompile Include="..\sdk\zlib\uncompr.c" />
-    <ClCompile Include="..\sdk\zlib\zutil.c" />
     <ClCompile Include="archive\ArchiveFS.cpp" />
     <ClCompile Include="archive\CryptoContext.cpp" />
     <ClCompile Include="archive\CryptoFns.cpp" />
@@ -572,6 +561,7 @@
     <ClInclude Include="..\sdk\raknet\RPCMap.h" />
     <ClInclude Include="..\sdk\raknet\RPCNode.h" />
     <ClInclude Include="..\sdk\raknet\RSACrypt.h" />
+    <ClInclude Include="..\sdk\raknet\SAMPCipher.h" />
     <ClInclude Include="..\sdk\raknet\SAMPRPC.h" />
     <ClInclude Include="..\sdk\raknet\SHA1.h" />
     <ClInclude Include="..\sdk\raknet\SimpleMutex.h" />
@@ -587,17 +577,6 @@
     <ClInclude Include="..\sdk\raknet\Types.h" />
     <ClInclude Include="..\sdk\raknet\_findfirst.h" />
     <ClInclude Include="..\sdk\shared.h" />
-    <ClInclude Include="..\sdk\zlib\crc32.h" />
-    <ClInclude Include="..\sdk\zlib\deflate.h" />
-    <ClInclude Include="..\sdk\zlib\inffast.h" />
-    <ClInclude Include="..\sdk\zlib\inffixed.h" />
-    <ClInclude Include="..\sdk\zlib\inflate.h" />
-    <ClInclude Include="..\sdk\zlib\inftrees.h" />
-    <ClInclude Include="..\sdk\zlib\trees.h" />
-    <ClInclude Include="..\sdk\zlib\zconf.h" />
-    <ClInclude Include="..\sdk\zlib\zconf.in.h" />
-    <ClInclude Include="..\sdk\zlib\zlib.h" />
-    <ClInclude Include="..\sdk\zlib\zutil.h" />
     <ClInclude Include="archive\ArchiveCommon.h" />
     <ClInclude Include="archive\ArchiveFS.h" />
     <ClInclude Include="archive\CryptoContext.h" />
@@ -671,7 +650,6 @@
   <ItemGroup>
     <Library Include="..\sdk\bass\bass.lib" />
     <Library Include="..\sdk\detours\detours.lib" />
-    <Library Include="..\sdk\zlib\zlib.lib" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="client.rc" />

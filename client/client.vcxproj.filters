@@ -19,9 +19,6 @@
     <Filter Include="sdk\detours">
       <UniqueIdentifier>{703a09de-9010-4402-9af7-81f031f00e40}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sdk\zlib">
-      <UniqueIdentifier>{243eada6-5ede-41c9-919e-bd7b5fbb09e0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sdk\raknet">
       <UniqueIdentifier>{bdfe8424-ea48-4b26-bd47-805ab266cc89}</UniqueIdentifier>
     </Filter>
@@ -150,42 +147,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="..\sdk\md5\md5.cpp">
       <Filter>sdk\md5</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\inflate.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\inftrees.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\trees.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\uncompr.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\zutil.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\adler32.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\compress.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\crc32.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\deflate.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\gzio.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\infback.c">
-      <Filter>sdk\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\zlib\inffast.c">
-      <Filter>sdk\zlib</Filter>
     </ClCompile>
     <ClCompile Include="..\sdk\dxut\dxstdafx.cpp">
       <Filter>sdk\dxut</Filter>
@@ -360,6 +321,9 @@
     <ClCompile Include="chatbubble.cpp" />
     <ClCompile Include="dialog.cpp" />
     <ClCompile Include="hash.cpp" />
+    <ClCompile Include="..\sdk\raknet\SAMPCipher.cpp">
+      <Filter>sdk\raknet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -482,39 +446,6 @@
     </ClInclude>
     <ClInclude Include="..\sdk\detours\detours.h">
       <Filter>sdk\detours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\inffixed.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\inflate.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\inftrees.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\trees.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\zconf.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\zconf.in.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\zlib.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\zutil.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\crc32.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\deflate.h">
-      <Filter>sdk\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\zlib\inffast.h">
-      <Filter>sdk\zlib</Filter>
     </ClInclude>
     <ClInclude Include="..\sdk\dxut\dxstdafx.h">
       <Filter>sdk\dxut</Filter>
@@ -806,13 +737,13 @@
     <ClInclude Include="chatbubble.h" />
     <ClInclude Include="dialog.h" />
     <ClInclude Include="hash.h" />
+    <ClInclude Include="..\sdk\raknet\SAMPCipher.h">
+      <Filter>sdk\raknet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">
       <Filter>sdk\detours</Filter>
-    </Library>
-    <Library Include="..\sdk\zlib\zlib.lib">
-      <Filter>sdk\zlib</Filter>
     </Library>
     <Library Include="..\sdk\bass\bass.lib">
       <Filter>sdk\bass</Filter>

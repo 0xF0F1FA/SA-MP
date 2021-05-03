@@ -115,6 +115,8 @@ CNetGame::CNetGame()
 		pConsole->ModifyVariableFlags("mtu", CON_VARFLAG_READONLY);
 	}
 
+	SetXorKey(dwPort);
+
 	if (!m_pRak->Start(dwMaxPlayers, 0, iSleepTime, dwPort, szBindAddress))
 	{
 		if (szBindAddress)

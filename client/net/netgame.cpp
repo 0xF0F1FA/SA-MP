@@ -68,6 +68,8 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 
 	m_pRakClient = new RakClient;
 
+	SetXorKey(iPort);
+
 	RegisterRPCs(m_pRakClient);
 	RegisterScriptRPCs(m_pRakClient);	// Register server-side scripting RPCs.
 

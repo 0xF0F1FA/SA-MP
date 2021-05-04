@@ -31,6 +31,8 @@ public:
 	ID3DXFontCE* GetDXFontCE() { return m_pD3DFontEmbed; };
 	ID3DXFont* GetDXFont() { return m_pD3DFont; };
 
+	inline long GetSmallerFontSizeY() { return m_lSmallerFontSizeY; };
+
 private:
 	ID3DXFont* m_pD3DFont;
 	ID3DXFontCE* m_pD3DFontEmbed;

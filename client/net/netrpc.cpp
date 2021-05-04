@@ -530,21 +530,53 @@ void DisableRaceCheckpoint(RPCParameters *rpcParams)
 
 //----------------------------------------------------
 
-static void UpdatePings(RPCParameters* rpcParams)
+static void UpdateScoresPingsIPs(RPCParameters* rpcParams)
 {
-	if (pNetGame->GetPlayerPool()) {
-		RakNet::BitStream bsData(rpcParams);
-		if (bsData.GetNumberOfUnreadBits() >= 32 && bsData.GetNumberOfUnreadBits() <= (32 * MAX_PLAYERS)) {
-			unsigned short usPlayerId = INVALID_PLAYER_ID_EX;
-			unsigned short usPlayerPing = 0;
-			for (unsigned short i = 0; i < (rpcParams->numberOfBitsOfData / 32); i++) {
-				if (bsData.Read(usPlayerId) && pNetGame->GetPlayerPool()->GetSlotState((unsigned char)usPlayerId)) {
-					bsData.Read(usPlayerPing);
-					pNetGame->GetPlayerPool()->UpdatePing(usPlayerId, usPlayerPing);
-				}
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	int iBitLength = rpcParams->numberOfBitsOfData;
+
+	// We'll ignore the last 16 bits (possibly player count) in the stream,
+	// but also count on it at overall size, or the statement will be false for 0.3.7 servers
+	if (!pPlayerPool || iBitLength < 80 || iBitLength > ((80 * MAX_PLAYERS) + 16))
+		return;
+	
+	RakNet::BitStream bsData(rpcParams);
+
+	WORD wPlayerID;
+	int  iPlayerScore;
+	DWORD dwPlayerPing;
+
+	// Loop until the unreaded bits gets less or equal than 16 bits (2 bytes)
+	// counting on the 2 byte player count(?) on the last bits
+	while (16 <= bsData.GetNumberOfUnreadBits())
+	{
+		// Resetting values, in case the stream readings fails,
+		// and not update the last processed player again
+		wPlayerID = INVALID_PLAYER_ID;
+		iPlayerScore = 0;
+		dwPlayerPing = 0;
+
+		bsData.Read(wPlayerID);
+		bsData.Read(iPlayerScore);
+		bsData.Read(dwPlayerPing);
+
+		if (wPlayerID == pPlayerPool->GetLocalPlayerID())
+		{
+			pPlayerPool->GetLocalPlayer()->m_iScore = iPlayerScore;
+			pPlayerPool->GetLocalPlayer()->m_usPing = (WORD)dwPlayerPing;
+		}
+		else
+		{
+			CRemotePlayer* pRemotePlayer = pPlayerPool->GetAt(wPlayerID);
+			if (pRemotePlayer) {
+				pRemotePlayer->m_iScore = iPlayerScore;
+				pRemotePlayer->m_usPing = (WORD)dwPlayerPing;
 			}
 		}
 	}
+
+	if (pScoreBoard)
+		pScoreBoard->UpdateList();
 }
 
 //----------------------------------------------------
@@ -1015,7 +1047,7 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,DisableCheckpoint);
 	REGISTER_STATIC_RPC(pRakClient,SetRaceCheckpoint);
 	REGISTER_STATIC_RPC(pRakClient,DisableRaceCheckpoint);
-	REGISTER_STATIC_RPC(pRakClient,UpdatePings);
+	REGISTER_STATIC_RPC(pRakClient,UpdateScoresPingsIPs);
 	//REGISTER_STATIC_RPC(pRakClient,SvrStats);
 	REGISTER_STATIC_RPC(pRakClient,GameModeRestart);
 	REGISTER_STATIC_RPC(pRakClient,ConnectionRejected);

@@ -211,6 +211,14 @@ BOOL HandleCharacterInput(DWORD dwChar)
 				return TRUE;
 		}
 	}
+	else if (pScoreBoard && pScoreBoard->IsVisible())
+	{
+		if (dwChar == 27) // escape
+		{
+			pScoreBoard->Hide(true);
+			return TRUE;
+		}
+	}
 	else {
 		switch(dwChar) {
 			case '`':
@@ -230,6 +238,9 @@ bool SubclassGameWindow()
 	HWND hwndGameWnd = pGame->GetMainWindowHwnd();
 
 	SetWindowText(hwndGameWnd,"GTA:SA:MP");
+
+	// Enable double click (especially for listboxes on dialogs)
+	SetClassLong(hwndGameWnd, GCL_STYLE, GetClassLong(hwndGameWnd, GCL_STYLE) | 8);
 
 	/*
 	if(IsWindowUnicode(hwndGameWnd)) {
@@ -253,6 +264,8 @@ bool SubclassGameWindow()
 LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 							 WPARAM wParam,LPARAM lParam ) 
 {
+	static bool bOutsideScoreboard = false;
+
 	if (uMsg == WM_ACTIVATEAPP && wParam == VK_LBUTTON && pGame && pD3DDevice
 		&& !pGame->IsMenuActive() && !pGame->m_byteDisabledInputType)
 	{
@@ -276,6 +289,19 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 		}
 	}
 
+	if (pScoreBoard)
+	{
+		if (!pGame->IsMenuActive() && uMsg == WM_KEYUP && wParam == VK_TAB)
+		{
+			if (pScoreBoard->IsVisible())
+				pScoreBoard->Hide(true);
+			else
+				pScoreBoard->Show();
+		}
+		if (!pGame->IsMenuActive() && pScoreBoard->IsVisible())
+			pScoreBoard->MsgProc(hwnd, uMsg, wParam, lParam);
+	}
+
 	if (pSpawnScreen)
 		pSpawnScreen->MsgProc(hwnd, uMsg, wParam, lParam);
 
@@ -286,7 +312,8 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 			break;
 		case WM_KEYDOWN:
 			if(wParam == VK_ESCAPE) {
-				if(pCmdWindow && pCmdWindow->isEnabled())
+				if(pCmdWindow && pCmdWindow->isEnabled() ||
+					pScoreBoard && pScoreBoard->IsVisible())
 				{
 					return 0;
 				}
@@ -307,14 +334,42 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 			}
 			return 1;
 		case WM_KILLFOCUS:
+			if (pScoreBoard && pScoreBoard->IsVisible())
+				pScoreBoard->Hide(true);
 			if (pCmdWindow && pCmdWindow->isEnabled())
 				pCmdWindow->Disable();
 			if (pSpawnScreen && pSpawnScreen->IsVisible())
 				pGame->ToggleKeyInputsDisabled(0, true);
 			pGame->ProcessInputDisabling();
 			break;
+		case WM_LBUTTONDOWN:
+			if (pScoreBoard && pScoreBoard->IsVisible())
+			{
+				RECT rect;
+				POINTS points = MAKEPOINTS(lParam);
+				pScoreBoard->GetRect(&rect);
+				
+				if (points.x < rect.left ||
+					points.x > rect.right ||
+					points.y < rect.top ||
+					points.y > rect.bottom)
+				{
+					bOutsideScoreboard = true;
+					return 0;
+				}
+			}
+			break;
 	}
 
+	if (bOutsideScoreboard)
+	{
+		if (pScoreBoard && pScoreBoard->IsVisible())
+		{
+			pScoreBoard->Hide(1);
+		}
+		bOutsideScoreboard = false;
+		return 0;
+	}
 	return CallWindowProc(hOldProc,hwnd,uMsg,wParam,lParam);
 }
 

@@ -255,8 +255,7 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 
 
 		// Scoreboard
-		if(pNetGame && !pCmdWindow->isEnabled() &&
-			((GetAsyncKeyState(VK_TAB) && !pCmdWindow->isEnabled()) || pNetGame->GetGameState() == GAMESTATE_RESTARTING))
+		if (pNetGame && pScoreBoard && pScoreBoard->IsVisible())
 		{
 			pGame->DisplayHud(FALSE);
 			pScoreBoard->Draw();

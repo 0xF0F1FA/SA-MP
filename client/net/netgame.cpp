@@ -796,7 +796,7 @@ void CNetGame::UpdatePlayerPings()
 
 	if ((GetTickCount() - dwLastUpdateTick) > RPC_PING_UPDATE_TIME) {
 		dwLastUpdateTick = GetTickCount();
-		m_pRakClient->RPC(RPC_UpdatePings, NULL, HIGH_PRIORITY, RELIABLE, 0, false);
+		m_pRakClient->RPC(RPC_UpdateScoresPingsIPs, NULL, HIGH_PRIORITY, RELIABLE, 0, false);
 	}
 }
 

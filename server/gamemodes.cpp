@@ -994,3 +994,20 @@ void CGameMode::OnPlayerGiveDamageActor(cell playerid, cell actorid,
 		amx_Exec(&m_amx, NULL, idx);
 	}
 }
+
+void CGameMode::OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell source)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnPlayerClickPlayer", &idx))
+	{
+		amx_Push(&m_amx, source);
+		amx_Push(&m_amx, clickedplayerid);
+		amx_Push(&m_amx, playerid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}
+

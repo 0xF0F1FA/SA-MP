@@ -403,7 +403,7 @@ void DoInitStuff()
 			pSpawnScreen = new CSpawnScreen;
 			//pPlayerTags = new CPlayerTags(pD3DDevice);
 			pPlayerTags = new CPlayerTags(pD3DDevice);
-			pScoreBoard = new CScoreBoard(pD3DDevice, FALSE);
+			pScoreBoard = new CScoreBoard(pD3DDevice);
 			pNetStats = new CNetStats(pD3DDevice);
 			//pSvrNetStats = new CSvrNetStats(pD3DDevice);
 			//pHelpDialog = new CHelpDialog(pD3DDevice);
@@ -639,6 +639,9 @@ void d3d9DestroyDeviceObjects()
 	if (pCmdWindow && pCmdWindow->isEnabled())
 		pCmdWindow->Disable();
 
+	if (pScoreBoard)
+		pScoreBoard->Hide(true);
+
 	if (pDialogResourceManager)
 		pDialogResourceManager->OnLostDevice();
 
@@ -647,9 +650,6 @@ void d3d9DestroyDeviceObjects()
 
 	if (pPlayerTags)
 		pPlayerTags->DeleteDeviceObjects();
-
-	if (pScoreBoard)
-		pScoreBoard->DeleteDeviceObjects();
 
 	if (pLabel)
 		pLabel->DeleteDeviceObjects();
@@ -675,9 +675,6 @@ void d3d9RestoreDeviceObjects()
 	if (pPlayerTags)
 		pPlayerTags->RestoreDeviceObjects();
 
-	if (pScoreBoard)
-		pScoreBoard->RestoreDeviceObjects();
-
 	if (pLabel)
 		pLabel->RestoreDeviceObjects();
 
@@ -688,6 +685,9 @@ void d3d9RestoreDeviceObjects()
 		pDeathWindow->OnResetDevice();
 	
 	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnResetDevice();
+	if (pScoreBoard)
+		pScoreBoard->CalcClientSize();
+
 	if (pGame->IsMenuActive())
 	{
 		pGame->ToggleKeyInputsDisabled(2, true);

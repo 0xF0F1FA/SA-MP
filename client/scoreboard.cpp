@@ -1,117 +1,124 @@
-//
+﻿//
 // Version: $Id: scoreboard.cpp,v 1.15 2006/04/18 11:58:57 kyeman Exp $
 //
 
-#include "scoreboard.h"
 #include "main.h"
-#include <stdio.h>
 
-#define ScoreBoardFVF D3DFVF_XYZRHW|D3DFVF_DIFFUSE
+VOID CALLBACK OnScoreBoardEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
-struct ScoreBoardVertices_s
+CScoreBoard::CScoreBoard(IDirect3DDevice9* pDevice)
 {
-	float x, y, z, rhw;
-	D3DCOLOR c;
-} ScoreBoardVertices[30] = {
-	//  x        y  z     rhw   c
-	{20.0f , 20.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{20.0f , 54.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{620.0f, 20.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
+	m_pDevice = pDevice;
+	m_pDialog = NULL;
+	m_pListBox = NULL;
+	m_dwSortType = 0;
+	m_iLastPlayerCount = 0;
+	if (pGame && pGame->GetScreenWidth() > 800)
+	{
+		m_fWidth = 800.0f;
+		m_fHeight = 600.0f;
+	}
+	else
+	{
+		m_fWidth = 640.0f;
+		m_fHeight = 480.0f;
+	}
+	m_fHeaderHeight = 60.0f;
+	m_fNameOffset = 0.085f;
+	m_fPingOffset = 0.265625f;
+	m_fScoreOffset = 0.4375f;
+	CalcClientSize();
+	m_bVisible = false;
+	ResetDialogControls();
+}
 
-	{20.0f , 54.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{620.0f, 20.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{620.0f, 54.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{20.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{21.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{20.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{21.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{20.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{21.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{619.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{620.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{619.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{620.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{619.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{620.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{21.0f , 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{21.0f , 459.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{619.0f, 459.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{21.0f , 459.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{619.0f, 459.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-	{619.0f, 460.0f, 0.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0)},
-
-	{21.0f , 54.0f , 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-	{21.0f , 459.0f, 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-	{619.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-
-	{21.0f , 459.0f, 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-	{619.0f, 54.0f , 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-	{619.0f, 459.0f, 0.0f, 1.0f, D3DCOLOR_ARGB(150, 0, 0, 0)},
-};
-
-CScoreBoard::CScoreBoard(IDirect3DDevice9* pDevice, BOOL bScaleToScreen)
+void CScoreBoard::CalcClientSize()
 {
-	m_pDevice		= pDevice;
-	m_pOldStates	= NULL;
-	m_pNewStates	= NULL;
-	m_pFont			= NULL;
-	m_pSprite		= NULL;
-	m_iOffset		= 0;
-	m_bSorted		= FALSE;
-
 	RECT rect;
 	GetClientRect(pGame->GetMainWindowHwnd(), &rect);
-	if (bScaleToScreen)
+	m_fScalar = 1.0f;
+	m_fScreenOffsetX = rect.right * 0.5f - m_fWidth * 0.5f;
+	m_fScreenOffsetY = rect.bottom * 0.5f - m_fHeight * 0.5f;
+}
+
+// GET REKT!!!!
+void CScoreBoard::GetRect(RECT* rect)
+{
+	rect->left = (LONG)m_fScreenOffsetX;
+	rect->right = (LONG)(m_fScreenOffsetX + m_fWidth);
+	rect->top = (LONG)m_fScreenOffsetY;
+	rect->bottom = (LONG)(m_fScreenOffsetY + m_fHeight);
+}
+
+void CScoreBoard::ResetDialogControls()
+{
+	SAFE_DELETE(m_pDialog);
+
+	m_pDialog = new CDXUTDialog();
+
+	if (m_pDialog)
 	{
-		m_fScalar = (float)rect.right / 640.0f;
-		m_fScreenOffsetX = 0.0f;
-		m_fScreenOffsetY = 0.0f;
-		for (int i=0; i<30; i++)
-		{
-			ScoreBoardVertices[i].x *= m_fScalar;
-			ScoreBoardVertices[i].y *= m_fScalar;
-		}
-	} else {
-		m_fScalar = 1.0f;
-		m_fScreenOffsetX = ((float)rect.right / 2) - 320.0f;
-		m_fScreenOffsetY = ((float)rect.bottom / 2) - 240.0f;
-		for (int i=0; i<30; i++)
-		{
-			ScoreBoardVertices[i].x += m_fScreenOffsetX;
-			ScoreBoardVertices[i].y += m_fScreenOffsetY;
-		}
+		m_pDialog->Init(pDialogResourceManager);
+		m_pDialog->SetCallback(OnScoreBoardEvent);
+		m_pDialog->SetSize((int)m_fWidth, (int)m_fHeight);
+		m_pDialog->SetLocation(0, 0);
+		m_pDialog->SetBackgroundColors(D3DCOLOR_ARGB(150,10,10,10));
+		m_pDialog->EnableMouseInput(true);
+		m_pDialog->EnableKeyboardInput(true);
+		m_pDialog->SetVisible(false);
+
+		m_pListBox = new CDXUTListBox(m_pDialog);
+
+		m_pDialog->AddControl(m_pListBox);
+		m_pListBox->SetLocation(0, (int)m_fHeaderHeight);
+		m_pListBox->SetSize((int)m_fWidth, (int)(m_fHeight - m_fHeaderHeight));
+		m_pListBox->OnInit();
+		m_pListBox->GetElement(0)->TextureColor.Init(D3DCOLOR_ARGB(200,255,255,255));
+		m_pListBox->m_nColumns = 3;
+		m_pListBox->m_nColumnWidth[0] = (int)(m_fNameOffset * m_fWidth);
+		m_pListBox->m_nColumnWidth[1] = (int)(m_fScoreOffset * m_fWidth);
+		m_pListBox->m_nColumnWidth[2] = (int)(m_fPingOffset * m_fWidth);
+		m_pListBox->SetEnabled(false);
+		m_pListBox->SetVisible(false);
+
+		CalcClientSize();
 	}
 }
 
-CScoreBoard::~CScoreBoard()
+void CScoreBoard::ProcessClickEvent()
 {
-	if (m_pOldStates)
-		m_pOldStates->Release();
+	if (m_bVisible && m_pDialog)
+	{
+		DXUTListBoxItem* pItem;
 
-	if (m_pNewStates)
-		m_pNewStates->Release();
+		pItem = m_pListBox->GetItem(m_pListBox->GetSelectedIndex());
+		if (pItem)
+		{
+			RakNet::BitStream bsSend;
 
-	if (m_pFont)
-		m_pFont->Release();
+			bsSend.Write((WORD)atol(pItem->strText));
+			bsSend.Write((BYTE)0);
 
-	if (m_pSprite)
-		m_pSprite->Release();
+			pNetGame->Send(RPC_Click, &bsSend);
+		}
+		
+		//Hide(true);
+		m_pDialog->SetVisible(false);
+		m_pListBox->SetEnabled(false);
+		m_pListBox->SetVisible(false);
+		pGame->ToggleKeyInputsDisabled(0);
+		m_bVisible = false;
+	}
 }
 
 typedef struct _PLAYER_SCORE_INFO
 {
 	DWORD dwId;
-	char* szName;
+	char  szName[MAX_PLAYER_NAME];
 	int   iScore;
 	DWORD dwPing;
 	DWORD dwColor;
-	int   iState;
+	//int   iState;
 } PLAYER_SCORE_INFO;
 
 void SwapPlayerInfo(PLAYER_SCORE_INFO* psi1, PLAYER_SCORE_INFO* psi2)
@@ -122,247 +129,212 @@ void SwapPlayerInfo(PLAYER_SCORE_INFO* psi1, PLAYER_SCORE_INFO* psi2)
 	memcpy(psi2, &plrinf, sizeof(PLAYER_SCORE_INFO));
 }
 
-void CScoreBoard::Draw()
+void CScoreBoard::UpdateList()
 {
-	if ((!m_pOldStates) || (!m_pNewStates) || (!m_pFont) || (!m_pSprite))
-	{
-		RestoreDeviceObjects();
-		if ((!m_pOldStates) || (!m_pNewStates) || (!m_pFont) || (!m_pSprite))
-			return;
-	}
+	if (!pNetGame || !pNetGame->GetPlayerPool() || !m_bVisible || !m_pDialog)
+		return;
 
-	pNetGame->UpdatePlayerPings();
+	int iLastIndexSaved = m_pListBox->GetSelectedIndex();
+	int iLastBarPosSaved = m_pListBox->GetScrollBarPosition();
 
-	m_pOldStates->Capture();
-	m_pNewStates->Apply();
-
-	m_pDevice->DrawPrimitiveUP(D3DPT_TRIANGLELIST, 10, ScoreBoardVertices, sizeof(ScoreBoardVertices_s));
-
-	m_pOldStates->Apply();
-
-	m_pSprite->Begin(D3DXSPRITE_SORT_TEXTURE|D3DXSPRITE_ALPHABLEND);
+	m_pListBox->RemoveAllItems();
 
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	int playercount = pPlayerPool->GetCount()+1;
-
-	if (m_iOffset > (playercount-20))
-		m_iOffset = (playercount-20);
-	if (m_iOffset < 0)
-		m_iOffset = 0;
+	CLocalPlayer* pLocalPlayer = pPlayerPool->GetLocalPlayer();
+	int playercount = pPlayerPool->GetCount() + 1;
 
 	PLAYER_SCORE_INFO* Players;
-	Players = (PLAYER_SCORE_INFO*)malloc(playercount * sizeof(PLAYER_SCORE_INFO));
+	Players = (PLAYER_SCORE_INFO*)calloc(playercount, sizeof(PLAYER_SCORE_INFO));
+
+	strcpy_s(Players[0].szName, pLocalPlayer->GetName());
+	Players[0].dwColor = pLocalPlayer->GetPlayerColorAsARGB();
+	Players[0].iScore = pLocalPlayer->m_iScore;
+	Players[0].dwPing = pLocalPlayer->m_usPing;
 	Players[0].dwId = pPlayerPool->GetLocalPlayerID();
-	Players[0].szName = (char*)pPlayerPool->GetLocalPlayer()->GetName();
-	Players[0].iScore = pPlayerPool->GetLocalPlayerScore();
-	Players[0].dwPing = pPlayerPool->GetLocalPlayerPing();
-	Players[0].dwColor = pPlayerPool->GetLocalPlayer()->GetPlayerColorAsARGB();
+	
 	int i = 1;
 	int x;
 	for (x=0; x<MAX_PLAYERS; x++)
 	{
-		if (pPlayerPool->GetSlotState(x) == TRUE)
+		if (pPlayerPool->GetSlotState(x) == TRUE &&
+			x != pPlayerPool->GetLocalPlayerID()) // &&
+			//!m_pPlayerPool->IsPlayerNPC(x))
 		{
-			// TODO: Will need changes here to not check index ranges multiple times to retrieve an info from player
-			Players[i].dwId = x;
-			Players[i].szName = (char*)pPlayerPool->GetAt(x)->GetName();
-			Players[i].iScore = pPlayerPool->GetPlayerScore(x);
-			Players[i].dwPing = pPlayerPool->GetPlayerPing(x);
-			Players[i].dwColor = pPlayerPool->GetAt(x)->GetPlayerColorAsARGB();
-			Players[i].iState = (int)pPlayerPool->GetAt(x)->GetState();
+			CRemotePlayer* pRemotePlayer = pPlayerPool->GetAt(x);
 
+			Players[i].dwPing = pRemotePlayer->m_usPing;
+			strcpy_s(Players[i].szName, pRemotePlayer->GetName());
+			Players[i].iScore = pRemotePlayer->m_iScore;
+			Players[i].dwColor = pRemotePlayer->GetPlayerColorAsARGB();
+			Players[i].dwId = x;
+			
 			i++;
 		}
 	}
 
-	if(m_bSorted)
+	if (m_dwSortType == 1 && (playercount - 1) > 0)
 	{
-		for (i=0; i<playercount-1; i++)
+		// TODO?
+	}
+	else if (m_dwSortType == 2 && (playercount - 1) > 0)
+	{
+		// TODO?
+	}
+	
+	char szBuffer[11]; //[260];
+	for (x = 0; x < playercount; x++)
+	{
+		sprintf_s(szBuffer, "%u", Players[x].dwId);
+		m_pListBox->AddItem(szBuffer, Players[x].dwId, Players[x].dwColor);
+
+		if (m_pListBox->GetItem(x) && Players[x].szName[0] != '\0')
 		{
-			for (int j=0; j<playercount-1-i; j++)
-			{
-				if (Players[j+1].iScore > Players[j].iScore)
-				{
-					SwapPlayerInfo(&Players[j], &Players[j+1]);
-				}
-			}
+			m_pListBox->AddItemToColumn(x, 0, Players[x].szName);
+
+			sprintf_s(szBuffer, "%d", Players[x].iScore);
+			m_pListBox->AddItemToColumn(x, 1, szBuffer);
+
+			sprintf_s(szBuffer, "%u", Players[x].dwPing);
+			m_pListBox->AddItemToColumn(x, 2, szBuffer);
 		}
 	}
 
-	int endplayer = min(m_iOffset+21, playercount);
+	if (iLastIndexSaved < 0)
+		m_pListBox->SelectItem(-1);
+	else
+		m_pListBox->SelectItem(iLastIndexSaved);
 
-	char szServerAddress[255];
-	sprintf_s(szServerAddress, "Players: %d-%d of %d", m_iOffset+1, endplayer, playercount);
-
-	// HOSTNAME AND IP ADDRESS
-	RECT rectMain = {(LONG)(24.0f * m_fScalar + m_fScreenOffsetX), (LONG)(21.0f * m_fScalar + m_fScreenOffsetY),
-					(LONG)(616.0f * m_fScalar + m_fScreenOffsetX), (LONG)(52.0f * m_fScalar + m_fScreenOffsetY)};
-	m_pFont->DrawText(m_pSprite, pNetGame->m_szHostName, -1, &rectMain, DT_SINGLELINE, D3DCOLOR_XRGB(255, 0, 0));
-	m_pFont->DrawText(m_pSprite, szServerAddress, -1, &rectMain, DT_SINGLELINE|DT_RIGHT, D3DCOLOR_XRGB(150, 150, 150));
-
-	// PLAYERID LABEL
-	rectMain.left = (LONG)((28.0f * m_fScalar) + m_fScreenOffsetX); rectMain.right = (LONG)((60.0f * m_fScalar) + m_fScreenOffsetX);
-	rectMain.top = (LONG)((22.0f * m_fScalar) + m_fScreenOffsetY); rectMain.bottom = (LONG)((52.0f * m_fScalar) + m_fScreenOffsetY);
-	m_pFont->DrawText(m_pSprite, "id", -1, &rectMain, DT_SINGLELINE|DT_CENTER|DT_BOTTOM, D3DCOLOR_XRGB(100, 150, 200));
-
-	// NAME LABEL
-	rectMain.left = (LONG)(60.0f * m_fScalar + m_fScreenOffsetX); rectMain.right = (LONG)(374.0f * m_fScalar + m_fScreenOffsetX);
-	rectMain.top = (LONG)(22.0f * m_fScalar + m_fScreenOffsetY); rectMain.bottom = (LONG)(52.0f * m_fScalar + m_fScreenOffsetY);
-	m_pFont->DrawText(m_pSprite, "name", -1, &rectMain, DT_SINGLELINE|DT_BOTTOM, D3DCOLOR_XRGB(100, 150, 200));
-
-	// SCORE LABEL
-	rectMain.left = (LONG)(374.0f * m_fScalar + m_fScreenOffsetX); rectMain.right = (LONG)(495.0f * m_fScalar + m_fScreenOffsetX);
-	rectMain.top = (LONG)(22.0f * m_fScalar + m_fScreenOffsetY); rectMain.bottom = (LONG)(52.0f * m_fScalar + m_fScreenOffsetY);
-	m_pFont->DrawText(m_pSprite, "score", -1, &rectMain, DT_SINGLELINE|DT_CENTER|DT_BOTTOM, D3DCOLOR_XRGB(100, 150, 200));
-
-	// PING LABEL
-	rectMain.left = (LONG)(495.0f * m_fScalar + m_fScreenOffsetX); rectMain.right = (LONG)(616.0f * m_fScalar + m_fScreenOffsetX);
-	rectMain.top = (LONG)(22.0f * m_fScalar + m_fScreenOffsetY); rectMain.bottom = (LONG)(52.0f * m_fScalar + m_fScreenOffsetY);
-	m_pFont->DrawText(m_pSprite, "ping", -1, &rectMain, DT_SINGLELINE|DT_CENTER|DT_BOTTOM, D3DCOLOR_XRGB(100, 150, 200));
-
-	RECT rectPlayerId	= {(LONG)(28.0f * m_fScalar + m_fScreenOffsetX), (LONG)(57.0f * m_fScalar + m_fScreenOffsetY),
-							(LONG)(60.0f * m_fScalar + m_fScreenOffsetX), (LONG)(456.0f * m_fScalar + m_fScreenOffsetY)};
-	RECT rectName		= {(LONG)(60.0f * m_fScalar + m_fScreenOffsetX), (LONG)(57.0f * m_fScalar + m_fScreenOffsetY),
-							(LONG)(374.0f * m_fScalar + m_fScreenOffsetX), (LONG)(456.0f * m_fScalar + m_fScreenOffsetY)};
-	RECT rectScore		= {(LONG)(374.0f * m_fScalar + m_fScreenOffsetX), (LONG)(57.0f * m_fScalar + m_fScreenOffsetY),
-							(LONG)(495.0f * m_fScalar + m_fScreenOffsetX), (LONG)(456.0f * m_fScalar + m_fScreenOffsetY)};
-	RECT rectPing		= {(LONG)(495.0f * m_fScalar + m_fScreenOffsetX), (LONG)(57.0f * m_fScalar + m_fScreenOffsetY),
-							(LONG)(616.0f * m_fScalar + m_fScreenOffsetX), (LONG)(456.0f * m_fScalar + m_fScreenOffsetY)};
-
-	char szPlayerId[11];
-	char szScore[11];
-	char szPing[11];
-	
-
-	for (x=m_iOffset; x<endplayer; x++)
-	{
-		sprintf_s(szPlayerId, "%d", Players[x].dwId);
-		sprintf_s(szScore, "%d", Players[x].iScore);
-		sprintf_s(szPing, "%d", Players[x].dwPing);
-
-		rectPlayerId.left++; rectPlayerId.top++;
-		m_pFont->DrawText(m_pSprite, szPlayerId, -1, &rectPlayerId, DT_SINGLELINE|DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
-		rectPlayerId.left--; rectPlayerId.top--;
-		m_pFont->DrawText(m_pSprite, szPlayerId, -1, &rectPlayerId, DT_SINGLELINE|DT_CENTER, Players[x].dwColor);
-
-		rectName.left++; rectName.top++;
-
-		char szUsePlayerName[64];
-
-#ifdef _DEBUG
-		sprintf_s(szUsePlayerName,"%s (%u)",Players[x].szName,Players[x].iState);
-#else
-		strcpy(szUsePlayerName,Players[x].szName);
-#endif
-
-		m_pFont->DrawText(m_pSprite, szUsePlayerName, -1, &rectName, DT_SINGLELINE, D3DCOLOR_XRGB(0, 0, 0));
-		rectName.left--; rectName.top--;
-		m_pFont->DrawText(m_pSprite, szUsePlayerName, -1, &rectName, DT_SINGLELINE, Players[x].dwColor);
-
-		rectScore.left++; rectScore.top++;
-		m_pFont->DrawText(m_pSprite, szScore, -1, &rectScore, DT_SINGLELINE|DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
-		rectScore.left--; rectScore.top--;
-		m_pFont->DrawText(m_pSprite, szScore, -1, &rectScore, DT_SINGLELINE|DT_CENTER, Players[x].dwColor);
-
-		rectPing.left++; rectPing.top++;
-		m_pFont->DrawText(m_pSprite, szPing, -1, &rectPing, DT_SINGLELINE|DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
-		rectPing.left--; rectPing.top--;
-		m_pFont->DrawText(m_pSprite, szPing, -1, &rectPing, DT_SINGLELINE|DT_CENTER, Players[x].dwColor);
-
-		rectPlayerId.top = rectName.top = rectScore.top = rectPing.top += (LONG)(20.0f * m_fScalar);
-	}
-
-	m_pSprite->End();
 	free(Players);
+
+	m_pListBox->SetScrollBarTrackPosition(iLastBarPosSaved);
 }
 
-void CScoreBoard::DeleteDeviceObjects()
+void CScoreBoard::Show()
 {
-	if (m_pOldStates)
+	if (!m_bVisible && m_pDialog)
 	{
-		m_pOldStates->Release();
-		m_pOldStates = NULL;
+		m_pDialog->SetVisible(true);
+		m_pListBox->SetEnabled(true);
+		m_pListBox->UpdateRects();
+		m_pListBox->SetVisible(true);
+		
+		UpdateList();
+
+		pGame->ToggleKeyInputsDisabled(3);
+		
+		m_bVisible = true;
 	}
-
-	if (m_pNewStates)
-	{
-		m_pNewStates->Release();
-		m_pNewStates = NULL;
-	}
-
-	if (m_pFont)
-		m_pFont->OnLostDevice();
-
-	if (m_pSprite)
-		m_pSprite->OnLostDevice();
 }
 
-void CScoreBoard::RestoreDeviceObjects()
+void CScoreBoard::Hide(bool bDisableControls)
 {
-	if (!m_pOldStates)
+	if (m_bVisible && m_pDialog)
 	{
-		m_pDevice->BeginStateBlock();
-
-		m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
-		m_pDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
-		m_pDevice->SetRenderState(D3DRS_ZENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_FILLMODE, 3);
-		m_pDevice->SetRenderState(D3DRS_CULLMODE, 1);
-		m_pDevice->SetRenderState(D3DRS_WRAP0, 0);
-		m_pDevice->SetRenderState(D3DRS_CLIPPING, 1);
-		m_pDevice->SetRenderState(D3DRS_VERTEXBLEND, 0);
-		m_pDevice->SetRenderState(D3DRS_CLIPPLANEENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_INDEXEDVERTEXBLENDENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_COLORWRITEENABLE, 15);
-		m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
-		m_pDevice->SetRenderState(D3DRS_SRCBLEND, 5);
-		m_pDevice->SetRenderState(D3DRS_DESTBLEND, 6);
-		m_pDevice->SetRenderState(D3DRS_BLENDOP, 1);
-		m_pDevice->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
-		m_pDevice->SetFVF(ScoreBoardFVF);
-		m_pDevice->SetStreamSource(0, NULL, 0, 0);
-
-		m_pDevice->EndStateBlock(&m_pOldStates);
+		m_pDialog->SetVisible(false);
+		m_pListBox->SetEnabled(false);
+		m_pListBox->SetVisible(false);
+		
+		if(bDisableControls)
+			pGame->ToggleKeyInputsDisabled(0);
+		
+		m_bVisible = false;
 	}
 
-	if (!m_pNewStates)
+}
+
+void CScoreBoard::Draw()
+{
+	char szPlayers[64];
+	
+	if (!m_bVisible)
+		return;
+
+	int playercount = 0;
+	if (pNetGame)
 	{
-		m_pDevice->BeginStateBlock();
-
-		m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
-		m_pDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
-		m_pDevice->SetRenderState(D3DRS_ZENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_FILLMODE, 3);
-		m_pDevice->SetRenderState(D3DRS_CULLMODE, 1);
-		m_pDevice->SetRenderState(D3DRS_WRAP0, 0);
-		m_pDevice->SetRenderState(D3DRS_CLIPPING, 1);
-		m_pDevice->SetRenderState(D3DRS_VERTEXBLEND, 0);
-		m_pDevice->SetRenderState(D3DRS_CLIPPLANEENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_INDEXEDVERTEXBLENDENABLE, 0);
-		m_pDevice->SetRenderState(D3DRS_COLORWRITEENABLE, 15);
-		m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
-		m_pDevice->SetRenderState(D3DRS_SRCBLEND, 5);
-		m_pDevice->SetRenderState(D3DRS_DESTBLEND, 6);
-		m_pDevice->SetRenderState(D3DRS_BLENDOP, 1);
-		m_pDevice->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
-		m_pDevice->SetFVF(ScoreBoardFVF);
-		m_pDevice->SetStreamSource(0, NULL, 0, 0);
-
-		m_pDevice->EndStateBlock(&m_pNewStates);
+		// TODO: (in case of ignoring connected NPCs)
+		playercount = pNetGame->GetPlayerPool()->GetCount(/*false*/) + 1;
+		if (playercount != m_iLastPlayerCount)
+		{
+			m_iLastPlayerCount = playercount;
+			UpdateList();
+		}
+		pNetGame->UpdatePlayerPings();
 	}
 
-	if (!m_pFont)
+	if (m_pDialog)
 	{
-		//             device     h                          w  weight  mip ital   charset       precision           quality        pitch          face       ID3DXFont**
-		D3DXCreateFont(m_pDevice, (UINT)(16.0f * m_fScalar), 0, FW_BOLD, 1, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, "Verdana", &m_pFont);
-	} else {
-		m_pFont->OnResetDevice();
+		int iWidth = pGame->GetScreenWidth();
+		int iHeight = pGame->GetScreenHeight();
+		if (iWidth > 0 && iHeight > 0)
+		{
+			m_pDialog->SetLocation(
+				iWidth / 2 - (int)m_fWidth / 2,
+				iHeight / 2 - (int)m_fHeight / 2);
+		}
+		m_pDialog->OnRender(10.0f);
 	}
 
-	if (!m_pSprite)
+	/*int playercount = 0;
+	if (pNetGame && pNetGame->GetPlayerPool())
 	{
-		D3DXCreateSprite(m_pDevice, &m_pSprite);
-	} else {
-		m_pSprite->OnResetDevice();
+		// TODO: (in case of ignoring connected NPCs)
+		playercount = pNetGame->GetPlayerPool()->GetCount(/ *false* /) + 1;
+	}*/
+
+	sprintf_s(szPlayers, "Players: %d", playercount);
+
+	RECT rect;
+	rect.left = (LONG)(m_fScreenOffsetX + 5.0f);
+	rect.top = (LONG)(m_fScreenOffsetY + 5.0f);
+	rect.right = (LONG)(m_fScreenOffsetX + m_fWidth);
+	rect.bottom = (LONG)(m_fHeaderHeight + m_fScreenOffsetY);
+	if(pNetGame && pNetGame->m_szHostName[0] != '\0')
+		pDefaultFont->RenderSmallerText(NULL, pNetGame->m_szHostName, rect, 288, 0xFFBEBEBE, true);
+
+	SIZE size;
+	pDefaultFont->MeasureSmallerText(&size, "Players: 10000", DT_LEFT);
+	
+	rect.left = (LONG)(m_fWidth - (float)size.cx + m_fScreenOffsetX);
+	rect.right = (LONG)(m_fScreenOffsetX + m_fWidth);
+	pDefaultFont->RenderSmallerText(NULL, szPlayers, rect, 288, 0xFFBEBEBE, true);
+
+	rect.left = (LONG)(m_fScalar * 10.0f + m_fScreenOffsetX);
+	rect.top = (LONG)((m_fHeaderHeight - pDefaultFont->GetSmallerFontSizeY() - 3) + m_fScreenOffsetY);
+	rect.right = (LONG)(m_fScalar * 56.0f + m_fScreenOffsetX);
+	rect.bottom = (LONG)(m_fHeaderHeight + m_fScreenOffsetY);
+	pDefaultFont->RenderSmallerText(NULL, "id", rect, 288, 0xFF95B0D0, true);
+
+	rect.left += (LONG)(m_fNameOffset * m_fWidth);
+	rect.right += (LONG)(m_fNameOffset * m_fWidth);
+	pDefaultFont->RenderSmallerText(NULL, "name", rect, 288, 0xFF95B0D0, true);
+
+	rect.left += (LONG)(m_fScoreOffset * m_fWidth);
+	rect.right += (LONG)(m_fScoreOffset * m_fWidth);
+	pDefaultFont->RenderSmallerText(NULL, "score", rect, 288, 0xFF95B0D0, true);
+
+	rect.left += (LONG)(m_fPingOffset * m_fWidth);
+	rect.right += (LONG)(m_fPingOffset * m_fWidth);
+	pDefaultFont->RenderSmallerText(NULL, "ping", rect, 288, 0xFF95B0D0, true);	
+}
+
+VOID CALLBACK OnScoreBoardEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
+{
+	if (nEvent == EVENT_LISTBOX_ITEM_DBLCLK)
+	{
+		pScoreBoard->ProcessClickEvent();
+	}
+}
+
+void CScoreBoard::MsgProc(HWND hwnd, UINT uMsg,
+	WPARAM wParam, LPARAM lParam)
+{
+	if (m_pDialog && m_pListBox)
+	{
+		POINT p;
+		GetCursorPos(&p);
+		m_pListBox->HandleMouse(uMsg, p, wParam, lParam);
+		m_pListBox->HandleKeyboard(uMsg, wParam, lParam);
+		m_pDialog->MsgProc(hwnd, uMsg, wParam, lParam);		
 	}
 }

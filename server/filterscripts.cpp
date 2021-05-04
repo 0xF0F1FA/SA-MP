@@ -1306,3 +1306,22 @@ void CFilterScripts::OnPlayerGiveDamageActor(cell playerid, cell actorid,
 		}
 	}
 }
+
+void CFilterScripts::OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell source)
+{
+	int idx = 0;
+	for (char i = 0; i < MAX_FILTER_SCRIPTS; i++)
+	{
+		if (m_pFilterScripts[i] == NULL)
+			continue;
+
+		if (!amx_FindPublic(m_pFilterScripts[i], "OnPlayerClickPlayer", &idx))
+		{
+			amx_Push(m_pFilterScripts[i], source);
+			amx_Push(m_pFilterScripts[i], clickedplayerid);
+			amx_Push(m_pFilterScripts[i], playerid);
+			amx_Exec(m_pFilterScripts[i], NULL, idx);
+		}
+	}
+}
+

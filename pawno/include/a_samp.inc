@@ -534,3 +534,7 @@ forward OnVehicleDamageStatusUpdate(vehicleid, playerid);
 forward OnActorStreamIn(actorid, forplayerid);
 forward OnActorStreamOut(actorid, forplayerid);
 forward OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart);
+
+#define CLICK_SOURCE_SCOREBOARD		0
+forward OnPlayerClickPlayer(playerid, clickedplayerid, source);
+

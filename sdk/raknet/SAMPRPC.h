@@ -49,7 +49,7 @@ enum
 	RPC_Death,
 	RPC_EnterVehicle,
 	RPC_ExitVehicle,
-	RPC_UpdatePings,
+	RPC_UpdateScoresPingsIPs,
 	RPC_ScmEvent,
 	RPC_MenuSelect,
 	RPC_MenuQuit,

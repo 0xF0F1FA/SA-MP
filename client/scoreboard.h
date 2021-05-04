@@ -3,33 +3,38 @@
 //
 
 #pragma once
-#ifndef SCOREBOARD_H
-#define SCOREBOARD_H
-
-#include <d3d9.h>
-#include <d3dx9.h>
 
 class CScoreBoard
 {
 private:
 	IDirect3DDevice9* m_pDevice;
-	IDirect3DStateBlock9* m_pOldStates;
-	IDirect3DStateBlock9* m_pNewStates;
-	ID3DXFont*	m_pFont;
-	ID3DXSprite* m_pSprite;
-	float m_fScalar;
+	CDXUTDialog* m_pDialog;
+	CDXUTListBox* m_pListBox;
+	float m_fWidth;
+	float m_fHeight;
+	int m_iLastPlayerCount;
+	bool m_bVisible;
 	float m_fScreenOffsetX;
 	float m_fScreenOffsetY;
+	float m_fScalar;
+	float m_fHeaderHeight;
+	float m_fNameOffset;
+	float m_fPingOffset;
+	float m_fScoreOffset;
+	DWORD m_dwSortType;
+
 public:
-	int m_iOffset;
-	BOOL m_bSorted;
-
-	CScoreBoard(IDirect3DDevice9* pDevice, BOOL bScaleToScreen);
-	~CScoreBoard();
-
+	CScoreBoard(IDirect3DDevice9* pDevice);
+	void CalcClientSize();
+	void GetRect(RECT* rect);
+	void ResetDialogControls();
+	void ProcessClickEvent();
+	void UpdateList();
+	void Show();
+	void Hide(bool bDisableControls);
 	void Draw();
-	void DeleteDeviceObjects();
-	void RestoreDeviceObjects();
-};
+	void MsgProc(HWND hwnd, UINT uMsg,
+		WPARAM wParam, LPARAM lParam);
 
-#endif
+	bool IsVisible() { return m_bVisible; };
+};

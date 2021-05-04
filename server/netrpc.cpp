@@ -46,6 +46,7 @@ void ClientJoin(RPCParameters *rpcParams)
 	CHAR szSerial[100];
 	std::string serial;
 	in_addr in;
+
 	wPlayerID = pRak->GetIndexFromPlayerID(sender);
 	PlayerID MyPlayerID = pRak->GetPlayerIDFromIndex(wPlayerID);
 
@@ -488,25 +489,42 @@ void ServerCommand(RPCParameters *rpcParams)
 
 //----------------------------------------------------
 
-static void UpdatePings(RPCParameters* rpcParams)
+static void UpdateScoresPingsIPs(RPCParameters* rpcParams)
 {
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool) {
-		CPlayer* pPlayer = pPlayerPool->GetAt(rpcParams->senderId);
-		RakNet::Time nTimeNow = RakNet::GetTime();
-		if (pPlayer != NULL && (nTimeNow - pPlayer->m_nLastPingUpdate) >= RPC_PING_UPDATE_TIME) {
-			pPlayer->m_nLastPingUpdate = nTimeNow;
-			RakNet::BitStream bsParams;
-			for (unsigned short i = 0; i < pPlayerPool->GetLastPlayerId(); i++) {
-				if (pPlayerPool->GetSlotState(i)) {
-					bsParams.Write(i);
-					// GetLastPing could return -1 when fails, but its only overflow back to 65535
-					bsParams.Write((unsigned short)pRak->GetLastPing(pRak->GetPlayerIDFromIndex(i)));
-				}
-			}
-			pNetGame->SendToPlayer(rpcParams->senderId, RPC_UpdatePings, &bsParams);
+	if (!pPlayerPool) return;
+	
+	CPlayer* pPlayer = pPlayerPool->GetAt(rpcParams->senderId);
+
+	if (!pPlayer || (RakNet::GetTime() - pPlayer->m_nLastPingUpdate) < 2000)
+		return;
+	
+	RakNet::BitStream bsParams;
+
+	int iLastID = pPlayerPool->GetLastPlayerId();
+	WORD i = 0;
+
+	if (iLastID != -1)
+	{
+		while (i <= (WORD)iLastID)
+		{
+			pPlayer = pPlayerPool->GetAt(i);
+			if (!pPlayer) continue;
+			
+			bsParams.Write(i);
+			bsParams.Write(pPlayer->m_iScore);
+			// GetLastPing could return -1 when fails, but its only overflow back to 65535
+			bsParams.Write(pRak->GetLastPing(pRak->GetPlayerIDFromIndex(i)));
+			i++;
 		}
 	}
+	
+	// Written, but unused last 2 bytes in client?
+	//bsParams.Write((WORD)pPlayerPool->GetPlayerCount());
+
+	pNetGame->SendToPlayer(rpcParams->senderId, RPC_UpdateScoresPingsIPs, &bsParams);
+
+	pPlayer->m_nLastPingUpdate = RakNet::GetTime();
 }
 
 //----------------------------------------------------
@@ -972,6 +990,33 @@ static void ActorDamage(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void Click(RPCParameters* rpcParams)
+{
+	WORD wClickedPlayerID = INVALID_PLAYER_ID;
+	unsigned char ucSource = 0;
+
+	if (rpcParams->numberOfBitsOfData == 24 &&
+		pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(rpcParams->senderId))
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		if (bsData.Read(wClickedPlayerID) &&
+			pNetGame->GetPlayerPool()->GetSlotState(wClickedPlayerID))
+		{
+			bsData.Read(ucSource);
+
+			if (pNetGame->GetFilterScripts())
+				pNetGame->GetFilterScripts()->OnPlayerClickPlayer(rpcParams->senderId, wClickedPlayerID, ucSource);
+
+			if (pNetGame->GetGameMode())
+				pNetGame->GetGameMode()->OnPlayerClickPlayer(rpcParams->senderId, wClickedPlayerID, ucSource);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakServerInterface * pRakServer)
 {
 	pRak = pRakServer;
@@ -985,7 +1030,7 @@ void RegisterRPCs(RakServerInterface * pRakServer)
 	REGISTER_STATIC_RPC(pRakServer, EnterVehicle);
 	REGISTER_STATIC_RPC(pRakServer, ExitVehicle);
 	REGISTER_STATIC_RPC(pRakServer, ServerCommand);
-	REGISTER_STATIC_RPC(pRakServer, UpdatePings);
+	REGISTER_STATIC_RPC(pRakServer, UpdateScoresPingsIPs);
 	//REGISTER_STATIC_RPC(pRakServer, SvrStats);
 	REGISTER_STATIC_RPC(pRakServer, SetInteriorId);
 	REGISTER_STATIC_RPC(pRakServer, ScmEvent);
@@ -999,6 +1044,7 @@ void RegisterRPCs(RakServerInterface * pRakServer)
 	REGISTER_STATIC_RPC(pRakServer, ClientCheck);
 	REGISTER_STATIC_RPC(pRakServer, VehicleDamage);
 	REGISTER_STATIC_RPC(pRakServer, ActorDamage);
+	REGISTER_STATIC_RPC(pRakServer, Click);
 }
 
 //----------------------------------------------------

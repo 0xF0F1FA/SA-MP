@@ -13,12 +13,12 @@ typedef struct {
 	unsigned int block_index;
 	bool computed;
 	bool corrupted;
-} SHA1Context;
+} SHA1Context_;
 
-class CSHA1 : public SHA1Context
+class CSHA1_ : public SHA1Context_
 {
 public:
-	CSHA1()
+	CSHA1_()
 	{
 		Reset();
 	}
@@ -208,7 +208,7 @@ public:
 		Update((unsigned char*)data, len);
 	}
 
-	void Update(char c)
+	/*void Update(char c)
 	{
 		Update((unsigned char*)&c, 1);
 	}
@@ -225,7 +225,7 @@ public:
 			Update(*data);
 			data++;
 		}
-	}
+	}*/
 };
 
 char bits_to_char(unsigned char b)
@@ -251,7 +251,7 @@ void GenerateComputerID(char* dest, char* src, int unk)
 	unsigned int states[5];
 	//unsigned int result_states[5];
 	unsigned char* state_bytes;
-	CSHA1 sha1;
+	CSHA1_ sha1;
 
 	states[0] = 0;
 	states[1] = 0;

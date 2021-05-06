@@ -102,42 +102,12 @@ BOOL HandleKeyPress(DWORD vKey)
 			break;
 
 		case VK_PRIOR:
-	
-			if (GetAsyncKeyState(VK_TAB))
-			{
-				if(!pNetGame) break;
-
-				pScoreBoard->m_iOffset -= 20;
-				if (pScoreBoard->m_iOffset < 0)
-					pScoreBoard->m_iOffset = 0;
-			} 
-			else {
-				if(pChatWindow) pChatWindow->PageUp();
-			}
 
 			break;
 
 		case VK_NEXT:
 		{
-			if(GetAsyncKeyState(VK_TAB))
-			{
-				if(!pNetGame) break;
 
-				pScoreBoard->m_iOffset += 20;
-			
-				CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-				int playercount = 0;
-				for (int x=0; x<MAX_PLAYERS; x++)
-					if (pPlayerPool->GetSlotState(x) == TRUE)
-						playercount++;
-				if (pScoreBoard->m_iOffset > (playercount-19))
-					pScoreBoard->m_iOffset = (playercount-19);
-				if (pScoreBoard->m_iOffset < 0)
-					pScoreBoard->m_iOffset = 0;
-			}
-			else {
-				if(pChatWindow) pChatWindow->PageDown();
-			}
 			break;
 		}
 

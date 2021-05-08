@@ -39,14 +39,14 @@ bool CObjectPool::Delete(BYTE byteObjectID)
 	return true;
 }
 
-bool CObjectPool::New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRot)
+bool CObjectPool::New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDist)
 {
 	if (m_pObjects[byteObjectID] != NULL)
 	{
 		Delete(byteObjectID);
 	}
 
-	m_pObjects[byteObjectID] = pGame->NewObject(iModel, vecPos.X, vecPos.Y, vecPos.Z, vecRot);
+	m_pObjects[byteObjectID] = pGame->NewObject(iModel, vecPos.X, vecPos.Y, vecPos.Z, vecRot, fDrawDist);
 
 	if (m_pObjects[byteObjectID])
 	{

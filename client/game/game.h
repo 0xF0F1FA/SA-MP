@@ -70,7 +70,7 @@ public:
 
 	CPlayerPed *NewPlayer(int iPlayerID, int iSkin,float fPosX,float fPosY,float fPosZ,float fRotation,BYTE byteCreateMarker = 1);
 	CVehicle *NewVehicle(int iType,float fPosX,float fPosY,float fPosZ,float fRotation, PCHAR szNumberPlate);
-	CObject *NewObject(int iModel, float fPosX, float fPosY,float fPosZ, VECTOR vecRot);
+	CObject *NewObject(int iModel, float fPosX, float fPosY,float fPosZ, VECTOR vecRot, float fDrawDist);
 	int		GetWeaponModelIDFromWeapon(int iWeaponID);
 	bool	IsKeyPressed(int iKeyIdentifier);
 	float	FindGroundZForCoord(float x, float y, float z);

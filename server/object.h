@@ -29,8 +29,9 @@ public:
 	BYTE					m_byteMoving;
 	float					m_fMoveSpeed;
 	float					m_fRotation;
+	float					m_fDrawDistance;
 
-	CObject(int iModel, VECTOR * vecPos, VECTOR * vecRot);
+	CObject(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist);
 	~CObject(){};
 
 	bool IsActive() { return m_bIsActive; }

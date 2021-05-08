@@ -9,11 +9,26 @@
 #include "../main.h"
 #include "util.h"
 
-CObject::CObject(int iModel, float fPosX, float fPosY, float fPosZ, VECTOR vecRot)
+bool IsObjectModel(MODEL_INFO_TYPE* t)
+{
+	if (t->vtable == 0x85BBF0 || t->vtable == 0x85BC30 || t->vtable == 0x85BC70 ||
+		t->vtable == 0x85BCB0 || t->vtable == 0x85BCF0)
+	{
+		return true;
+	}
+	return false;
+}
+
+CObject::CObject(int iModel, float fPosX, float fPosY, float fPosZ, VECTOR vecRot, float fDrawDistance)
 {
 	DWORD dwRetID	= 0;
 	m_pEntity		= 0;
 	m_dwGTAId		= 0;
+
+	MODEL_INFO_TYPE* pModelInfo = GetModelInfo(iModel);
+
+	if (fDrawDistance != 0.0f && pModelInfo && IsObjectModel(pModelInfo))
+		pModelInfo->fDrawDistance = fDrawDistance;
 
 	ScriptCommand(&create_object, iModel, fPosX, fPosY, fPosZ, &dwRetID);
 	ScriptCommand(&put_object_at, dwRetID, fPosX, fPosY, fPosZ);

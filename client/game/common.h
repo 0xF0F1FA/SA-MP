@@ -241,10 +241,12 @@ typedef struct {
 
 typedef struct
 {
-	PADDING(_pad0, 8);			// 0-8
+	DWORD vtable;				// 0-4
+	PADDING(_pad0, 4);			// 4-8
 	WORD wUseCount;				// 8-10
 	PADDING(_pad1, 10);			// 10-20
 	MODEL_COL_TYPE* pModelCol;	// 20-24
+	float fDrawDistance;		// 24-28
 } MODEL_INFO_TYPE;
 
 //-----------------------------------------------------------

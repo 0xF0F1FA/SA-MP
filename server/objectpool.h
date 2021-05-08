@@ -26,8 +26,8 @@ public:
 	CObjectPool();
 	~CObjectPool();
 
-	BYTE New(int iModel, VECTOR * vecPos, VECTOR * vecRot);
-	BYTE New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot);
+	BYTE New(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist);
+	BYTE New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot, float fDrawDist);
 	
 	bool Delete(BYTE byteObjectID);	
 	bool DeleteForPlayer(BYTE bytePlayerID, BYTE byteObjectID);

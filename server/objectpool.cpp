@@ -44,7 +44,7 @@ CObjectPool::~CObjectPool()
 
 //----------------------------------------------------
 
-BYTE CObjectPool::New(int iModel, VECTOR * vecPos, VECTOR * vecRot)
+BYTE CObjectPool::New(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist)
 {
 	BYTE byteObjectID;
 
@@ -55,7 +55,7 @@ BYTE CObjectPool::New(int iModel, VECTOR * vecPos, VECTOR * vecRot)
 
 	if(byteObjectID == MAX_OBJECTS) return 0xFF;		
 
-	m_pObjects[byteObjectID] = new CObject(iModel,vecPos,vecRot);
+	m_pObjects[byteObjectID] = new CObject(iModel,vecPos,vecRot,fDrawDist);
 
 	if(m_pObjects[byteObjectID])
 	{
@@ -72,7 +72,7 @@ BYTE CObjectPool::New(int iModel, VECTOR * vecPos, VECTOR * vecRot)
 
 //----------------------------------------------------
 
-BYTE CObjectPool::New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot)
+BYTE CObjectPool::New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot, float fDrawDist)
 {
 	BYTE byteObjectID;
 
@@ -83,7 +83,7 @@ BYTE CObjectPool::New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot)
 
 	if(byteObjectID == MAX_OBJECTS) return 0xFF;		
 
-	CObject *pObject = new CObject(iModel, vecPos, vecRot);
+	CObject *pObject = new CObject(iModel, vecPos, vecRot, fDrawDist);
 	
 	if (pObject)
 	{

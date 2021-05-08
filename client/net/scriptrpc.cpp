@@ -671,6 +671,7 @@ void ScrCreateObject(RPCParameters *rpcParams)
 	byte byteObjectID;
 	int iModel;
 	VECTOR vecPos, vecRot;
+	float fDrawDist;
 	RakNet::BitStream bsData(rpcParams);
 	bsData.Read(byteObjectID);
 	bsData.Read(iModel);
@@ -683,8 +684,10 @@ void ScrCreateObject(RPCParameters *rpcParams)
 	bsData.Read(vecRot.Y);
 	bsData.Read(vecRot.Z);
 
+	bsData.Read(fDrawDist);
+
 	CObjectPool* pObjectPool =	pNetGame->GetObjectPool();
-	pObjectPool->New(byteObjectID, iModel, vecPos, vecRot);
+	pObjectPool->New(byteObjectID, iModel, vecPos, vecRot, fDrawDist);
 }
 
 //----------------------------------------------------

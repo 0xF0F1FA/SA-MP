@@ -71,9 +71,9 @@ CVehicle *CGame::NewVehicle(int iType, float fPosX, float fPosY,
 //-----------------------------------------------------------
 
 CObject *CGame::NewObject(int iModel, float fPosX, float fPosY,
-							float fPosZ, VECTOR vecRot)
+							float fPosZ, VECTOR vecRot, float fDrawDist)
 {
-	CObject *pObjectNew = new CObject(iModel,fPosX,fPosY,fPosZ,vecRot);
+	CObject *pObjectNew = new CObject(iModel,fPosX,fPosY,fPosZ,vecRot, fDrawDist);
 	return pObjectNew;
 }
 

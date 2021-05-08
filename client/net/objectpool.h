@@ -18,7 +18,7 @@ public:
 	CObjectPool();
 	~CObjectPool();
 
-	bool New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRot);
+	bool New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDist=0.0f);
 	bool Delete(BYTE byteObjectID);
 
 	// Find out if the slot is inuse.

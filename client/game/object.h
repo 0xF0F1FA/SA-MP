@@ -21,7 +21,7 @@ public:
 	BYTE					m_byteMoving;
 	float					m_fMoveSpeed;
 	
-	CObject(int iModel, float fPosX, float fPosY, float fPosZ, VECTOR vecRot);
+	CObject(int iModel, float fPosX, float fPosY, float fPosZ, VECTOR vecRot, float fDrawDistance=0.0f);
 	~CObject();
 	
 	void Process(float fElapsedTime);

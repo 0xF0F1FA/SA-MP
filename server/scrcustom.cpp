@@ -5104,7 +5104,7 @@ static cell n_GetGravity(AMX *amx, cell *params)
 
 static cell n_CreateObject(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "CreateObject", 7);
+	CHECK_PARAMS(amx, "CreateObject", 8);
 	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
 	VECTOR vecPos, vecRot;
 
@@ -5115,8 +5115,10 @@ static cell n_CreateObject(AMX *amx, cell *params)
 	vecRot.X = amx_ctof(params[5]);
 	vecRot.Y = amx_ctof(params[6]);
 	vecRot.Z = amx_ctof(params[7]);
+
+	float fDrawDist = amx_ctof(params[8]);
 	
-	BYTE byteObjectID = pObjectPool->New((int)params[1], &vecPos, &vecRot);
+	BYTE byteObjectID = pObjectPool->New((int)params[1], &vecPos, &vecRot, fDrawDist);
 
 	if (byteObjectID != 0xFF)
 	{
@@ -5375,7 +5377,7 @@ static cell n_SetObjectScale(AMX* amx, cell* params)
 
 static cell n_CreatePlayerObject(AMX *amx, cell *params)
 {
-	CHECK_PARAMS(amx, "CreatePlayerObject", 8);
+	CHECK_PARAMS(amx, "CreatePlayerObject", 9);
 	if (!pNetGame->GetPlayerPool()->GetSlotState(params[1])) return 0;
 	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
 	VECTOR vecPos, vecRot;
@@ -5387,8 +5389,10 @@ static cell n_CreatePlayerObject(AMX *amx, cell *params)
 	vecRot.X = amx_ctof(params[6]);
 	vecRot.Y = amx_ctof(params[7]);
 	vecRot.Z = amx_ctof(params[8]);
+
+	float fDrawDist = amx_ctof(params[9]);
 	
-	BYTE byteObjectID = pObjectPool->New((int)params[1], (int)params[2], &vecPos, &vecRot);
+	BYTE byteObjectID = pObjectPool->New((int)params[1], (int)params[2], &vecPos, &vecRot, fDrawDist);
 
 	if (byteObjectID != 0xFF)
 	{

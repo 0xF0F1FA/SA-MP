@@ -4,7 +4,7 @@
 #endif
 #define _objects_included
 
-native CreateObject(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz);
+native CreateObject(modelid, Float:X, Float:Y, Float:Z, Float:rX, Float:rY, Float:rZ, Float:DrawDistance = 0.0);
 native AttachObjectToPlayer(objectid, playerid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz);
 native SetObjectPos(objectid, Float:x, Float:y, Float:z);
 native GetObjectPos(objectid, &Float:x, &Float:y, &Float:z);
@@ -18,7 +18,7 @@ native StopObject(objectid);
 native IsObjectMoving(objectid);
 native SetObjectScale(objectid, Float:scale);
 
-native CreatePlayerObject(playerid, modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz);
+native CreatePlayerObject(playerid, modelid, Float:X, Float:Y, Float:Z, Float:rX, Float:rY, Float:rZ, Float:DrawDistance = 0.0);
 native SetPlayerObjectPos(playerid, playerobjectid, Float:x, Float:y, Float:z);
 native GetPlayerObjectPos(playerid, playerobjectid, &Float:x, &Float:y, &Float:z);
 native SetPlayerObjectRot(playerid, playerobjectid, Float:rx, Float:ry, Float:rz);

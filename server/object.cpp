@@ -12,7 +12,7 @@ Version: $Id: vehicle.cpp,v 1.5 2006/05/07 15:35:32 kyeman Exp $
 //----------------------------------------------------------
 // Global
 
-CObject::CObject(int iModel, VECTOR * vecPos, VECTOR * vecRot)
+CObject::CObject(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist)
 {
 	// Set the initial pos
 	memset(&m_matWorld,0,sizeof(MATRIX4X4));
@@ -27,7 +27,7 @@ CObject::CObject(int iModel, VECTOR * vecPos, VECTOR * vecRot)
 	m_byteMoving = 0;
 
 	m_iModel = iModel;
-
+	m_fDrawDistance = fDrawDist;
 	m_bIsActive = true;
 }
 
@@ -47,6 +47,7 @@ void CObject::SpawnForPlayer(BYTE byteForPlayerID)
 	bsObjectSpawn.Write(m_matWorld.up.X);
 	bsObjectSpawn.Write(m_matWorld.up.Y);
 	bsObjectSpawn.Write(m_matWorld.up.Z);
+	bsObjectSpawn.Write(m_fDrawDistance);
 	
 	//printf("player: %d, id: %d, model: %d, others: %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", byteForPlayerID, m_byteObjectID, m_iModel, m_matWorld.pos.X, m_matWorld.pos.Y, m_matWorld.pos.Z, m_matWorld.up.X, m_matWorld.up.Y, m_matWorld.up.Z);
 

@@ -55,6 +55,7 @@ typedef struct _GAME_SETTINGS {
 #include <d3dx9core.h>
 #include <dxut/dxstdafx.h>
 #include "game/game.h"
+#include "game/util.h"
 
 #include <raknet/RakClientInterface.h>
 #include <raknet/BitStream.h>
@@ -144,6 +145,7 @@ extern bool bWantHudScaling;
 extern bool bHeadMove;
 extern int iGtaVersion;
 extern char szUserDocPath[MAX_PATH];
+extern HINSTANCE hInstance;
 
 #include "outputdebugstring.h"
 

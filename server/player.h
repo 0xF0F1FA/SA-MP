@@ -222,6 +222,8 @@ public:
 	unsigned long GetCurrentWeaponAmmo();
 
 	void UpdateTimer();
+
+	bool SendClientCheck(BYTE byteType, DWORD dwAddress, WORD wOffset, WORD wCount);
 };
 
 #endif

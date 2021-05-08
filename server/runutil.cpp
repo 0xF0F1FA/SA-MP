@@ -853,3 +853,18 @@ void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q)
 	q->Z = _copysignf(z, m->up.X - m->right.Y);
 }
 
+//----------------------------------------------------
+
+bool IsValidClientCheckParams(int iType, int iOffset, int iCount)
+{
+	if (iType == 2 || iType == 5 || (iType >= 69 && iType <= 72) &&
+		(iOffset >= 0 && iOffset <= 256) &&
+		(iCount >= 2 && iCount <= 256))
+	{
+		return true;
+	}
+	return false;
+}
+
+//----------------------------------------------------
+

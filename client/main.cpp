@@ -342,8 +342,6 @@ void DoInitStuff()
 
 		pConfigFile = new CConfigFile(szUserDocPath);
 
-		Util_GetTime();
-
 		timeBeginPeriod(5); // increases the accuracy of Sleep()
 		SubclassGameWindow();
 

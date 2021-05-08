@@ -232,6 +232,23 @@ typedef struct {
 
 //-----------------------------------------------------------
 
+typedef struct {
+	PADDING(m_0_to_20, 44); // 0-44
+	PDWORD pdwColData; // 44-48
+} MODEL_COL_TYPE;
+
+//-----------------------------------------------------------
+
+typedef struct
+{
+	PADDING(_pad0, 8);			// 0-8
+	WORD wUseCount;				// 8-10
+	PADDING(_pad1, 10);			// 10-20
+	MODEL_COL_TYPE* pModelCol;	// 20-24
+} MODEL_INFO_TYPE;
+
+//-----------------------------------------------------------
+
 #define FADE_OUT						0
 #define FADE_IN							1
 

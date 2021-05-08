@@ -36,4 +36,6 @@ bool ContainsInvalidNickChars(char* szString);
 void ReplaceBadChars(char * szString);
 int CanFileBeOpenedForReading(char* filename);
 void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q);
+bool IsValidClientCheckParams(int iType, int iOffset, int iCount);
+
 //----------------------------------------------------

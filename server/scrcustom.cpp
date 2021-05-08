@@ -1320,23 +1320,19 @@ static cell n_GetPlayerWeaponState(AMX* amx, cell* params)
 static cell n_SendClientCheck(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SendClientCheck", 5);
-	if (pNetGame->GetPlayerPool() && pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
-		if ((params[2] >= 2 && params[2] <= 72) && (params[4] >= 0 && params[4] <= 255) &&
-			(params[5] >= 0 && params[5] <= 255)) {
-			RakNet::BitStream bsSend;
-			unsigned char
-				ucType = (unsigned char)params[2],
-				ucOffset = (unsigned char)params[4],
-				ucCount = (unsigned char)params[5];
-			unsigned long
-				ulAddress = (unsigned long)params[3];
 
-			bsSend.Write(ucType);
-			bsSend.Write(ulAddress);
-			bsSend.Write(ucOffset);
-			bsSend.Write(ucCount);
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 
-			return pNetGame->SendToPlayer(params[1], RPC_ClientCheck, &bsSend);
+	if (IsValidClientCheckParams(params[2], params[4], params[5]))
+	{
+		if (pPlayerPool && pPlayerPool->GetSlotState(params[1]))
+		{
+			CPlayer* pPlayer = pPlayerPool->GetAt(params[1]);
+			if (pPlayer)
+			{
+				return pPlayer->SendClientCheck((BYTE)params[2],
+					params[3], (WORD)params[4], (WORD)params[5]);
+			}
 		}
 	}
 	return 0;

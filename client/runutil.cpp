@@ -334,19 +334,6 @@ char * K_DecodeString(unsigned char *szInput)
 	return st;
 }
 
-unsigned long Util_GetTime()
-{
-	static bool bInited = false;
-	static LARGE_INTEGER fli;
-	LARGE_INTEGER cli;
-	if (!bInited) {
-		QueryPerformanceFrequency(&fli);
-		bInited = true;
-	}
-	QueryPerformanceCounter(&cli);
-	return (unsigned long)(cli.QuadPart * 1000 / fli.QuadPart);
-}
-
 const char* GetWeaponName(int iWeaponID)
 {
 	switch (iWeaponID) {

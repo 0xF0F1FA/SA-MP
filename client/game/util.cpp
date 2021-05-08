@@ -924,10 +924,41 @@ unsigned int CRC32UppercaseString(char* szString)
 	return uiResult;
 }
 
+//----------------------------------------------------
+
 void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius)
 {
 	// TODO
 }
+
+//----------------------------------------------------
+
+MODEL_INFO_TYPE* GetModelInfo(int iModelID)
+{
+	if (iModelID < 0 || iModelID > 20000)
+	{
+		return NULL;
+	}
+	
+	MODEL_INFO_TYPE** pModelInfo = (MODEL_INFO_TYPE**)0xA9B0C8;
+
+	return pModelInfo[iModelID];
+}
+
+//----------------------------------------------------
+
+MODEL_COL_TYPE* GetModelColInfo(int iModelID)
+{
+	return GetModelInfo(iModelID)->pModelCol;
+}
+
+//----------------------------------------------------
+
+WORD GetModelUseCount(int iModelID)
+{
+	return GetModelInfo(iModelID)->wUseCount;
+}
+
 //----------------------------------------------------
 
 // https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/

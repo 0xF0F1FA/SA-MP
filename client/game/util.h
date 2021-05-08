@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include "../main.h"
-
 #define ENTITY_TYPE_UNKNOWN		0
 #define ENTITY_TYPE_PED			1
 #define ENTITY_TYPE_VEHICLE		2
@@ -61,7 +59,7 @@ float DegToRad(float fDegrees);
 
 bool IsNumeric(char *szString);
 
-void GameForcedExit(int iReasonCode);
+void _declspec(noreturn) GameForcedExit(int iReasonCode);
 
 BOOL __stdcall IsValidModel(int iModelID);
 
@@ -76,6 +74,10 @@ void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius);
 
 void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION * quat);
 void QuatNormalize(D3DXQUATERNION* pQuat);
+MODEL_INFO_TYPE* GetModelInfo(int iModelID);
+MODEL_COL_TYPE* GetModelColInfo(int iModelID);
+WORD GetModelUseCount(int iModelID);
+
 
 //-----------------------------------------------------------
 

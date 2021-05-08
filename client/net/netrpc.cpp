@@ -818,46 +818,140 @@ void Instagib(RPCParameters *rpcParams)
 
 //----------------------------------------------------
 
-static BYTE GetByteSumAtAddress(DWORD dwAddr, BYTE byteCount)
+static BYTE GetByteSumAtAddress(DWORD dwAddr, WORD wCount)
 {
-	BYTE sum = 0, byte = 0;
+	BYTE sum = 0;
+	WORD byte = 0;
 	do {
 		sum ^= *(BYTE*)(dwAddr + byte++) & 0xCC;
-	} while (byte != byteCount);
+	} while (byte != wCount);
 	return sum;
 }
 
-// TODO: Add type: 70, 2, 71, 69, 72
-// What are these check type numbers even...
+void SendClientCheckResponse(BYTE byteType, DWORD dwAddress, BYTE byteSum)
+{
+	RakNet::BitStream bsSend;
+
+	bsSend.Write(byteType);
+	bsSend.Write(dwAddress);
+	bsSend.Write(byteSum);
+
+	pNetGame->Send(RPC_ClientCheck, &bsSend);
+}
+
 static void ClientCheck(RPCParameters* rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
+	BYTE byteType=0;
+	DWORD dwAddress=0, dwTempAddr;
+	WORD wOffset=0, wCount=0;
+	BYTE byteSum=0;
 
-	unsigned char ucType, ucOffset, ucCount;
-	unsigned long ulMemAddress;
+	if (!bsData.Read(byteType) ||
+		!bsData.Read(dwAddress) ||
+		!bsData.Read(wOffset) || wOffset > 256 ||
+		!bsData.Read(wCount) || wCount > 256 || wCount < 2)
+	{
+		return;
+	}
 
-	if (bsData.GetNumberOfUnreadBits() == 72 && bsData.Read(ucType)) {
-		bsData.Read(ulMemAddress);
-		bsData.Read(ucOffset);
-		bsData.Read(ucCount);
-		if (ucType == 5 && (ulMemAddress >= 0x400000 && ulMemAddress <= 0x856E00)) {
-			unsigned char ucSum = GetByteSumAtAddress(ulMemAddress + ucOffset, ucCount);
-
-			RakNet::BitStream bsSend;
-			bsSend.Write<unsigned char>(5); // type
-			bsSend.Write(ulMemAddress);
-			bsSend.Write(ucSum);
-			pNetGame->Send(RPC_ClientCheck, &bsSend);
+	switch (byteType)
+	{
+	case 70:
+	{
+		if (IsValidModel(dwAddress))
+		{
+			dwTempAddr = (DWORD)GetModelInfo(dwAddress);
+			if (dwTempAddr)
+				byteSum = GetByteSumAtAddress(dwTempAddr + wOffset, wCount);
 		}
-		else if (ucType == 72) {
-			ulMemAddress = Util_GetTime() & 0xFFFFFFF | 0x30000000;
-
-			RakNet::BitStream bsSend;
-			bsSend.Write<unsigned char>(72); // type
-			bsSend.Write(ulMemAddress);
-			bsSend.Write<unsigned char>(0);
-			pNetGame->Send(RPC_ClientCheck, &bsSend);
+		SendClientCheckResponse(70, dwAddress, byteSum);
+		break;
+	}
+	case 2:
+	{
+		CPlayerPed* pPlayerPed = pGame->FindPlayerPed();
+		if (pPlayerPed)
+		{
+			if (!pPlayerPed->IsInVehicle() || pPlayerPed->IsAPassenger())
+			{
+				if (pPlayerPed->m_pPed)
+				{
+					dwAddress = *(DWORD*)((DWORD)pPlayerPed->m_pPed + 64);
+					byteSum = 1;
+				}
+			}
+			else
+			{
+				if (pPlayerPed->m_pPed->pVehicle)
+				{
+					dwAddress = *(DWORD*)((DWORD)pPlayerPed->m_pPed->pVehicle + 64);
+					byteSum = 2;
+				}
+			}
 		}
+		SendClientCheckResponse(2, dwAddress, byteSum);
+		break;
+	}
+	case 71:
+	{
+		if (IsValidModel(dwAddress))
+		{
+			INT iWaitCount = 0;
+			if (!CGame::IsModelLoaded(dwAddress))
+			{
+				CGame::RequestModel(dwAddress);
+				CGame::LoadRequestedModels();
+				while (!CGame::IsModelLoaded(dwAddress))
+				{
+					if (++iWaitCount > 1000)
+						break;
+					Sleep(1);
+				}
+			}
+			if (CGame::IsModelLoaded(dwAddress))
+			{
+				dwTempAddr = (DWORD)GetModelColInfo(dwAddress);
+				if (dwTempAddr)
+					byteSum = GetByteSumAtAddress(dwTempAddr + wOffset, wCount);
+
+				if (!GetModelUseCount(dwAddress))
+					CGame::RemoveModel(dwAddress);
+			}
+		}
+		SendClientCheckResponse(71, dwAddress, byteSum);
+		break;
+	}
+	case 5:
+	{
+		if (dwAddress >= 0x400000 && dwAddress <= 0x856E00)
+		{
+			if (dwAddress) // ???
+				byteSum = GetByteSumAtAddress(dwAddress + wOffset, wCount);
+
+			SendClientCheckResponse(5, dwAddress, byteSum);
+		}
+		break;
+	}
+	case 69:
+	{
+		// TODO: Change the size of .text section for each version?
+		if (dwAddress <= 0xC3500)
+		{
+			dwTempAddr = (DWORD)hInstance + dwAddress;
+			if (dwTempAddr)
+				byteSum = GetByteSumAtAddress(dwTempAddr + wOffset, wCount);
+
+			SendClientCheckResponse(69, dwAddress, byteSum);
+		}
+		break;
+	}
+	case 72:
+	{
+		dwAddress = (RakNet::GetTime32() & 0xFFFFFFF | 0x30000000);
+		SendClientCheckResponse(72, dwAddress, 0);
+		break;
+	}
 	}
 }
 

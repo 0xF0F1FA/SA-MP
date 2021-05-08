@@ -1360,4 +1360,18 @@ void CPlayer::UpdateTimer()
 }
 
 //----------------------------------------------------
+
+bool CPlayer::SendClientCheck(BYTE byteType, DWORD dwAddress, WORD wOffset, WORD wCount)
+{
+	RakNet::BitStream bsSend;
+	
+	bsSend.Write(byteType);
+	bsSend.Write(dwAddress);
+	bsSend.Write(wOffset);
+	bsSend.Write(wCount);
+
+	return pNetGame->SendToPlayer(m_bytePlayerID, RPC_ClientCheck, &bsSend);
+}
+
+//----------------------------------------------------
 // EOF

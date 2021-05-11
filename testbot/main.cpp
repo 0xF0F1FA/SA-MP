@@ -14,6 +14,18 @@ CNetGame		*pNetGame=0;
 
 void InitSettings();
 
+#ifdef LINUX
+
+#include <time.h>
+
+long GetTickCount()
+{
+	tms tm;
+	return (times(&tm) * 10);
+}
+
+#endif
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
 	OutputDebugString("----- Bot Starting -----");

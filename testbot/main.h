@@ -11,6 +11,8 @@
 #define SAFE_DELETE(p)	{ if (p) { delete (p); (p) = NULL; } }
 #define SAFE_RELEASE(p)	{ if (p) { (p)->Release(); (p) = NULL; } }
 
+#define PI 3.14159265f
+
 #define MAX_PLAYER_NAME		24
 #define MAX_SETTINGS_STRING 256
 
@@ -178,6 +180,10 @@ typedef struct _CAR_MOD_INFO
 	int iColor0;
 	int iColor1;
 } CAR_MOD_INFO;
+
+#ifdef LINUX
+long GetTickCount();
+#endif
 
 #include "net/netrpc.h"
 #include "net/playerpool.h"

@@ -152,6 +152,7 @@ typedef struct _SERVER_SETTINGS {
 extern CConsole* pConsole;
 extern CNetGame* pNetGame;
 extern CPlugins* pPlugins;
+extern CArtwork* pArtwork;
 
 /*#ifdef RAKRCON
 extern CRcon *pRcon;

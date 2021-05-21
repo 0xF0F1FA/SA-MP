@@ -7715,6 +7715,33 @@ static cell n_gpci(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native AddCharModel(baseid, newid, dffname[], txdname[]);
+
+static cell n_AddCharModel(AMX* amx, cell* params)
+{
+	char* szDffName;
+	char* szTxdName;
+
+	CHECK_PARAMS(amx, "AddCharModel", 4);
+	
+	if (pArtwork)
+	{
+		int iBaseID = params[1];
+		int iNewID = params[2];
+
+		amx_StrParam(amx, params[3], szDffName);
+		amx_StrParam(amx, params[4], szTxdName);
+
+		if (szDffName == NULL) szDffName = "";
+		if (szTxdName == NULL) szTxdName = "";
+
+		return pArtwork->AddModelEntry(1, -1, iBaseID, iNewID,
+			szDffName, szTxdName, false, false);
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
 {
@@ -7830,6 +7857,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "GangZoneFlashForAll",		n_GangZoneFlashForAll },
 	{ "GangZoneStopFlashForPlayer",	n_GangZoneStopFlashForPlayer },
 	{ "GangZoneStopFlashForAll",	n_GangZoneStopFlashForAll },
+
+	// Artwork
+	DEFINE_NATIVE(AddCharModel),
 
 	// Admin
 	DEFINE_NATIVE(IsPlayerAdmin),

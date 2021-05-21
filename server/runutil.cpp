@@ -916,14 +916,14 @@ DWORD GetFileCRC32Checksum(char* szFile, DWORD* pdwCRC)
 	DWORD dwCRC = 0;
 	DWORD dwOverallSize = 0;
 	DWORD dwCopiedLen;
-	char szBuffer[1030];
+	char szBuffer[1024];
 
 	FILE* pFile = fopen(szFile, "rb");
 	if (pFile)
 	{
 		while (!feof(pFile))
 		{
-			dwCopiedLen = fread(szBuffer, 1, 1024, pFile);
+			dwCopiedLen = fread(szBuffer, 1, sizeof(szBuffer), pFile);
 			dwCRC = CRC32(dwCRC, szBuffer, dwCopiedLen);
 			dwOverallSize += dwCopiedLen;
 		}

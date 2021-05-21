@@ -458,6 +458,9 @@ native GangZoneStopFlashForAll(gangzoneid);
 native ConnectNPC(name[], script[]);
 native IsPlayerNPC(playerid);
 
+// Artwork/NetModels
+native AddCharModel(baseid, newid, dffname[], txdname[]);
+
 
 // Per-player 3D Text Labels
 native PlayerText3D:CreatePlayer3DTextLabel(playerid, text[], color, Float:X, Float:Y, Float:Z, Float:DrawDistance, attachedplayer=INVALID_PLAYER_ID, attachedvehicle=INVALID_VEHICLE_ID, testLOS=0);

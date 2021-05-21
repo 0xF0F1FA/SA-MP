@@ -63,6 +63,7 @@ enum
 	RPC_DestroyLabel,
 	RPC_ChatBubble,
 	RPC_SetTimer,
+	RPC_ModelRequest,
 
 	RPC_ScrSetSpawnInfo = 100,
 	RPC_ScrSetPlayerTeam,

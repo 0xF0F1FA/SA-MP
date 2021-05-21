@@ -12,6 +12,7 @@
 CNetGame		*pNetGame	= NULL;
 CConsole		*pConsole	= NULL;
 CPlugins		*pPlugins	= NULL;
+CArtwork		*pArtwork	= NULL;
 
 SERVER_SETTINGS gServerSettings;
 
@@ -45,6 +46,7 @@ int iPlayerTimeOutTime = 10000;
 int iConnSeedTime = 300000;
 int iConnCookies = 1;
 int iCookieLogging = 1;
+bool bUseArtwork = false;
 
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
@@ -399,6 +401,8 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("connseedtime", CON_VARTYPE_INT, 0, &iConnSeedTime);
 	pConsole->AddVariable("conncookies", CON_VARTYPE_INT, 0, &iConnCookies);
 	pConsole->AddVariable("cookielogging", CON_VARTYPE_INT, 0, &iCookieLogging);
+	pConsole->AddVariable("useartwork", CON_VARTYPE_BOOL, 0, &bUseArtwork);
+	pConsole->AddStringVariable("artpath", 0, "models");
 
 	// Add 16 gamemode variables.
 	int x=0;
@@ -435,6 +439,13 @@ int main (int argc, char** argv)
 	//pConsole->ModifyVariableFlags("nosign", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("onfoot_rate", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("incar_rate", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("useartwork", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("artpath", CON_VARFLAG_READONLY);
+
+	if (bUseArtwork)
+		pConsole->AddStringVariable("artwork", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, "Yes");
+	else
+		pConsole->AddStringVariable("artwork", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, "No");
 
 	// Add the version as a rule
 	pConsole->AddStringVariable("version", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, SAMP_VERSION);
@@ -454,6 +465,12 @@ int main (int argc, char** argv)
 	// Load up the plugins
 	pPlugins = new CPlugins();
 	pPlugins->LoadPlugins("plugins");
+
+	if (bUseArtwork) {
+		pArtwork = new CArtwork(pConsole->GetStringVariable("artpath"));
+		if (pArtwork)
+			pArtwork->ReadConfig("artconfig.txt");
+	}
 
 	// Create the NetGame.
 	pNetGame = new CNetGame();
@@ -507,9 +524,9 @@ int main (int argc, char** argv)
 	delete pRcon;
 #endif*/
 
-	delete pNetGame;
-
-	delete pPlugins;
+	SAFE_DELETE(pNetGame);
+	SAFE_DELETE(pArtwork); // additional
+	SAFE_DELETE(pPlugins);
 
 	// If WIN32: Kill the input thread.
 	#ifdef WIN32
@@ -517,7 +534,7 @@ int main (int argc, char** argv)
 		CloseHandle(hConsoleExecuteEvent);
 	#endif
 
-	delete pConsole;
+	SAFE_DELETE(pConsole);
 
 	fclose(pLogFile);
 

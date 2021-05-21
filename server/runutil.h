@@ -37,5 +37,7 @@ void ReplaceBadChars(char * szString);
 int CanFileBeOpenedForReading(char* filename);
 void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q);
 bool IsValidClientCheckParams(int iType, int iOffset, int iCount);
+DWORD CRC32(DWORD crc, char* buf, int len);
+DWORD GetFileCRC32Checksum(char* szFile, DWORD* pdwCRC);
 
 //----------------------------------------------------

@@ -189,6 +189,7 @@
     <ClCompile Include="..\sdk\sqlite\sqlite3.c" />
     <ClCompile Include="actor.cpp" />
     <ClCompile Include="actorpool.cpp" />
+    <ClCompile Include="artwork.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="exceptions.cpp" />
     <ClCompile Include="filterscripts.cpp" />
@@ -211,6 +212,7 @@
     <ClCompile Include="plugins.cpp" />
     <ClCompile Include="query.cpp" />
     <ClCompile Include="runutil.cpp" />
+    <ClCompile Include="sampmap.cpp" />
     <ClCompile Include="scrcore.cpp" />
     <ClCompile Include="scrcustom.cpp" />
     <ClCompile Include="scrdatabase.cpp" />
@@ -300,6 +302,7 @@
     <ClInclude Include="..\sdk\sqlite\sqlite3ext.h" />
     <ClInclude Include="actor.h" />
     <ClInclude Include="actorpool.h" />
+    <ClInclude Include="artwork.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="filterscripts.h" />
     <ClInclude Include="format.h" />
@@ -322,6 +325,7 @@
     <ClInclude Include="plugininternal.h" />
     <ClInclude Include="plugins.h" />
     <ClInclude Include="runutil.h" />
+    <ClInclude Include="sampmap.h" />
     <ClInclude Include="scrcore.h" />
     <ClInclude Include="scrtimers.h" />
     <ClInclude Include="system.h" />

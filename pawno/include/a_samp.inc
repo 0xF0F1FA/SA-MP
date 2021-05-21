@@ -463,6 +463,7 @@ native AddCharModel(baseid, newid, dffname[], txdname[]);
 native AddSimpleModel(virtualworld, baseid, newid, dffname[], txdname[]);
 native AddSimpleModelTimed(virtualworld, baseid, newid, dffname[], txdname[], timeon, timeoff);
 native FindModelFileNameFromCRC(crc, retstr[], retstr_size);
+native FindTextureFileNameFromCRC(crc, retstr[], retstr_size);
 
 
 // Per-player 3D Text Labels

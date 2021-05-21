@@ -7802,6 +7802,29 @@ static cell n_AddSimpleModelTimed(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native FindModelFileNameFromCRC(crc, retstr[], retstr_size);
+
+static cell n_FindModelFileNameFromCRC(AMX* amx, cell* params)
+{
+	ARTWORK_DATA* pData;
+	cell* cstr;
+
+	CHECK_PARAMS(amx, "FindModelFileNameFromCRC", 3);
+
+	if (pArtwork)
+	{
+		pData = pArtwork->FindDataFromModelCRC(params[1]);
+		if (pData)
+		{
+			amx_GetAddr(amx, params[2], &cstr);
+			amx_SetString(cstr, pData->szDffName, 0, 0, params[3]);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
 {
@@ -7922,6 +7945,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(AddCharModel),
 	DEFINE_NATIVE(AddSimpleModel),
 	DEFINE_NATIVE(AddSimpleModelTimed),
+	DEFINE_NATIVE(FindModelFileNameFromCRC),
 
 	// Admin
 	DEFINE_NATIVE(IsPlayerAdmin),

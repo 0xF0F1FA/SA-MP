@@ -7770,6 +7770,38 @@ static cell n_AddSimpleModel(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native AddSimpleModelTimed(virtualworld, baseid, newid, dffname[], txdname[], timeon, timeoff);
+
+static cell n_AddSimpleModelTimed(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "AddSimpleModelTimed", 7);
+
+	if (pArtwork)
+	{
+		int iBaseID = params[2];
+		int iNewID = params[3];
+		int iVirtualWorld = params[1];
+
+		char* szDffName;
+		char* szTxdName;
+		amx_StrParam(amx, params[4], szDffName);
+		amx_StrParam(amx, params[5], szTxdName);
+
+		// additional
+		if (szDffName == NULL) szDffName = "";
+		if (szTxdName == NULL) szTxdName = "";
+
+		// additional
+		bool bTimeOn = params[6] != 0;
+		bool bTimeOff = params[7] != 0;
+
+		return pArtwork->AddModelEntry(2, iVirtualWorld, iBaseID,
+			iNewID, szDffName, szTxdName, bTimeOn, bTimeOff);
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
 {
@@ -7889,6 +7921,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	// Artwork
 	DEFINE_NATIVE(AddCharModel),
 	DEFINE_NATIVE(AddSimpleModel),
+	DEFINE_NATIVE(AddSimpleModelTimed),
 
 	// Admin
 	DEFINE_NATIVE(IsPlayerAdmin),

@@ -461,6 +461,7 @@ native IsPlayerNPC(playerid);
 // Artwork/NetModels
 native AddCharModel(baseid, newid, dffname[], txdname[]);
 native AddSimpleModel(virtualworld, baseid, newid, dffname[], txdname[]);
+native AddSimpleModelTimed(virtualworld, baseid, newid, dffname[], txdname[], timeon, timeoff);
 
 
 // Per-player 3D Text Labels

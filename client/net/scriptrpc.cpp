@@ -1636,8 +1636,12 @@ static void ScrSetGameSpeed(RPCParameters* rpcParams)
 
 static void ScrToggleChatbox(RPCParameters* rpcParams)
 {
+	if (!pChatWindow) return;
+
 	RakNet::BitStream bsData(rpcParams);
-	if (bsData.GetNumberOfUnreadBits() == 1 && pChatWindow) {
+
+	if (bsData.GetNumberOfUnreadBits() == 1)
+	{
 		pChatWindow->ForceHide(bsData.ReadBit());
 	}
 }

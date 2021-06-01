@@ -379,6 +379,14 @@ void DoInitStuff()
 
 		AllocateBufferForColorEmbed();
 
+		if (pConfigFile->GetInt("timestamp"))
+			pChatWindow->SetTimeStampVisisble(true);
+
+		int iPageSize = pConfigFile->GetInt("pagesize");
+		if (iPageSize) {
+			pChatWindow->SetPageSize(iPageSize);
+		}
+
 		if (pConfigFile->GetInt("nohudscalefix") == 1)
 			bWantHudScaling = false;
 
@@ -658,7 +666,11 @@ void d3d9DestroyDeviceObjects()
 	if (pDeathWindow)
 		pDeathWindow->OnLostDevice();
 
-	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnLostDevice();
+	if (pChatWindow) {
+		pChatWindow->DeleteDeviceObjects();
+		pChatWindow->OnLostDevice();
+	}
+
 	bCursorRemoved = false;
 }
 
@@ -682,7 +694,11 @@ void d3d9RestoreDeviceObjects()
 	if (pDeathWindow)
 		pDeathWindow->OnResetDevice();
 	
-	if (pChatWindow && pChatWindow->m_pChatTextSprite) pChatWindow->m_pChatTextSprite->OnResetDevice();
+	if (pChatWindow) {
+		pChatWindow->RestoreDeviceObjects();
+		pChatWindow->OnResetDevice();
+	}
+
 	if (pScoreBoard)
 		pScoreBoard->CalcClientSize();
 

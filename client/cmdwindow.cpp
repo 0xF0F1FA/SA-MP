@@ -251,7 +251,12 @@ void CCmdWindow::ProcessInput()
 	*m_szInputBuffer ='\0';	
 	m_pEditControl->SetText("",false);
 
-	if(m_bEnabled) Disable();
+	if (m_bEnabled) {
+		// Rolls back to the beggining
+		if (pChatWindow)
+			pChatWindow->ResetPage();
+		Disable();
+	}
 }
 
 //----------------------------------------------------

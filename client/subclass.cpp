@@ -102,12 +102,20 @@ BOOL HandleKeyPress(DWORD vKey)
 			break;
 
 		case VK_PRIOR:
-
+			// Cannot scroll when in debug mode?
+			if (/*pNetGame &&*/ pChatWindow && pCmdWindow->IsCandidateActive())
+			{
+				pChatWindow->PageUp();
+			}
 			break;
 
 		case VK_NEXT:
 		{
-
+			// Cannot scroll when in debug mode?
+			if (/*pNetGame &&*/ pChatWindow && pCmdWindow->IsCandidateActive())
+			{
+				pChatWindow->PageDown();
+			}
 			break;
 		}
 
@@ -294,6 +302,13 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 			break;
 		case WM_CHAR:
 			HandleCharacterInput((DWORD)wParam);
+			break;
+		case WM_MOUSEWHEEL:
+			if (pCmdWindow->isEnabled() && pChatWindow->IsEnabled())
+			{
+				pChatWindow->Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
+				return 0;
+			}
 			break;
 		case WM_SETCURSOR:
 			extern bool bCursorRemoved;

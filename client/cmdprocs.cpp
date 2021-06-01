@@ -1442,11 +1442,20 @@ static void cmdTeamTest(PCHAR szCmd)
 
 static void cmdSetChatPageSize(PCHAR szCmd)
 {
-	unsigned int uiSize = (unsigned int)atoi(szCmd);
-	if (1 <= uiSize && uiSize <= 30)
-		pChatWindow->SetPageSize(uiSize);
+	DWORD dwSize;
+
+	if (szCmd[0] != 0 && (dwSize = atol(szCmd), dwSize >= 10) && dwSize <= 20)
+	{
+		if (pChatWindow)
+			pChatWindow->SetPageSize(dwSize);
+		if (pConfigFile)
+			pConfigFile->SetInt("pagesize", dwSize);
+	}
 	else
-		pChatWindow->AddInfoMessage("Usage: /pagesize [1-30]");
+	{
+		if (pChatWindow)
+			pChatWindow->AddDebugMessage("pagesize [10-20] (lines)");
+	}
 }
 
 static void cmdToggleChatTimeStamp(PCHAR szCmd)
@@ -1454,7 +1463,20 @@ static void cmdToggleChatTimeStamp(PCHAR szCmd)
 	(void)szCmd;
 
 	if (pChatWindow)
-		pChatWindow->ToggleTimeStamp();
+	{
+		if (pChatWindow->IsTimeStampVisible())
+		{
+			pChatWindow->SetTimeStampVisisble(false);
+			if (pConfigFile)
+				pConfigFile->SetInt("timestamp", 0);
+		}
+		else
+		{
+			pChatWindow->SetTimeStampVisisble(true);
+			if (pConfigFile)
+				pConfigFile->SetInt("timestamp", 1);
+		}
+	}
 }
 
 void cmdDisableVehMapIcon(PCHAR szCmd)

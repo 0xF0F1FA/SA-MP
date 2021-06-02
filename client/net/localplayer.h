@@ -54,6 +54,10 @@ private:
 	ULONG					m_ulThisSyncFrame;
 	ULONG					m_ulLastSyncFrame;
 	bool					m_bPassengerDriveByMode;
+	DWORD					m_dwLastWeaponsUpdateTick;
+	WORD					m_wLastTargetedPlayer;
+	WORD					m_wLastTargetedActor;
+	BYTE					m_byteLastHeldWeapon;
 	BYTE					m_byteCurInterior;
 	bool					m_bInRCMode;
 

@@ -1097,41 +1097,55 @@ void CNetGame::Packet_StatsUpdate(Packet *p)
 
 void CNetGame::Packet_WeaponsUpdate(Packet *p)
 {
-	RakNet::BitStream bsData(p);
-	CPlayerPool *pPlayerPool = GetPlayerPool();
-	//BYTE bytePlayerID = (BYTE)p->playerIndex;
+	if (m_iGameState != GAMESTATE_RUNNING) return;
+	if (p->bitSize < 40 || p->bitSize > 456) return;
+	if (!m_pPlayerPool || !m_pPlayerPool->GetSlotState(p->playerIndex)) return;
 
-	BYTE byteLength = (p->length - 1) / 4; // Should be number of changed weapons
-	
-	//printf("Original: %d New: %d", p->length, byteLength);
-	
+	CPlayer* pPlayer = m_pPlayerPool->GetAt(p->playerIndex);
+
+	RakNet::BitStream bsData(p);
+	WORD wTargetedPlayer = INVALID_PLAYER_ID;
+	WORD wTargetedActor = INVALID_ACTOR_ID;
+
+	bsData.IgnoreBits(8); // packetid
+	bsData.Read(wTargetedPlayer);
+	bsData.Read(wTargetedActor);
+
+	// TODO: Find out max target range and include the check here also?
+	if (!m_pPlayerPool->GetSlotState(wTargetedPlayer))
+		wTargetedPlayer = INVALID_PLAYER_ID;
+
+	if (!m_pActorPool || !m_pActorPool->GetSlotState(wTargetedActor))
+		wTargetedActor = INVALID_ACTOR_ID;
+
+	pPlayer->m_wTargetedPlayer = wTargetedPlayer;
+	pPlayer->m_wTargetedActor = wTargetedActor;
+
+	DWORD dwSize = bsData.GetNumberOfUnreadBits() / 32;
 	BYTE byteIndex;
 	BYTE byteWeapon;
 	WORD wordAmmo;
 	
-	if (pPlayerPool)
+	if (dwSize == (dwSize * 32))
 	{
-		//printf("1");
-		if (pPlayerPool->GetSlotState(p->playerIndex))
+		while (bsData.GetNumberOfUnreadBits() >= 32)
 		{
-			//printf("2");
-			CPlayer* pPlayer = pPlayerPool->GetAt(p->playerIndex);
-			bsData.IgnoreBits(8);
-			while (byteLength)
+			byteIndex = 255;
+			byteWeapon = 255;
+			wordAmmo = 0;
+
+			bsData.Read(byteIndex);
+			bsData.Read(byteWeapon);
+
+			if (byteIndex >= 13 || pPlayer->GetWeaponSlot(byteWeapon) != byteIndex)
 			{
-				//printf("3");
-				bsData.Read(byteIndex);
-				bsData.Read(byteWeapon);
-				bsData.Read(wordAmmo);
-				//printf("\n%u %u %i", byteIndex, byteWeapon, wordAmmo);
-				if (byteIndex < (BYTE)13)
-				{
-					//printf("\n%d %d %d", byteIndex, byteWeapon, wordAmmo);
-					pPlayer->m_dwSlotAmmo[byteIndex] = (DWORD)wordAmmo;
-					pPlayer->m_byteSlotWeapon[byteIndex] = byteWeapon;
-				}
-				byteLength--;
+				return;
 			}
+
+			bsData.Read(wordAmmo);
+
+			pPlayer->m_dwSlotAmmo[byteIndex] = (DWORD)wordAmmo;
+			pPlayer->m_byteSlotWeapon[byteIndex] = byteWeapon;
 		}
 	}
 }

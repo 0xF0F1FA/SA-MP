@@ -142,6 +142,8 @@ void CPlayer::Deactivate()
 	m_fGameTime = 720.0f; // 12 o'clock in minutes	
 	m_fHealth = 0.0f;
 	m_fArmour = 0.0f;
+	m_wTargetedPlayer = INVALID_PLAYER_ID;
+	m_wTargetedActor = INVALID_ACTOR_ID;
 
 	SAFE_DELETE(m_pLabelPool);
 	m_pLabelPool = new CPlayerLabelPool();
@@ -1371,6 +1373,73 @@ bool CPlayer::SendClientCheck(BYTE byteType, DWORD dwAddress, WORD wOffset, WORD
 	bsSend.Write(wCount);
 
 	return pNetGame->SendToPlayer(m_bytePlayerID, RPC_ClientCheck, &bsSend);
+}
+
+//----------------------------------------------------
+
+int CPlayer::GetWeaponSlot(int iWeaponID)
+{
+	switch (iWeaponID)
+	{
+	case WEAPON_FIST:
+	case WEAPON_BRASSKNUCKLE:
+		return 0;
+	case WEAPON_GOLFCLUB:
+	case WEAPON_NITESTICK:
+	case WEAPON_KNIFE:
+	case WEAPON_BAT:
+	case WEAPON_SHOVEL:
+	case WEAPON_POOLSTICK:
+	case WEAPON_KATANA:
+	case WEAPON_CHAINSAW:
+		return 1;
+	case WEAPON_COLT45:
+	case WEAPON_SILENCED:
+	case WEAPON_DEAGLE:
+		return 2;
+	case WEAPON_SHOTGUN:
+	case WEAPON_SAWEDOFF:
+	case WEAPON_SHOTGSPA:
+		return 3;
+	case WEAPON_UZI:
+	case WEAPON_MP5:
+	case WEAPON_TEC9:
+		return 4;
+	case WEAPON_AK47:
+	case WEAPON_M4:
+		return 5;
+	case WEAPON_RIFLE:
+	case WEAPON_SNIPER:
+		return 6;
+	case WEAPON_ROCKETLAUNCHER:
+	case WEAPON_HEATSEEKER:
+	case WEAPON_FLAMETHROWER:
+	case WEAPON_MINIGUN:
+		return 7;
+	case WEAPON_GRENADE:
+	case WEAPON_TEARGAS:
+	case WEAPON_MOLTOV:
+	case WEAPON_SATCHEL:
+		return 8;
+	case WEAPON_SPRAYCAN:
+	case WEAPON_FIREEXTINGUISHER:
+	case WEAPON_CAMERA:
+		return 9;
+	case WEAPON_DILDO:
+	case WEAPON_DILDO2:
+	case WEAPON_VIBRATOR:
+	case WEAPON_VIBRATOR2:
+	case WEAPON_FLOWER:
+	case WEAPON_CANE:
+		return 10;
+	case WEAPON_NIGHT_VIS_GOGGLES:
+	case WEAPON_THERMAL_GOGGLES:
+	case WEAPON_PARACHUTE:
+		return 11;
+	case WEAPON_BOMB:
+		return 12;
+	}
+	return -1;
 }
 
 //----------------------------------------------------

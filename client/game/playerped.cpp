@@ -199,6 +199,19 @@ void CPlayerPed::SetInitialState()
 
 //-----------------------------------------------------------
 
+DWORD CPlayerPed::GetTarget()
+{
+	if (m_pPed &&
+		m_pPed->entity.vtable != ADDR_PLACEABLE_VTBL &&
+		m_pPed->entity.pdwRenderWare)
+	{
+		return m_pPed->pTarget;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------
+
 void CPlayerPed::SetKeys(UINT uiKeys, WORD lrAnalog, WORD udAnalog)
 {
 	GTA_CONTROLSET *pPlayerKeys = GameGetPlayerKeys(m_bytePlayerNumber);

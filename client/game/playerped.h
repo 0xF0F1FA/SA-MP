@@ -52,6 +52,7 @@ public:
 	};
 
 	void  Destroy();
+	DWORD GetTarget();
 	//void  ShowMarker(int iMarkerColor);
 	void  ShowMarker();
 	//void  ShowMarkerEx();

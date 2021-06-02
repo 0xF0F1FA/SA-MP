@@ -77,6 +77,8 @@ public:
 	unsigned char			m_ucFightingMove;
 	bool					m_bIsNPC;
 	char					m_szSerial[100];
+	WORD					m_wTargetedPlayer;
+	WORD					m_wTargetedActor;
 
 	// Weapon data
 	DWORD					m_dwSlotAmmo[13];
@@ -194,6 +196,7 @@ public:
 		return m_ofSync.byteCurrentWeapon;
 	};
 	
+	int GetWeaponSlot(int iWeaponID);
 	//WEAPON_SLOT_TYPE* GetWeaponSlotsData();
 	void SetWeaponSlot(BYTE byteSlot, DWORD dwWeapon, DWORD dwAmmo);
 	

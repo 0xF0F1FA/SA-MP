@@ -218,6 +218,8 @@ native PlayAudioStreamForPlayer(playerid, url[], Float:posX = 0.0, Float:posY = 
 native StopAudioStreamForPlayer(playerid);
 native PlayCrimeReportForPlayer(playerid, suspectid, crime);
 native DisableRemoteVehicleCollisions(playerid, disable);
+native GetPlayerTargetPlayer(playerid);
+native GetPlayerTargetActor(playerid);
 
 native SetPVarInt(playerid, varname[], int_value);
 native SetPVarString(playerid, varname[], string_value[]);

@@ -2910,7 +2910,42 @@ static cell n_IsPlayerInRaceCheckpoint(AMX *amx, cell *params)
 }
 
 //----------------------------------------------------------------------------------
+// native GetPlayerTargetPlayer(playerid);
 
+static cell n_GetPlayerTargetPlayer(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetPlayerTargetPlayer", 1);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer)
+		{
+			return pPlayer->m_wTargetedPlayer;
+		}
+	}
+	return INVALID_PLAYER_ID;
+}
+
+//----------------------------------------------------------------------------------
+// native GetPlayerTargetActor(playerid);
+
+static cell n_GetPlayerTargetActor(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetPlayerTargetActor", 1);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer)
+		{
+			return pPlayer->m_wTargetedActor;
+		}
+	}
+	return INVALID_ACTOR_ID;
+}
+
+//----------------------------------------------------------------------------------
 // native GameTextForAll(strtext,displaytime,style)
 static cell n_GameTextForAll(AMX *amx, cell *params)
 {
@@ -8069,6 +8104,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "ForceClassSelection",	n_ForceClassSelection },
 	{ "SetPlayerWantedLevel",	n_SetPlayerWantedLevel },
 	{ "GetPlayerWantedLevel",	n_GetPlayerWantedLevel },
+	DEFINE_NATIVE(GetPlayerTargetPlayer),
+	DEFINE_NATIVE(GetPlayerTargetActor),
 	DEFINE_NATIVE(GetPlayerVelocity),
 	DEFINE_NATIVE(SetPlayerVelocity),
 	DEFINE_NATIVE(SetPlayerSkillLevel),

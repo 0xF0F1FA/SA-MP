@@ -103,7 +103,7 @@ BOOL HandleKeyPress(DWORD vKey)
 
 		case VK_PRIOR:
 			// Cannot scroll when in debug mode?
-			if (/*pNetGame &&*/ pChatWindow && pCmdWindow->IsCandidateActive())
+			if (/*pNetGame &&*/ pChatWindow && !pCmdWindow->IsCandidateActive())
 			{
 				pChatWindow->PageUp();
 			}
@@ -112,7 +112,7 @@ BOOL HandleKeyPress(DWORD vKey)
 		case VK_NEXT:
 		{
 			// Cannot scroll when in debug mode?
-			if (/*pNetGame &&*/ pChatWindow && pCmdWindow->IsCandidateActive())
+			if (/*pNetGame &&*/ pChatWindow && !pCmdWindow->IsCandidateActive())
 			{
 				pChatWindow->PageDown();
 			}

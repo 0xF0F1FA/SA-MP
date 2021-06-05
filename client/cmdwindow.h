@@ -69,6 +69,8 @@ public:
 	void ResetDialogControls(CDXUTDialog *pGameUI);
 	CCmdWindow(IDirect3DDevice9 *pD3DDevice);
 	~CCmdWindow();
+
+	bool IsCandidateActive();
 };
 
 //----------------------------------------------------

@@ -315,4 +315,15 @@ void CCmdWindow::SendToServer(char* szServerCommand)
 }
 
 //----------------------------------------------------
+
+bool CCmdWindow::IsCandidateActive()
+{
+	if (m_pEditControl)
+	{
+		return CDXUTIMEEditBox::IsCandidateActive();
+	}
+	return false;
+}
+
+//----------------------------------------------------
 // EOF

@@ -5610,7 +5610,7 @@ CGrowableArray< CDXUTIMEEditBox::CInputLocale > CDXUTIMEEditBox::s_Locale; // Ar
 #if defined(DEBUG) | defined(_DEBUG)
 bool      CDXUTIMEEditBox::m_bIMEStaticMsgProcCalled = false;
 #endif
-DWORD     CDXUTIMEEditBox::s_dwIMEEventTick;
+DWORD     CDXUTIMEEditBox::s_dwLastEventTick;
 
 //--------------------------------------------------------------------------------------
 CDXUTIMEEditBox::CDXUTIMEEditBox( CDXUTDialog *pDialog )
@@ -6616,7 +6616,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
             s_bHideCaret = false;
             // Hide reading window
             s_bShowReadingWindow = false;
-            s_dwIMEEventTick = GetTickCount();
+            s_dwLastEventTick = GetTickCount();
             break;
 
         case WM_IME_NOTIFY:
@@ -6636,7 +6636,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                     DXUTTRACE( wParam == IMN_CHANGECANDIDATE ? "  IMN_CHANGECANDIDATE\n" : "  IMN_OPENCANDIDATE\n" );
 
                     s_CandList.bShowWindow = true;
-                    s_dwIMEEventTick = GetTickCount();
+                    s_dwLastEventTick = GetTickCount();
                     *trapped = true;
                     if( NULL == ( hImc = _ImmGetContext( DXUTGetHWND() ) ) )
                         break;
@@ -6746,7 +6746,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                 {
                     DXUTTRACE( "  IMN_CLOSECANDIDATE\n" );
                     s_CandList.bShowWindow = false;
-                    s_dwIMEEventTick = GetTickCount();
+                    s_dwLastEventTick = GetTickCount();
                     if( !s_bShowReadingWindow )
                     {
                         s_CandList.dwCount = 0;
@@ -7209,13 +7209,13 @@ void CDXUTIMEEditBox::RenderIndicator( IDirect3DDevice9* pd3dDevice, float fElap
 
 
 //--------------------------------------------------------------------------------------
-bool CDXUTIMEEditBox::IsCandicateActive()
+bool CDXUTIMEEditBox::IsCandidateActive()
 {
     if (s_CandList.bShowWindow || s_bShowReadingWindow)
     {
         return true;
     }
-    return (GetTickCount() - s_dwIMEEventTick) < 300;
+    return (GetTickCount() - s_dwLastEventTick) < 300;
 }
 
 
@@ -7693,7 +7693,7 @@ void CDXUTIMEEditBox::Initialize()
 
     FARPROC Temp;
 
-    s_dwIMEEventTick = GetTickCount();
+    s_dwLastEventTick = GetTickCount();
 
     s_CompString.SetBufferSize( MAX_COMPSTRING_SIZE );
 

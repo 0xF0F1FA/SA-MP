@@ -1522,6 +1522,23 @@ void cmdDebugLabels(PCHAR szCmd)
 	bShowDebugLabels = !bShowDebugLabels;
 }
 
+void cmdTestDeathWindow(PCHAR szCmd)
+{
+	(void)szCmd;
+
+	if (pDeathWindow)
+	{
+		pDeathWindow->AddMessage("Pooper","Pooper333",-1,-1,1);
+		pDeathWindow->AddMessage("Pooper","Pooper",-1,-1,5);
+		pDeathWindow->AddMessage("Pooper","Pooper",-1,-1,15);
+		pDeathWindow->AddMessage("Pooper","Pooper",-1,-1,14);
+		pDeathWindow->AddMessage("Pooper","Pooper",-1,-1,2);
+		pDeathWindow->AddMessage(NULL,"PooperPooperPooper0001",-1,-1,5);
+		pDeathWindow->AddMessage(NULL,"Pooper",-1,-1,-1);
+		pDeathWindow->AddMessage("Pooper","PooperPooperPooper0001",-1,-1,0);
+	}
+}
+
 void SetupCommands()
 {
 	// RELEASE COMMANDS
@@ -1539,6 +1556,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("headmove", cmdHeadMove);
 
 	pCmdWindow->AddCmdProc("disvehico", cmdDisableVehMapIcon);
+	pCmdWindow->AddCmdProc("testdw", cmdTestDeathWindow);
 
 #ifndef _DEBUG
 	if (tSettings.bDebug)

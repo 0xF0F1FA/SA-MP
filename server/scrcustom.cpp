@@ -6490,7 +6490,7 @@ static cell n_GetPlayerCameraAspectRatio(AMX* amx, cell* params)
 	if (pNetGame->GetPlayerPool()) {
 		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
 		if (pPlayer != NULL) {
-			fRet = pPlayer->GetAimSyncData()->ucAspectRatio * 0.0039215689 + 1.0;
+			fRet = pPlayer->GetAimSyncData()->byteAspectRatio * 0.0039215689 + 1.0;
 			return amx_ftoc(fRet);
 		}
 	}

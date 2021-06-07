@@ -23,7 +23,7 @@ using namespace RakNet;
 #define NETMODE_NORMAL_INCAR_SENDRATE	40
 
 #define NETMODE_HEADSYNC_SENDRATE		1000
-#define NETMODE_AIM_SENDRATE			100
+#define NETMODE_AIM_SENDRATE			500
 #define NETMODE_FIRING_SENDRATE			40
 
 #define LANMODE_IDLE_ONFOOT_SENDRATE	20
@@ -53,6 +53,7 @@ CLocalPlayer::CLocalPlayer()
 	m_ulLastSyncFrame = 0;
 	m_wLastKeys = 0;
 	m_iDisplayZoneTick = 0;
+	m_dwLastSyncSendTick = GetTickCount();
 	m_dwLastSendTick = GetTickCount();
 	m_dwLastSendSpecTick = GetTickCount();
 	m_dwLastAimSendTick = m_dwLastSendTick;
@@ -120,6 +121,8 @@ void CLocalPlayer::ResetAllSyncAttributes()
 	m_wLastTargetedActor = INVALID_ACTOR_ID;
 	m_dwLastWeaponsUpdateTick = GetTickCount();
 	m_byteLastHeldWeapon = 0;
+	
+	SecureZeroMemory(&m_aimSync, sizeof(AIM_SYNC_DATA));
 }
 
 //----------------------------------------------------------
@@ -671,7 +674,6 @@ void CLocalPlayer::SendOnFootFullSyncData()
 
 void CLocalPlayer::SendAimSyncData()
 {
-	RakNet::BitStream bsAimSync;
 	AIM_SYNC_DATA aimSync;
 	CAMERA_AIM * caAim = m_pPlayerPed->GetCurrentAim();
 	
@@ -680,17 +682,12 @@ void CLocalPlayer::SendAimSyncData()
 	aimSync.vecAimf1.X = caAim->f1x;
 	aimSync.vecAimf1.Y = caAim->f1y;
 	aimSync.vecAimf1.Z = caAim->f1z;
-	aimSync.vecAimf2.X = caAim->f2x;
-	aimSync.vecAimf2.Y = caAim->f2y;
-	aimSync.vecAimf2.Z = caAim->f2z;
 	aimSync.vecAimPos.X = caAim->pos1x;
 	aimSync.vecAimPos.Y = caAim->pos1y;
 	aimSync.vecAimPos.Z = caAim->pos1z;
 
 	aimSync.fAimZ = m_pPlayerPed->GetAimZ();
-
-	aimSync.ucAspectRatio = (unsigned char)((CGame::GetAspectRatio() - 1.0f) * 255.0f);
-	
+	aimSync.byteAspectRatio = (BYTE)(GameGetLocalPlayerAspectRatio() * 255.0f);
 	aimSync.byteCamExtZoom = (BYTE)(m_pPlayerPed->GetCameraExtendedZoom() * 63.0f);
 	
 	WEAPON_SLOT_TYPE* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
@@ -699,9 +696,20 @@ void CLocalPlayer::SendAimSyncData()
 	else
 		aimSync.byteWeaponState = (pwstWeapon->dwAmmoInClip > 1) ? WS_MORE_BULLETS : pwstWeapon->dwAmmoInClip;
 
-	bsAimSync.Write((BYTE)ID_AIM_SYNC);
-	bsAimSync.Write((PCHAR)&aimSync,sizeof(AIM_SYNC_DATA));
-	pNetGame->GetRakClient()->Send(&bsAimSync,HIGH_PRIORITY,UNRELIABLE_SEQUENCED,0);
+	DWORD dwTickNow = GetTickCount();
+
+	if(dwTickNow - m_dwLastSyncSendTick > NETMODE_AIM_SENDRATE ||
+		memcmp(&m_aimSync, &aimSync, sizeof(AIM_SYNC_DATA)))
+	{
+		m_dwLastSyncSendTick = dwTickNow;
+
+		RakNet::BitStream bsAimSync;
+		bsAimSync.Write((BYTE)ID_AIM_SYNC);
+		bsAimSync.Write((PCHAR)&aimSync, sizeof(AIM_SYNC_DATA));
+		pNetGame->GetRakClient()->Send(&bsAimSync, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0);
+
+		memcpy(&m_aimSync, &aimSync, sizeof(AIM_SYNC_DATA));
+	}
 }
 
 //----------------------------------------------------------

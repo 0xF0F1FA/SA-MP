@@ -282,15 +282,14 @@ typedef struct {
 	VEHICLEID SurfVehicleId;
 } ONFOOT_SYNC_DATA;
 
-typedef struct {
-	unsigned char byteCamMode;
-	unsigned char byteCamExtZoom : 6;	// 0-63 normalized
-	unsigned char byteWeaponState : 2;	// see eWeaponState
+typedef struct { // size=31
+	BYTE byteCamMode;
 	VECTOR vecAimf1;
-	VECTOR vecAimf2;
 	VECTOR vecAimPos;
 	float fAimZ;
-	unsigned char ucAspectRatio;
+	BYTE byteCamExtZoom : 6;	// 0-63 normalized
+	BYTE byteWeaponState : 2;	// see eWeaponState
+	BYTE byteAspectRatio;
 } AIM_SYNC_DATA;
 
 typedef struct {

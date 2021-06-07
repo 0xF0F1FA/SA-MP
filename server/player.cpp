@@ -748,8 +748,11 @@ void CPlayer::StoreOnFootFullSyncData(ONFOOT_SYNC_DATA *pofSync)
 
 void CPlayer::StoreAimSyncData(AIM_SYNC_DATA *paimSync)
 {
+	m_bHasAimUpdates = false;
 	memcpy(&m_aimSync,paimSync,sizeof(AIM_SYNC_DATA));
-	m_bHasAimUpdates = true;
+	float fDist = GetNormalisation(&paimSync->vecAimf1);
+	if(fDist > 0.0f && fDist < 1.5f && IsWithinWorldRange(&paimSync->vecAimPos))
+		m_bHasAimUpdates = true;
 }
 
 //----------------------------------------------------

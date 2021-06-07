@@ -28,11 +28,16 @@ static float * pfPlayerStats = (float *)0xB79380;
 static float fLocalWeaponSkills[11];
 static float fWeaponSkills[MAX_CLIENT_PLAYERS][11];
 
+static float * pfAspectRatio = (float *)0xC3EFA4;
+static float fLocalAspectRatio;
+static float fAspectRatio[MAX_CLIENT_PLAYERS];
+
 //----------------------------------------------------------
 
 void __stdcall GameStoreLocalPlayerCameraExtZoom()
 {
 	fLocalCameraExtZoom = *pfCameraExtZoom;
+	fLocalAspectRatio = *pfAspectRatio;
 }
 
 //----------------------------------------------------------
@@ -40,13 +45,22 @@ void __stdcall GameStoreLocalPlayerCameraExtZoom()
 void __stdcall GameSetLocalPlayerCameraExtZoom()
 {
 	*pfCameraExtZoom = fLocalCameraExtZoom;
+	*pfAspectRatio = fLocalAspectRatio;
 }
 
 //----------------------------------------------------------
 
-void __stdcall GameSetPlayerCameraExtZoom(BYTE bytePlayerID, float fZoom)
+void __stdcall GameSetPlayerCameraExtZoom(BYTE bytePlayerID, float fZoom, float fRatio)
 {
 	fCameraExtZoom[bytePlayerID] = fZoom;
+	fAspectRatio[bytePlayerID] = fRatio;
+}
+
+//----------------------------------------------------------
+
+float __stdcall GameGetLocalPlayerAspectRatio()
+{
+	return *pfAspectRatio - 1.0f;
 }
 
 //----------------------------------------------------------
@@ -71,6 +85,8 @@ void __stdcall GameSetRemotePlayerCameraExtZoom(BYTE bytePlayerID)
 	float fZoom = fCameraExtZoom[bytePlayerID];
 	float fValue = fZoom * 35.0f + 35.0f; // unnormalize for 35.0 to 70.0
 	*pfCameraExtZoom = fValue;
+
+	*pfAspectRatio = fAspectRatio[bytePlayerID] + 1.0f;
 }
 
 //----------------------------------------------------------
@@ -101,6 +117,8 @@ void __stdcall GameAimSyncInit()
 	memset(&caLocalPlayerAim,0,sizeof(CAMERA_AIM));
 	memset(caRemotePlayerAim,0,sizeof(CAMERA_AIM) * MAX_PLAYERS);
 	memset(byteCameraMode,4,MAX_PLAYERS);
+	for(int i=0; i<MAX_CLIENT_PLAYERS; i++)
+		fAspectRatio[i] = 0.333f;
 	for(int i=0; i<MAX_PLAYERS; i++)
 		fCameraExtZoom[i] = 1.0f;
 }

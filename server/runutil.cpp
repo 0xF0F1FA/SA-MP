@@ -850,6 +850,17 @@ int CanFileBeOpenedForReading(char * filename)
 }
 
 //----------------------------------------------------
+
+bool IsWithinWorldRange(VECTOR* pPos)
+{
+	return
+		(pPos->X < 20000.0 && pPos->X > -20000.0) &&
+		(pPos->Y < 20000.0 && pPos->Y > -20000.0) &&
+		(pPos->Z < 200000.0	&& pPos->Z > -1000.0);
+}
+
+//----------------------------------------------------
+
 void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q)
 {
 	float t, w, x, y, z, s;
@@ -880,6 +891,13 @@ void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q)
 	q->X = _copysignf(x, m->at.Y - m->up.Z);
 	q->Y = _copysignf(y, m->right.Z - m->at.X);
 	q->Z = _copysignf(z, m->up.X - m->right.Y);
+}
+
+//----------------------------------------------------
+
+float GetNormalisation(VECTOR* vec)
+{
+	return ((vec->X * vec->X) + (vec->Y * vec->Y) + (vec->Z * vec->Z));
 }
 
 //----------------------------------------------------

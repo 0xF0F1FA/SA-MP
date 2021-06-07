@@ -34,5 +34,6 @@ void FormatGameKeysInString(PCHAR buf);
 DWORD FormatGameTextKey(PCHAR szBuf, DWORD dwMaxLen);
 int ConvertMultiToWideString(LPCSTR szSource, LPWSTR szDest, int iLen);
 void Transform(VECTOR* vecOut, MATRIX4X4* matIn, VECTOR* vecIn);
+void CrossProduct(VECTOR* pIn, VECTOR* pOut);
 
 //----------------------------------------------------

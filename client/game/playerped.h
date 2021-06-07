@@ -36,6 +36,9 @@ public:
 	void SetCurrentAim(CAMERA_AIM *pAim);
 
 	BYTE GetCameraMode() {
+		if (m_bytePlayerNumber)
+			return GameGetPlayerCameraMode(m_bytePlayerNumber);
+
 		return GameGetLocalPlayerCameraMode();
 	};
 
@@ -47,8 +50,8 @@ public:
 		return GameGetLocalPlayerCameraExtZoom();
 	};
 
-	void SetCameraExtendedZoom(float fZoom) {
-		GameSetPlayerCameraExtZoom(m_bytePlayerNumber,fZoom);
+	void SetCameraExtendedZoom(float fZoom, float fRatio) {
+		GameSetPlayerCameraExtZoom(m_bytePlayerNumber,fZoom, fRatio);
 	};
 
 	void  Destroy();

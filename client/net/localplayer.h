@@ -23,6 +23,7 @@ class CLocalPlayer
 {
 public:
 	CPlayerPed				*m_pPlayerPed;
+	AIM_SYNC_DATA			m_aimSync;
 	char					m_szName[MAX_PLAYER_NAME];
 	bool					m_bIsActive;
 	bool					m_bIsWasted;
@@ -73,6 +74,7 @@ private:
 	VEHICLEID				m_SurfingID;
 
 	WORD					m_wLastKeys;
+	DWORD					m_dwLastSyncSendTick;
 	DWORD					m_dwLastSendTick;
 	DWORD					m_dwLastSendSpecTick;
 	DWORD					m_dwLastAimSendTick;

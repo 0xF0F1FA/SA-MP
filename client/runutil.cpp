@@ -750,6 +750,19 @@ DWORD FormatGameTextKey(PCHAR szBuf, DWORD dwMaxLen)
 
 //----------------------------------------------------
 
+// https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function
+void CrossProduct(VECTOR* pIn, VECTOR* pOut)
+{
+	float fAngle = atan2f(pIn->Y, pIn->X) - 1.5708f;
+	float fVX = sinf(fAngle);
+	float fVY = cosf(fAngle);
+	pOut->X = pIn->Y * 0.0f - fVY * pIn->Z;
+	pOut->Y = fVX * pIn->Z - pIn->X * 0.0f;
+	pOut->Z = fVY * pIn->X - fVX * pIn->Y;
+}
+
+//----------------------------------------------------
+
 void Transform(VECTOR* vecOut, MATRIX4X4* matIn, VECTOR* vecIn)
 {
 	vecOut->X = matIn->at.X * vecIn->Z +

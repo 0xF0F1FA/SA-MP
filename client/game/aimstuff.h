@@ -31,9 +31,10 @@ BYTE __stdcall GameGetLocalPlayerCameraMode();
 
 void __stdcall GameStoreLocalPlayerCameraExtZoom();
 void __stdcall GameSetLocalPlayerCameraExtZoom();
-void __stdcall GameSetPlayerCameraExtZoom(BYTE bytePlayerID, float fZoom);
+void __stdcall GameSetPlayerCameraExtZoom(BYTE bytePlayerID, float fZoom, float fRatio);
 void __stdcall GameSetRemotePlayerCameraExtZoom(BYTE bytePlayerID);
 float __stdcall GameGetLocalPlayerCameraExtZoom();
+float __stdcall GameGetLocalPlayerAspectRatio();
 
 void __stdcall GameStoreLocalPlayerWeaponSkills();
 void __stdcall GameSetLocalPlayerWeaponSkills();

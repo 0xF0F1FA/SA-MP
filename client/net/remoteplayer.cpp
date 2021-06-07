@@ -832,25 +832,33 @@ void CRemotePlayer::UpdateAimFromSyncData(AIM_SYNC_DATA *paimSync)
 	m_pPlayerPed->SetCameraMode(paimSync->byteCamMode);
 
 	CAMERA_AIM Aim;
+	VECTOR In, Out;
+
+	In.X = paimSync->vecAimf1.X;
+	In.Y = paimSync->vecAimf1.Y;
+	In.Z = paimSync->vecAimf1.Z;
+
+	CrossProduct(&In, &Out);
 
 	Aim.f1x = paimSync->vecAimf1.X;
 	Aim.f1y = paimSync->vecAimf1.Y;
 	Aim.f1z = paimSync->vecAimf1.Z;
-	Aim.f2x = paimSync->vecAimf2.X;
-	Aim.f2y = paimSync->vecAimf2.Y;
-	Aim.f2z = paimSync->vecAimf2.Z;
 	Aim.pos1x = paimSync->vecAimPos.X;
 	Aim.pos1y = paimSync->vecAimPos.Y;
 	Aim.pos1z = paimSync->vecAimPos.Z;
 	Aim.pos2x = paimSync->vecAimPos.X;
 	Aim.pos2y = paimSync->vecAimPos.Y;
 	Aim.pos2z = paimSync->vecAimPos.Z;
+	Aim.f2x = Out.X;
+	Aim.f2y = Out.Y;
+	Aim.f2z = Out.Z;
 
 	m_pPlayerPed->SetCurrentAim(&Aim);
 	m_pPlayerPed->SetAimZ(paimSync->fAimZ);
 
-	float fExtZoom = (float)(paimSync->byteCamExtZoom)/63.0f;
-	m_pPlayerPed->SetCameraExtendedZoom(fExtZoom);
+	float fAscpectRatio = paimSync->byteAspectRatio * 0.0039215689f;
+	float fExtZoom = paimSync->byteCamExtZoom * 0.015873017f;
+	m_pPlayerPed->SetCameraExtendedZoom(fExtZoom, fAscpectRatio);
 
 	WEAPON_SLOT_TYPE* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
 	if (paimSync->byteWeaponState == WS_RELOADING)

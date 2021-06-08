@@ -18,8 +18,8 @@ char *Util_strrev(char *str);
 char * Util_itoa(int v, char *s, int r);
 void Util_Base64Encode( char *cpInput, char *cpOutput );
 
-char * K_DecodeString(unsigned char *szInput);
-void K_EncodeString(char *szInput, char *szOutput);
+//char * K_DecodeString(unsigned char *szInput);
+//void K_EncodeString(char *szInput, char *szOutput);
 
 const char* GetWeaponName(int iWeaponID);
 

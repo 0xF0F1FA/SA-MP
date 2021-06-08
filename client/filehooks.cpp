@@ -369,17 +369,6 @@ int WINAPI Arch_ShowCursor(BOOL bShow)
 
 void InstallFileSystemHooks()
 {
-	BYTE szKernel32Enc[13] = {0x6D,0xAC,0x4E,0xCD,0xAC,0x8D,0x66,0x46,0xC5,0x8C,0x8D,0x8D,0}; // kernel32.dll
-    char *szKernel32Dec = NULL;
-
-	BYTE szCreateFileAEnc[12] = {0x68,0x4E,0xAC,0x2C,0x8E,0xAC,0xC8,0x2D,0x8D,0xAC,0x28,0}; // CreateFileA
-	BYTE szReadFileEnc[9] = {0x4A,0xAC,0x2C,0x8C,0xC8,0x2D,0x8D,0xAC,0}; // ReadFile
-	BYTE szGetFileSizeEnc[12] = {0xE8,0xAC,0x8E,0xC8,0x2D,0x8D,0xAC,0x6A,0x2D,0x4F,0xAC,0}; // GetFileSize
-	BYTE szSetFilePointerEnc[15] = {0x6A,0xAC,0x8E,0xC8,0x2D,0x8D,0xAC,0xA,0xED,0x2D,0xCD,0x8E,0xAC,0x4E,0}; // SetFilePointer
-	BYTE szCloseHandleEnc[12] = {0x68,0x8D,0xED,0x6E,0xAC,0x9,0x2C,0xCD,0x8C,0x8D,0xAC,0}; // CloseHandle
-	BYTE szGetFileTypeEnc[12] = {0xE8,0xAC,0x8E,0xC8,0x2D,0x8D,0xAC,0x8A,0x2F,0xE,0xAC,0}; // GetFileType
-	BYTE szGetModuleHandleAEnc[17] = {0xE8,0xAC,0x8E,0xA9,0xED,0x8C,0xAE,0x8D,0xAC,0x9,0x2C,0xCD,0x8C,0x8D,0xAC,0x28,0}; // GetModuleHandleA
-
 	if(!bFileHooksInstalled) {
 		OutputDebugString("Installing File System Hooks");
 
@@ -387,39 +376,37 @@ void InstallFileSystemHooks()
 		memset(OpenArchRecords,0,sizeof(ARCH_FILE_RECORD) * MAX_OPEN_ARCH_FILES);
 		memset(bArchRecordSlotState,FALSE,sizeof(BOOL) * MAX_OPEN_ARCH_FILES);
 
-		szKernel32Dec = K_DecodeString(szKernel32Enc);
-
 		Real_CreateFileA = (def_CreateFileA)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szCreateFileAEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "CreateFileA"),
 			(PBYTE)Arch_CreateFileA);
 
 		/*
 		Real_CreateFileW = (def_CreateFileW)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, "CreateFileW"),
+			(PBYTE)DetourFindFunction("kernel32.dll", "CreateFileW"),
 			(PBYTE)Arch_CreateFileW);*/
 
 		Real_ReadFile = (def_ReadFile)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szReadFileEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "ReadFile"),
 			(PBYTE)Arch_ReadFile);
 
 		Real_GetFileSize = (def_GetFileSize)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szGetFileSizeEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "GetFileSize"),
 			(PBYTE)Arch_GetFileSize);
 
 		Real_SetFilePointer = (def_SetFilePointer)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szSetFilePointerEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "SetFilePointer"),
 			(PBYTE)Arch_SetFilePointer);
 
 		Real_CloseHandle = (def_CloseHandle)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szCloseHandleEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "CloseHandle"),
 			(PBYTE)Arch_CloseHandle);
 
 		Real_GetFileType = (def_GetFileType)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szGetFileTypeEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "GetFileType"),
 			(PBYTE)Arch_GetFileType);
 
 		Real_GetModuleHandleA = (def_GetModuleHandleA)DetourFunction(
-			(PBYTE)DetourFindFunction(szKernel32Dec, K_DecodeString(szGetModuleHandleAEnc)),
+			(PBYTE)DetourFindFunction("kernel32.dll", "GetModuleHandleA"),
 			(PBYTE)Arch_GetModuleHandleA);
 
 		/*

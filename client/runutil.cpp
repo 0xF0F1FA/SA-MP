@@ -299,7 +299,7 @@ return;
 // Simple rotate right 3 character encoding for
 // hiding strings in the exe.
 
-void K_EncodeString(char *szInput, char *szOutput)
+/*void K_EncodeString(char *szInput, char *szOutput)
 {
 	char b;
 
@@ -313,11 +313,11 @@ void K_EncodeString(char *szInput, char *szOutput)
 		szOutput++;
 	}
 	*szOutput = 0;
-}
+}*/
 
 //----------------------------------------------------
 
-char * K_DecodeString(unsigned char *szInput)
+/*char * K_DecodeString(unsigned char *szInput)
 {
 	char b;
 	char *st = (char *)szInput;
@@ -332,7 +332,7 @@ char * K_DecodeString(unsigned char *szInput)
 	}
 
 	return st;
-}
+}*/
 
 const char* GetWeaponName(int iWeaponID)
 {

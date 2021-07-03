@@ -162,6 +162,7 @@
     <ClCompile Include="actor.cpp" />
     <ClCompile Include="threadedhttp.cpp" />
     <ClCompile Include="httpclient.cpp" />
+    <ClCompile Include="labelpool.cpp" />
     <ClCompile Include="playerlabelpool.cpp" />
     <ClCompile Include="..\sdk\raknet\SAMPCipher.cpp">
       <Filter>sdk\raknet</Filter>
@@ -426,6 +427,7 @@
     <ClInclude Include="actor.h" />
     <ClInclude Include="threadedhttp.h" />
     <ClInclude Include="httpclient.h" />
+    <ClInclude Include="labelpool.h" />
     <ClInclude Include="playerlabelpool.h" />
     <ClInclude Include="..\sdk\raknet\SAMPCipher.h">
       <Filter>sdk\raknet</Filter>

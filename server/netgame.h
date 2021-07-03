@@ -53,6 +53,7 @@ private:
 	CGangZonePool				*m_pGangZonePool;
 	CVariables					*m_pVariable;
 	CActorPool					*m_pActorPool;
+	CLabelPool					*m_pLabelPool;
 
     int							m_iCurrentGameModeIndex;
 	int							m_iCurrentGameModeRepeat;
@@ -129,7 +130,8 @@ public:
 	CMenuPool * GetMenuPool() { return m_pMenuPool; };
 	CTextDrawPool * GetTextDrawPool() { return m_pTextPool; };
 	CGangZonePool * GetGangZonePool() { return m_pGangZonePool; };
-	CActorPool* GetActorPool() { return m_pActorPool; };
+	CActorPool * GetActorPool() { return m_pActorPool; };
+	CLabelPool * GetLabelPool() { return m_pLabelPool; };
 
 	void ProcessClientJoin(BYTE bytePlayerID);
 

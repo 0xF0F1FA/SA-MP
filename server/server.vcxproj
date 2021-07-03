@@ -197,6 +197,7 @@
     <ClCompile Include="gamemodes.cpp" />
     <ClCompile Include="gangzonepool.cpp" />
     <ClCompile Include="httpclient.cpp" />
+    <ClCompile Include="labelpool.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="menupool.cpp" />
@@ -309,6 +310,7 @@
     <ClInclude Include="gamemodes.h" />
     <ClInclude Include="gangzonepool.h" />
     <ClInclude Include="httpclient.h" />
+    <ClInclude Include="labelpool.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="menupool.h" />

@@ -58,6 +58,7 @@ CNetGame::CNetGame()
 	m_pGangZonePool = NULL;
 	m_pVariable = NULL;
 	m_pActorPool = NULL;
+	m_pLabelPool = NULL;
 	m_bLanMode = false;
 	m_byteMod = 0x01;
 	//m_bACEnabled = pConsole->GetBoolVariable("anticheat");
@@ -224,6 +225,7 @@ CNetGame::~CNetGame()
 	SAFE_DELETE(m_pGangZonePool);
 	SAFE_DELETE(m_pVariable);
 	SAFE_DELETE(m_pActorPool);
+	SAFE_DELETE(m_pLabelPool);
 
 	//if (IsACEnabled())
 	//	CAntiCheat::Shutdown(this);
@@ -403,6 +405,10 @@ void CNetGame::Init(bool bFirst = false)
 
 	if (!m_pVariable) m_pVariable = new CVariables;
 
+	if (!m_pLabelPool) {
+		m_pLabelPool = new CLabelPool();
+	}
+
 	// Default tags/markers
 	m_bShowNameTags = true;
 	m_bShowPlayerMarkers = true;
@@ -455,6 +461,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	SAFE_DELETE(m_pTextPool);
 	SAFE_DELETE(m_pGangZonePool);
 	SAFE_DELETE(m_pActorPool);
+	SAFE_DELETE(m_pLabelPool);
 
 	// m_pGameMode->Unload();
 	
@@ -465,6 +472,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	m_pGameMode = NULL;
 	m_pTextPool = NULL;
 	m_pGangZonePool = NULL;
+	m_pLabelPool = NULL;
 
 	fRestartWaitTime = 0.0f;
 	m_bAdminTeleport = false;

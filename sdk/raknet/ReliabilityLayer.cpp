@@ -43,6 +43,9 @@ static const RakNet::Time64 MAX_TIME_TO_SAMPLE=250000; // How many ns to sample 
 
 #ifdef SAMPSRV
 extern int iPlayerTimeOutTime;
+extern int iMessageHoleLimit;
+
+void logprintf(char* format, ...);
 #endif
 
 #ifdef _MSC_VER
@@ -697,6 +700,19 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer( const char *buffe
 				//	assert(waitingForOrderedPacketReadIndex[ internalPacket->orderingChannel ] < internalPacket->orderingIndex);
 					statistics.orderedMessagesOutOfOrder++;
 
+#ifdef SAMPSRV
+					DataStructures::LinkedList<InternalPacket*>* orderingList;
+					orderingList = GetOrderingListAtOrderingStream(internalPacket->orderingChannel);
+					if(orderingList && (int)orderingList->Size() > iMessageHoleLimit)
+					{
+						logprintf(
+							"[warning] Too many out-of-order messages from player %s (%d) Limit: %u (messageholelimit)",
+							playerId.ToString(true),
+							orderingList->Size(),
+							iMessageHoleLimit);
+						return 1;
+					}
+#endif
 					// This is a newer ordered packet than we are waiting for. Store it for future use
 					AddToOrderingList( internalPacket );
 				}
@@ -1819,7 +1835,6 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream( RakNet::Bit
 	if ( isSplitPacket )
 	{
 #ifdef SAMPSRV
-		void logprintf(char* format, ...);
 		logprintf("[warning] dropping a split packet from client");
 		internalPacketPool.ReleasePointer(internalPacket);
 		return 0;

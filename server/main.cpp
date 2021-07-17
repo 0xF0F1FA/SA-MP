@@ -42,6 +42,7 @@ bool g_bDBLogQueries = true;
 bool bQueryLogging = false;
 
 int iSleepTime = 5;
+int iMessageHoleLimit = 3000;
 int iPlayerTimeOutTime = 10000;
 int iConnSeedTime = 300000;
 int iConnCookies = 1;
@@ -389,6 +390,7 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("instagib", CON_VARTYPE_BOOL, CON_VARFLAG_RULE, &bEnableInstagib, ServerInstagibChanged);
 	pConsole->AddVariable("myriad", CON_VARTYPE_BOOL, 0, &bGameMod);
 	pConsole->AddVariable("chatlogging", CON_VARTYPE_INT, 0, &iChatLogging);
+	pConsole->AddVariable("messageholelimit", CON_VARTYPE_INT, 0, &iMessageHoleLimit);
 	pConsole->AddVariable("playertimeout", CON_VARTYPE_INT, 0, &iPlayerTimeOutTime);
 	pConsole->AddVariable("db_logging", CON_VARTYPE_INT, 0, &g_bDBLogging);
 	pConsole->AddVariable("db_log_queries", CON_VARTYPE_INT, 0, &g_bDBLogQueries);

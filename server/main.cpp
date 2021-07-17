@@ -20,7 +20,7 @@ SERVER_SETTINGS gServerSettings;
 CRcon		*pRcon		= NULL;
 #endif*/
 
-BYTE		byteRconUser= INVALID_ID;
+WORD		wRconUser=    INVALID_ID;
 SOCKET		sockRconReply=INVALID_SOCKET;
 void*		dataRconReply=NULL;
 DWORD		dwdlRconReply=0;
@@ -586,9 +586,9 @@ void logprintf(char* format, ...)
 		fflush(pLogFile);
 	}
 
-	if (byteRconUser != INVALID_ID)
+	if (wRconUser != INVALID_ID)
 	{
-		pNetGame->SendClientMessage(pNetGame->GetRakServer()->GetPlayerIDFromIndex(byteRconUser), 0xFFFFFFFF, buffer);
+		pNetGame->SendClientMessage(pNetGame->GetRakServer()->GetPlayerIDFromIndex(wRconUser), 0xFFFFFFFF, buffer);
 	} else if (bRconSocketReply) {
 		RconSocketReply(buffer);
 	}

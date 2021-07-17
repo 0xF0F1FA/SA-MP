@@ -159,7 +159,7 @@ extern CArtwork* pArtwork;
 extern CRcon *pRcon;
 #endif*/
 
-extern BYTE byteRconUser;
+extern WORD	wRconUser;
 extern bool bRconSocketReply;
 extern bool g_bDBLogging;
 extern bool g_bDBLogQueries;

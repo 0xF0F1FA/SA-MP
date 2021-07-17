@@ -1287,9 +1287,9 @@ void CNetGame::Packet_InGameRcon(Packet* packet)
 			return;
 		}
 		logprintf("RCON (In-Game): Player [%s] sent command: %s", pPlayer->GetName(), szCmd);
-		byteRconUser = packet->playerIndex;
+		wRconUser = packet->playerIndex;
 		pConsole->Execute(szCmd);
-		byteRconUser = INVALID_ID;
+		wRconUser = INVALID_ID;
 	}
 }
 

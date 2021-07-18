@@ -386,6 +386,39 @@ void cmdSelectVehicle(PCHAR szCmd)
 
 //-----------------------------------------------------
 
+void cmdSetWeather(PCHAR szCmd)
+{
+	if (!strlen(szCmd)) {
+		pChatWindow->AddDebugMessage("Usage: set_weather (weather number)");
+		return;
+	}
+	int iWeatherID = atoi(szCmd);
+	pGame->SetWorldWeather(iWeatherID);
+}
+
+//----------------------------------------------------
+
+void cmdSetTime(PCHAR szCmd)
+{
+	if (!strlen(szCmd)) {
+		pChatWindow->AddDebugMessage("Usage: set_time (hour) (minute)");
+		return;
+	}
+
+	int	iHour = 0, iMinute = 0;
+
+	sscanf_s(szCmd, "%d%d", &iHour, &iMinute);
+
+	if ((iHour >= 0 && iHour <= 23) && (iMinute >= 0 && iMinute <= 59)) {
+		pGame->SetWorldTime(iHour, iMinute);
+	}
+	else {
+		pChatWindow->AddDebugMessage("Invalid Time. Use /set_time (hour 0-23) (minute 0-59)");
+	}
+}
+
+//----------------------------------------------------
+
 void cmdShowInterior(PCHAR szCmd)
 {
 	DWORD dwRet;
@@ -635,39 +668,6 @@ void cmdDisplayMemoryAsc(PCHAR szCmd)
 	}
 	
 	GameDebugEntity(dwDebugAddr,dwDebugOffset,15);
-}
-
-//----------------------------------------------------
-
-void cmdSetWeather(PCHAR szCmd)
-{
-	if(!strlen(szCmd)){
-		pChatWindow->AddDebugMessage("Usage: set_weather (weather number)");
-		return;
-	}	
-	int iWeatherID = atoi(szCmd);
-	pGame->SetWorldWeather(iWeatherID);
-}
-
-//----------------------------------------------------
-
-void cmdSetTime(PCHAR szCmd)
-{
-	if(!strlen(szCmd)){
-		pChatWindow->AddDebugMessage("Usage: set_time (hour) (minute)");
-		return;
-	}
-		
-	int	iHour=0,iMinute=0;
-
-	sscanf_s(szCmd,"%d%d",&iHour,&iMinute);
-
-	if ((iHour >= 0 && iHour <= 23) && (iMinute >= 0 && iMinute <= 59)) {
-		pGame->SetWorldTime(iHour,iMinute);
-	}
-	else {
-		pChatWindow->AddDebugMessage("Invalid Time. Use /set_time (hour 0-23) (minute 0-59)");
-	}
 }
 
 //----------------------------------------------------
@@ -1566,6 +1566,8 @@ void SetupCommands()
 		pCmdWindow->AddCmdProc("v",cmdCreateVehicle);
 		pCmdWindow->AddCmdProc("vehicle",cmdCreateVehicle);
 		pCmdWindow->AddCmdProc("player_skin",cmdPlayerSkin);
+		pCmdWindow->AddCmdProc("set_weather", cmdSetWeather);
+		pCmdWindow->AddCmdProc("set_time", cmdSetTime);
 #ifndef _DEBUG
 	}
 #endif
@@ -1610,8 +1612,6 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("give_weapon",cmdGiveActorWeapon);
 	pCmdWindow->AddCmdProc("disp_mem",cmdDisplayMemory);
 	pCmdWindow->AddCmdProc("disp_mem_asc",cmdDisplayMemoryAsc);
-	pCmdWindow->AddCmdProc("set_weather",cmdSetWeather);
-	pCmdWindow->AddCmdProc("set_time",cmdSetTime);
 	pCmdWindow->AddCmdProc("rp",cmdRemotePlayer);
 	pCmdWindow->AddCmdProc("rpr",cmdRemotePlayerRespawn);
 	pCmdWindow->AddCmdProc("say",cmdSay);

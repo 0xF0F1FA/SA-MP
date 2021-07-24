@@ -6,7 +6,7 @@ uses
   Windows, Messages, Forms, SysUtils, Registry, WinSock, ShellAPI, ShlObj, hh,
   FindSort, Dialogs, IdHTTP, MMSystem, ExtCtrls, XPMan, ImgList, Controls,
   Menus, ComCtrls, StdCtrls, TeEngine, Series, TeeProcs, Chart, Tabs, Graphics,
-  GIFImage, ToolWin, Classes, TlHelp32;
+  ToolWin, Classes, TlHelp32;
 
 {$L EliRT.obj}
 

@@ -1,7 +1,5 @@
 program samp;
 
-{$R 'MasterUpdate.dfm' :TForm(MasterUpdate)}
-
 uses
   Windows,
   Forms,

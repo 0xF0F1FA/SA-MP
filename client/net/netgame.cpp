@@ -438,7 +438,7 @@ void CNetGame::Packet_PlayerSync(Packet *p)
 	if(bHasUD) bsPlayerSync.Read(ofSync.udAnalog);
 
 	// GENERAL KEYS
-	bsPlayerSync.Read(ofSync.uiKeys);
+	bsPlayerSync.Read(ofSync.wKeys);
 
 	// VECTOR POS
 	bsPlayerSync.Read((char*)&ofSync.vecPos,sizeof(VECTOR));
@@ -546,7 +546,7 @@ void CNetGame::Packet_VehicleSync(Packet *p)
 	// KEYS
 	bsSync.Read(icSync.lrAnalog);
 	bsSync.Read(icSync.udAnalog);
-	bsSync.Read(icSync.uiKeys);
+	bsSync.Read(icSync.wKeys);
 
 	// ROLL / DIRECTION / POSITION / MOVE SPEED
 	bsSync.Read((char*)&icSync.cvecRoll,sizeof(C_VECTOR1));

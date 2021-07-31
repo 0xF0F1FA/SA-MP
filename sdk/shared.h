@@ -269,9 +269,9 @@ typedef struct {
 } PLAYER_SPAWN_INFO;
 
 typedef struct {
-	unsigned short lrAnalog;
-	unsigned short udAnalog;
-	unsigned int uiKeys;
+	WORD lrAnalog;
+	WORD udAnalog;
+	WORD wKeys;
 	VECTOR vecPos;
 	float fRotation;
 	unsigned char byteHealth;
@@ -295,9 +295,9 @@ typedef struct { // size=31
 
 typedef struct {
 	VEHICLEID VehicleID;
-	unsigned short lrAnalog;
-	unsigned short udAnalog;
-	unsigned int uiKeys;
+	WORD lrAnalog;
+	WORD udAnalog;
+	WORD wKeys;
 	C_VECTOR1 cvecRoll;
 	C_VECTOR1 cvecDirection;
 	VECTOR vecPos;
@@ -322,16 +322,16 @@ typedef struct {
 	unsigned char byteCurrentWeapon;
 	unsigned char bytePlayerHealth;
 	unsigned char bytePlayerArmour;
-	unsigned short lrAnalog;
-	unsigned short udAnalog;
-	unsigned int uiKeys;
+	WORD lrAnalog;
+	WORD udAnalog;
+	WORD wKeys;
 	VECTOR vecPos;
 } PASSENGER_SYNC_DATA;
 
 typedef struct {
-	unsigned short lrAnalog;
-	unsigned short udAnalog;
-	unsigned int uiKeys;
+	WORD lrAnalog;
+	WORD udAnalog;
+	WORD wKeys;
 	VECTOR vecPos;
 } SPECTATOR_SYNC_DATA;
 

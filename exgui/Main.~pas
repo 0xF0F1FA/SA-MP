@@ -6,7 +6,7 @@ uses
   Windows, Messages, Forms, SysUtils, Registry, WinSock, ShellAPI, ShlObj, hh,
   FindSort, Dialogs, IdHTTP, MMSystem, ExtCtrls, XPMan, ImgList, Controls,
   Menus, ComCtrls, StdCtrls, TeEngine, Series, TeeProcs, Chart, Tabs, Graphics,
-  ToolWin, Classes, TlHelp32;
+  ToolWin, Classes, TlHelp32, ClipBrd, StrUtils;
 
 {$L EliRT.obj}
 
@@ -124,19 +124,19 @@ type
     Splitter1: TSplitter;
     ToolButton1: TToolButton;
     lblPlayerName: TLabel;
-    pnNameBack: TPanel;
-    pnName: TPanel;
-    edName: TEdit;
     N11: TMenuItem;
     miGtaHost: TMenuItem;
     miSamp: TMenuItem;
     tmrQueryQueueProcess: TTimer;
+    edName: TEdit;
+    label_url: TLabel;
 
     function GetToken(TokenData: String; ItemIndex: Integer; TokenDelimiter: String): String;
     function GetClipBoardStr: String;
     procedure SetClipBoardStr(Str: String);
 
     procedure GetGTAExe(Owner: HWND);
+    procedure GetModelCacheFolder(Owner: HWND);
     procedure FormCreate(Sender: TObject);
     procedure lbServersDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
@@ -215,6 +215,7 @@ type
     procedure miGtaHostClick(Sender: TObject);
     procedure miSampClick(Sender: TObject);
     procedure tmrQueryQueueProcessTimer(Sender: TObject);
+    procedure label_urlClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -272,6 +273,8 @@ var
   PingCounter: Integer = 0;
   MasterFile: Integer = 1;
   gta_sa_exe: String;
+  model_cache: String;
+  artwork_proxy: String;
   QueryQueue: TStringList;
   ServersTopIndex: Integer = -1;
 
@@ -282,6 +285,14 @@ uses
   RconConfig, Settings, About, Rcon, MasterUpdate;
 
 {$R *.dfm}
+
+procedure GetGTAUserFilesPath(out ResultPath: String);
+var
+  Path: Array[0..MAX_PATH] Of Char;
+begin
+  if SHGetSpecialFolderPath(0, Path, CSIDL_PERSONAL, FALSE) >= TRUE then
+    ResultPath:= Path + '\GTA San Andreas User Files\SAMP\';
+end;
 
 function CompareHostName(a, b: Pointer): Integer;
 begin
@@ -369,37 +380,37 @@ begin
   WSACleanup;
 end;
 
-function TfmMain.GetClipBoardStr: String;
+function DarkenColor(Color: TColor): TColor;
 var
-  hData: THandle;
-  StrPtr: Pointer;
+  ColorHex: Integer;
+  K, Y, M, R, G, B: Byte;
 begin
-  OpenClipboard(0);
-  hData:= GetClipboardData(CF_TEXT);
-  StrPtr:= GlobalLock(hData);
-  SetLength(Result, GlobalSize(hData));
-  CopyMemory(@Result[1], StrPtr, Length(Result));
-  CloseClipboard;
+  Result:= Color;
+
+  ColorHex:= ColorToRGB(Color);
+  K:= GetKValue(ColorHex);
+  if K > 16 then begin
+    Y:= GetYValue(ColorHex);
+    if Y > 16 then begin
+      M:= GetMValue(ColorHex);
+      if M > 16 then begin
+        B:= M - 16;
+        G:= Y - 16;
+        R:= K - 16;
+        Result:= RGB(R, G, B);
+      end;
+    end;
+  end;
+end;
+
+function TfmMain.GetClipBoardStr: String;
+begin
+  Result:= Clipboard.AsText;
 end;
 
 procedure TfmMain.SetClipBoardStr(Str: String);
-var
-  hData: THandle;
-  DataPtr: Pointer;
 begin
-  OpenClipboard(0);
-  EmptyClipboard;
-
-  hData:= GlobalAlloc(GMEM_MOVEABLE + GMEM_DDESHARE, Length(Str)+1);
-
-  if hData > 0 then begin
-    DataPtr:= GlobalLock(hData);
-    CopyMemory(DataPtr, @Str[1], Length(Str));
-    GlobalUnlock(hData);
-    SetClipboardData(CF_TEXT, hData);
-  end;
-
-  CloseClipboard;
+  Clipboard.SetTextBuf(PChar(Str));
 end;
 
 procedure TfmMain.GetGTAExe(Owner: HWND);
@@ -422,12 +433,29 @@ begin
 
   TmpStr:= ExtractFilePath(Copy(TmpStr, 2, Length(TmpStr)-2));
 
-  if BrowseForFolder(Owner, BrowseExe, TmpStr, 'Please locate your GTA: San Andreas installtion...') then begin
+  if BrowseForFolder(Owner, BrowseExe, TmpStr, 'Please locate your GTA: San Andreas installation...') then begin
     gta_sa_exe:= BrowseExe + '\gta_sa.exe';
 
     Reg.RootKey:= HKEY_CURRENT_USER;
     Reg.OpenKey('SOFTWARE\SAMP', true);
     Reg.WriteString('gta_sa_exe', gta_sa_exe);
+    Reg.CloseKey;
+    Reg.Free;
+  end;
+end;
+
+procedure TfmMain.GetModelCacheFolder(Owner: HWND);
+var
+  Reg: TRegistry;
+  TmpStr, BrowsePath: String;
+begin
+  Reg:= TRegistry.Create;
+  GetGTAUserFilesPath(TmpStr);
+  if BrowseForFolder(Owner, BrowsePath, TmpStr, 'Please locate your model cache...') then begin
+    model_cache:= BrowsePath;
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Reg.OpenKey('SOFTWARE\SAMP', true);
+    Reg.WriteString('model_cache', model_cache);
     Reg.CloseKey;
     Reg.Free;
   end;
@@ -440,6 +468,7 @@ var
   s_in: sockaddr_in;
   Reg: TRegistry;
   ServFull, ServAddr, ServPort, ServPass: String;
+  TmpStr, UserDataPath: String;
 begin
   Reg:= TRegistry.Create;
   Reg.RootKey:= HKEY_CURRENT_USER;
@@ -449,6 +478,12 @@ begin
     gta_sa_exe:= Reg.ReadString('gta_sa_exe')
   else
     GetGTAExe(Handle);
+
+  if Reg.ValueExists('model_cache') then
+    model_cache:= Reg.ReadString('model_cache');
+
+  if Reg.ValueExists('artwork_proxy') then
+    artwork_proxy:= Reg.ReadString('artwork_proxy');
 
   if Reg.ValueExists('PlayerName') then
     edName.Text:= Reg.ReadString('PlayerName');
@@ -470,8 +505,10 @@ begin
   QueryQueue:= TStringList.Create;
   tmrQueryQueueProcess.Enabled:= true;
 
-  if FileExists('USERDATA.DAT') then
-    ImportFavorites('USERDATA.DAT', false);
+  GetGTAUserFilesPath(TmpStr);
+  UserDataPath:= TmpStr + 'USERDATA.DAT';
+  if FileExists(UserDataPath) then
+    ImportFavorites(UserDataPath, false);
 
   if ParamCount > 0 then begin
     ServFull:= ParamStr(1);
@@ -503,18 +540,18 @@ begin
     Idx:= StrToIntDef(Items.Strings[Index], 0);
     if Idx >= Length(Servers) then Exit;
 
-    Canvas.Pen.Color:= clBtnShadow;
+    Canvas.Pen.Color:= clBtnHighlight;
     Canvas.Pen.Style:= psClear;
 
     if odSelected in State then begin
-      Canvas.Font.Color:= clWhite;
-      Canvas.Brush.Color:= $00804000;
+      Canvas.Font.Color:= clHighlightText;
+      Canvas.Brush.Color:= clHighlight;
     end else begin
-      Canvas.Font.Color:= clBlack;
+      Canvas.Font.Color:= clWindowText;
       if (Index mod 2) = 1 then
-        Canvas.Brush.Color:= $00FFFFFF
+        Canvas.Brush.Color:= clWindow
       else
-        Canvas.Brush.Color:= $00EEEEEE;
+        Canvas.Brush.Color:= DarkenColor(clWindow);
     end;
 
     Inc(Rect.Right);
@@ -540,7 +577,10 @@ begin
     DrawText(Canvas.Handle, PChar(IntToStr(Servers[Idx].Players) + ' / ' + IntToStr(Servers[Idx].MaxPlayers)), -1, TempRect, DT_LEFT);
 
     TempRect:= Classes.Rect(hcServers.Sections.Items[3].Left + 2, Rect.Top + 2, hcServers.Sections.Items[3].Right - 2, Rect.Bottom - 2);
-    DrawText(Canvas.Handle, PChar(IntToStr(Servers[Idx].Ping)), -1, TempRect, DT_LEFT);
+    if Servers[Idx].Ping = 9999 then
+      DrawText(Canvas.Handle, '-', -1, TempRect, DT_LEFT)
+    else
+      DrawText(Canvas.Handle, PChar(IntToStr(Servers[Idx].Ping)), -1, TempRect, DT_LEFT);
 
     TempRect:= Classes.Rect(hcServers.Sections.Items[4].Left + 2, Rect.Top + 2, hcServers.Sections.Items[4].Right - 2, Rect.Bottom - 2);
     DrawText(Canvas.Handle, PChar(Servers[Idx].Mode), -1, TempRect, DT_LEFT);
@@ -1241,14 +1281,14 @@ begin
 
   IdHTTP:= TIdHTTP.Create(Application);
   with IdHTTP do begin
-    ReadTimeout:= 10000; // 10secs
+    ReadTimeout:= 20000; // 20secs
     AllowCookies:= true;
 
     ProxyParams.BasicAuthentication:= False;
     ProxyParams.ProxyPort:= 0;
 
     Port:= 80;
-    Host:= 'server.sa-mp.com';
+    Host:= 'lists.sa-mp.com';
     Request.Host:= 'http://' + IdHTTP.Host + '/';
 
     Request.ContentLength:= -1;
@@ -1257,7 +1297,7 @@ begin
     Request.ContentType:= 'text/html';
     Request.Accept:= 'text/html, */*';
     Request.BasicAuthentication:= False;
-    Request.UserAgent:= 'Mozilla/3.0 (compatible; SA:MP v0.1 BETA)';
+    Request.UserAgent:= 'Mozilla/3.0 (compatible; SA:MP v0.3.7)';
 
     HTTPOptions:= [hoForceEncodeParams];
   end;
@@ -1265,9 +1305,9 @@ begin
   SL:= TStringList.Create;
   try
     if MasterFile = 1 then
-      SL.Text:= IdHTTP.Get('/0.2.X/servers')
+      SL.Text:= IdHTTP.Get('/0.3.7/internet')
     else if MasterFile = 2 then
-      SL.Text:= IdHTTP.Get('/0.2.X/official');
+      SL.Text:= IdHTTP.Get('/0.3.7/hosted');
   except
     // STATUS: BAD RESPONCE FROM MASTER SERVER
   end;
@@ -1373,7 +1413,8 @@ end;
 
 procedure TfmMain.HelpTopicsClick(Sender: TObject);
 begin
-  HtmlHelp(Handle, 'samp.chm', HH_HELP_CONTEXT, 0);
+  // 'http://wiki.sa-mp.com/' url no longer works
+  ShellExecute(Handle, 'open', 'https://team.sa-mp.com/wiki-archive.html', nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure TfmMain.AboutClick(Sender: TObject);
@@ -1383,6 +1424,8 @@ end;
 
 procedure TfmMain.tsServerListsChange(Sender: TObject; NewTab: Integer;
   var AllowChange: Boolean);
+var
+  TmpStr, UserFilePath: String;
 begin
   if tsServerLists.TabIndex = 0 then
     ExportFavorites('USERDATA.DAT', true);
@@ -1394,8 +1437,10 @@ begin
   SetLength(Servers, 0);
 
   if NewTab = 0 then begin
-    if FileExists('USERDATA.DAT') then
-      ImportFavorites('USERDATA.DAT', false);
+    GetGTAUserFilesPath(TmpStr);
+    UserFilePath := TmpStr + 'USERDATA.DAT';
+    if FileExists(UserFilePath) then
+      ImportFavorites(UserFilePath, false);
   end;
 
   {
@@ -1459,7 +1504,7 @@ begin
       break;
     end;
   end;
-  
+
   if Idx = -1 then begin
    //fmMain.Caption:= 'Server not found ' + StrIP;
    Exit;
@@ -1612,10 +1657,20 @@ var
 
   Host: String;
   Port: Word;
+
+  S, H: Integer;
 begin
-  if Pos(':', Server) <> 0 then begin
-    Host:= Copy(Server, 1, Pos(':', Server)-1);
-    Port:= StrToIntDef(Copy(Server, Pos(':', Server)+1, 5), 7777);
+  S:= Pos(':', Server);
+  if S <> 0 then begin
+    H:= Pos('#', Server);
+    if H <> 0 then begin
+      Host:= Copy(Server, 1, S-1);
+      Inc(S);
+      Port:= StrToIntDef(Copy(Server,S,H-S), 7777);
+    end else begin
+      Host:= Copy(Server, 1, S-1);
+      Port:= StrToIntDef(Copy(Server, S+1, Length(Server)-S), 7777);
+    end;
   end else begin
     Host:= Server;
     Port:= 7777;
@@ -1636,13 +1691,13 @@ begin
   Buf[6]:= StrToIntDef(GetToken(Host, 3, '.'), 0);
   Buf[7]:= StrToIntDef(GetToken(Host, 4, '.'), 0);
 
-  Move(Port, Buf[8], 2); // Port
-
   ZeroMemory(@ToAddr, SizeOf(ToAddr));
   ToAddr.sin_family:= AF_INET;
   ToAddr.sin_port:= htons(Port);
   ToAddr.sin_addr.S_addr:= inet_addr(PChar(Host));
   ToLen:= SizeOf(ToAddr);
+
+  Move(Port, Buf[8], 2); // Port
 
   if bInfo = true then begin
     Buf[10]:= Byte('i'); // Info Packet Id
@@ -1984,6 +2039,18 @@ begin
     QueryServerInfo(QueryQueue.Strings[0], true, false, false, false);
     //UpdateServers;
     QueryQueue.Delete(0);
+  end;
+end;
+
+procedure TfmMain.label_urlClick(Sender: TObject);
+var
+  Url: String;
+begin
+  Url:= label_url.Caption;
+  if Url <> '' then begin
+    if not AnsiStartsStr(Url, 'http://') Or not AnsiStartsStr(Url, 'https://') then
+      Url:= 'https://' + Url;
+    ShellExecute(0, 'open', PAnsiChar(Url), nil, nil, SW_SHOWNORMAL);
   end;
 end;
 

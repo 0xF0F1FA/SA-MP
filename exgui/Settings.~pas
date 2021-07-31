@@ -50,8 +50,6 @@ begin
   Reg.OpenKey('SOFTWARE\SAMP', true);
   Reg.WriteBool('SaveServPasses', cbSaveServerPasswords.Checked);
   Reg.WriteBool('SaveRconPasses', cbSaveRconPasswords.Checked);
-  Reg.WriteString('artwork_proxy', edProxyAddress.Text);
-  artwork_proxy:= edProxyAddress.Text;
   Reg.CloseKey;
   Reg.Free;
   Close;
@@ -71,14 +69,15 @@ begin
   Reg.OpenKey('SOFTWARE\SAMP', true);
   if Reg.ValueExists('SaveServPasses') then
     cbSaveServerPasswords.Checked:= Reg.ReadBool('SaveServPasses');
+
+
+
   if Reg.ValueExists('SaveRconPasses') then
     cbSaveRconPasswords.Checked:= Reg.ReadBool('SaveRconPasses');
   Reg.CloseKey;
   Reg.Free;
 
   edInstallLoc.Text:= ExtractFilePath(gta_sa_exe);
-  edCacheLoc.Text:= model_cache;
-  edProxyAddress.Text:= artwork_proxy;
 end;
 
 procedure TfmSettings.sbBrowseClick(Sender: TObject);

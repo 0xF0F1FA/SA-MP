@@ -34,7 +34,7 @@ const
   COLOR_URL   = $00FFAA00;//$008000FF;
 
 var
-  CreditLines: Array[0..45] of TCreditLine =
+  CreditLines: Array[0..102] of TCreditLine =
   (
     //---------- Header Start
     //(Line: 'Grand Theft Auto'; Color: $00FF8000; Bold: true),
@@ -101,7 +101,7 @@ var
     (Line: ''; Color: 666; Bold: false), // Spacer
     (Line: ''; Color: 666; Bold: false), // Spacer
     (Line: ''; Color: 666; Bold: false), // Spacer
-    (Line: ''; Color: 666; Bold: false)  // Spacer
+    (Line: ''; Color: 666; Bold: false), // Spacer
   );
 
   fmAbout: TfmAbout;
@@ -117,7 +117,6 @@ var
 
   // Drawing
   RenderThread: THandle;
-  Thread: Integer;
   bmi: BITMAPINFO;
   hDC1, hDC2: HDC;
   Buf: PBGRArray;
@@ -217,7 +216,7 @@ begin
 
   Ticks:= timeGetTime;
   GameOver:= false;
-  Thread:= BeginThread(nil, 0, @RenderTimer, nil, 0, RenderThread);
+  BeginThread(nil, 0, @RenderTimer, nil, 0, RenderThread);
 end;
 
 procedure TfmAbout.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -267,7 +266,6 @@ end;
 
 procedure TfmAbout.FormClick(Sender: TObject);
 begin
-  CloseHandle(Thread);
   Close;
 end;
 

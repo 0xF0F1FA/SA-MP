@@ -22,7 +22,7 @@ begin
   end;
 
   Application.Initialize;
-  Application.Title := 'SA:MP 0.2X';
+  Application.Title := 'SA-MP 0.3';
   Application.CreateForm(TfmMain, fmMain);
   Application.CreateForm(TfmAbout, fmAbout);
   Application.Run;

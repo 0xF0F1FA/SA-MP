@@ -71,8 +71,6 @@
   #define UNUSED_PARAM(p) ((void)(p))
 #endif
 
-#define MAX_FILE_STREAMS (101)
-
 enum filemode {
   io_read,      /* file must exist */
   io_write,     /* creates a new file */
@@ -86,13 +84,69 @@ enum seek_whence {
   seek_end,
 };
 
+typedef struct file_stream file_stream;
+
 struct file_stream {
-    AMX* amx;
-    FILE* file;
+  AMX* amx;
+  FILE* file;
+  file_stream* next;
 };
 
-static struct file_stream*
-    filestreams[MAX_FILE_STREAMS];
+file_stream* filestream=NULL;
+
+int verify_stream(AMX* amx, FILE* file)
+{
+  file_stream* curr=filestream;
+
+  while (curr!=NULL) {
+    if (curr->file==file && (curr->amx==amx || curr->amx==NULL)) {
+      return 1;
+    }
+    curr=curr->next;
+  }
+  return 0;
+}
+
+int add_stream(AMX* amx, FILE* file)
+{
+  file_stream* stream;
+
+  if ((stream=(file_stream *)malloc(sizeof(file_stream)))==NULL)
+    return 0;
+
+  stream->amx=amx;
+  stream->file=file;
+  stream->next=NULL;
+
+  if (filestream==NULL) {
+    filestream=stream;
+  } else {
+    stream->next=filestream;
+    filestream=stream;
+  }
+  return 1;
+}
+
+int delete_stream(AMX* amx, FILE* file)
+{
+  file_stream* curr=filestream;
+  file_stream* prev=NULL;
+
+  while (curr!=NULL) {
+    if (curr->amx==amx && curr->file==file) {
+      if (prev)
+        prev->next=curr->next;
+      curr->next=NULL;
+      curr->file=NULL;
+      curr->amx=NULL;
+      free(curr);
+      return 1;
+    } /* if */
+    prev=curr;
+    curr=curr->next;
+  } /* while */
+  return 0;
+}
 
 /* This function only stores unpacked strings. UTF-8 is used for
  * Unicode, and packed strings can only store 7-bit and 8-bit
@@ -433,7 +487,6 @@ static cell AMX_NATIVE_CALL n_fopen(AMX *amx, cell *params)
   TCHAR *attrib,*altattrib;
   TCHAR *name,fullname[AMX_MAX_PATH];
   FILE *f = NULL;
-  unsigned k=0;
 
   altattrib=NULL;
   switch (params[2] & 0x7fff) {
@@ -462,60 +515,49 @@ static cell AMX_NATIVE_CALL n_fopen(AMX *amx, cell *params)
       f=_tfopen(fullname,altattrib);
   } /* if */
   if (f!=NULL) {
-    /* find empty slot for handles */
-    while(filestreams[k]!=0 && k<MAX_FILE_STREAMS)
-      k++;
-    if (k==MAX_FILE_STREAMS)
-      return 0; /* return 0 if maximum file stream reached */
-    filestreams[k]=(struct file_stream*)malloc(sizeof(struct file_stream));
-    if (filestreams[k]==NULL)
-      return 0; /* malloc failed, return 0 */
-    filestreams[k]->amx=amx;
-    filestreams[k]->file=f;
-    k++;
+    /* add file stream to the map */
+    if (add_stream(amx, f) == 0) {
+      /* allocation failed, close the opened file and return 0 (null) */
+      fclose(f);
+      f = NULL;
+    }
   } /* if */
-  return (cell)k;
+  return (cell)f;
 }
 
 /* fclose(File: handle) */
 static cell AMX_NATIVE_CALL n_fclose(AMX *amx, cell *params)
 {
-  int err=0,idx=params[1]-1;
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      err=fclose(filestreams[idx]->file);
-      free(filestreams[idx]);
-      filestreams[idx]=0;
-      return err;
-    } /* if */
+  /* check if passed handle is added to the map */
+  if (verify_stream(amx,(FILE*)params[1])==0) {
+      return 0;
   } /* if */
-  return err;
+  return (cell)fclose((FILE*)params[1]) == 0;
 }
 
 /* fwrite(File: handle, const string[]) */
 static cell AMX_NATIVE_CALL n_fwrite(AMX *amx, cell *params)
 {
-  int r=0,idx=params[1]-1;
+  int r=0;
   cell *cptr;
   char *str;
   int len;
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      amx_GetAddr(amx,params[2],&cptr);
-      amx_StrLen(cptr,&len);
-      if (len==0)
-        return 0;
+  if (verify_stream(amx,(FILE*)params[1])==0)
+      return r;
 
-      if ((ucell)*cptr>UNPACKEDMAX) {
-        /* the string is packed, write it as an ASCII/ANSI string */
-        if ((str=(char*)alloca(len+1))!=NULL)
-          r=_tfputs(str,filestreams[idx]->file);
-      } else {
-        /* the string is unpacked, write it as UTF-8 */
-        r=fputs_cell(filestreams[idx]->file,cptr,1);
-      } /* if */
-    } /* if */
+  amx_GetAddr(amx,params[2],&cptr);
+  amx_StrLen(cptr,&len);
+  if (len==0)
+    return 0;
+
+  if ((ucell)*cptr>UNPACKEDMAX) {
+    /* the string is packed, write it as an ASCII/ANSI string */
+    if ((str=(char*)alloca(len+1))!=NULL)
+      r=_tfputs(str, (FILE*)params[1]);
+  } else {
+    /* the string is unpacked, write it as UTF-8 */
+    r=fputs_cell((FILE*)params[1],cptr,1);
   } /* if */
   return r;
 }
@@ -526,33 +568,31 @@ static cell AMX_NATIVE_CALL n_fread(AMX *amx, cell *params)
   int chars=0,max;
   char *str;
   cell *cptr;
-  int idx=params[1]-1;
+  
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return chars;
+  
+  max=(int)params[3];
+  if (max<=0)
+    return 0;
+  if (params[4])
+    max*=sizeof(cell);
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      max=(int)params[3];
-      if (max<=0)
-        return 0;
-      if (params[4])
-        max*=sizeof(cell);
+  amx_GetAddr(amx,params[2],&cptr);
+  str=(char *)alloca(max);
+  if (str==NULL || cptr==NULL) {
+    amx_RaiseError(amx, AMX_ERR_NATIVE);
+    return 0;
+  } /* if */
 
-      amx_GetAddr(amx,params[2],&cptr);
-      str=(char *)alloca(max);
-      if (str==NULL || cptr==NULL) {
-        amx_RaiseError(amx, AMX_ERR_NATIVE);
-        return 0;
-      } /* if */
-
-      if (params[4]) {
-        /* store as packed string, read an ASCII/ANSI string */
-        chars=fgets_char(filestreams[idx]->file,str,max);
-        assert(chars<max);
-        amx_SetString(cptr,str,(int)params[4],0,max);
-      } else {
-        /* store and unpacked string, interpret UTF-8 */
-        chars=fgets_cell(filestreams[idx]->file,cptr,max,1);
-      } /* if */
-    } /* if */
+  if (params[4]) {
+    /* store as packed string, read an ASCII/ANSI string */
+    chars=fgets_char((FILE*)params[1],str,max);
+    assert(chars<max);
+    amx_SetString(cptr,str,(int)params[4],0,max);
+  } else {
+    /* store and unpacked string, interpret UTF-8 */
+    chars=fgets_cell((FILE*)params[1],cptr,max,1);
   } /* if */
   assert(chars<max);
   return chars;
@@ -562,21 +602,20 @@ static cell AMX_NATIVE_CALL n_fread(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL n_fputchar(AMX *amx, cell *params)
 {
   size_t result=0;
-  int idx=params[1]-1;
 
   UNUSED_PARAM(amx);
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      if (params[3]) {
-        cell str[2];
-        str[0]=params[2];
-        str[1]=0;
-        result=fputs_cell(filestreams[idx]->file,str,1);
-        assert(result==0 || result==1);
-      } else {
-        fputc((int)params[2],filestreams[idx]->file);
-      } /* if */
-    } /* if */
+
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return result;
+
+  if (params[3]) {
+    cell str[2];
+    str[0]=params[2];
+    str[1]=0;
+    result=fputs_cell((FILE*)params[1],str,1);
+    assert(result==0 || result==1);
+  } else {
+    fputc((int)params[2], (FILE*)params[1]);
   } /* if */
   return result;
 }
@@ -586,20 +625,19 @@ static cell AMX_NATIVE_CALL n_fgetchar(AMX *amx, cell *params)
 {
   cell str[2];
   size_t result=0;
-  int idx=params[1]-1;
 
   UNUSED_PARAM(amx);
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      if (params[3]) {
-        result=fgets_cell(filestreams[idx]->file,str,2,1);
-      } else {
-        str[0]=fgetc(filestreams[idx]->file);
-        result=(str[0]!=EOF);
-      } /* if */
-      assert(result==0 || result==1);
-    } /* if */
+
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return EOF;
+
+  if (params[3]) {
+    result=fgets_cell((FILE*)params[1],str,2,1);
+  } else {
+    str[0]=fgetc((FILE*)params[1]);
+    result=(str[0]!=EOF);
   } /* if */
+  assert(result==0 || result==1);
   if (result==0)
     return EOF;
   else
@@ -621,21 +659,19 @@ static cell AMX_NATIVE_CALL n_fblockwrite(AMX *amx, cell *params)
 {
   cell *cptr;
   cell count=0;
-  int idx=params[1]-1;
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      amx_GetAddr(amx,params[2],&cptr);
-      if (cptr!=NULL) {
-        cell max=params[3];
-        ucell v;
-        for (count=0; count<max; count++) {
-          v=(ucell)*cptr++;
-          if (fwrite(aligncell(&v),sizeof(cell),1,filestreams[idx]->file)!= 1)
-            break; /* write error */
-        } /* for */
-      } /* if */
-    } /* if */
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return count;
+
+  amx_GetAddr(amx,params[2],&cptr);
+  if (cptr!=NULL) {
+    cell max=params[3];
+    ucell v;
+    for (count=0; count<max; count++) {
+      v=(ucell)*cptr++;
+      if (fwrite(aligncell(&v),sizeof(cell),1,(FILE*)params[1])!= 1)
+        break; /* write error */
+    } /* for */
   } /* if */
   return count;
 }
@@ -645,63 +681,63 @@ static cell AMX_NATIVE_CALL n_fblockread(AMX *amx, cell *params)
 {
   cell *cptr;
   cell count=0;
-  int idx=params[1]-1;
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      amx_GetAddr(amx,params[2],&cptr);
-      if (cptr!=NULL) {
-        cell max=params[3];
-        ucell v;
-        for (count=0; count<max; count++) {
-          if (fread(&v,sizeof(cell),1,filestreams[idx]->file)!=1)
-            break; /* write error */
-          *cptr++=(cell)*aligncell(&v);
-        } /* for */
-      } /* if */
-    } /* if */
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return count;
+
+  amx_GetAddr(amx,params[2],&cptr);
+  if (cptr!=NULL) {
+    cell max=params[3];
+    ucell v;
+    for (count=0; count<max; count++) {
+      if (fread(&v,sizeof(cell),1,(FILE*)params[1])!=1)
+        break; /* write error */
+      *cptr++=(cell)*aligncell(&v);
+    } /* for */
   } /* if */
   return count;
 }
 
-#ifdef AMX_WANT_FILE_FTEMP
 /* File: ftemp() */
 static cell AMX_NATIVE_CALL n_ftemp(AMX *amx, cell *params)
 {
-  UNUSED_PARAM(amx);
+  FILE* f=NULL;
+  //UNUSED_PARAM(amx);
   UNUSED_PARAM(params);
-  return (cell)tmpfile();
+  if ((f=tmpfile())!=NULL) {
+    if (add_stream(amx,f)==0) {
+      fclose(f);
+      f=NULL;
+    } /* if */
+  } /* if */
+  return (cell)f;
 }
-#endif
 
 /* fseek(File: handle, position, seek_whence: whence=seek_start) */
 static cell AMX_NATIVE_CALL n_fseek(AMX *amx, cell *params)
 {
-  int idx=params[1]-1;
   int whence;
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      switch (params[3]) {
-      case seek_start:
-        whence=SEEK_SET;
-        break;
-      case seek_current:
-        whence=SEEK_CUR;
-        break;
-      case seek_end:
-        whence=SEEK_END;
-        //if (params[2]>0)
-        //  params[2]=-params[2];
-        break;
-      default:
-        return 0;
-      } /* switch */
-      return lseek(fileno(filestreams[idx]->file),params[2],whence);
-    }/* if */
-  } /* if */
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return -1;
+
+  switch (params[3]) {
+  case seek_start:
+    whence=SEEK_SET;
+    break;
+  case seek_current:
+    whence=SEEK_CUR;
+    break;
+  case seek_end:
+    whence=SEEK_END;
+    //if (params[2]>0)
+    //  params[2]=-params[2];
+    break;
+  default:
+    return 0;
+  } /* switch */
   UNUSED_PARAM(amx);
-  return -1;
+  return lseek(fileno((FILE*)params[1]),params[2],whence);
 }
 
 /* bool: fexist(const name[]) */
@@ -731,17 +767,15 @@ static cell AMX_NATIVE_CALL n_fremove(AMX *amx, cell *params)
 /* flength(File: handle) */
 static cell AMX_NATIVE_CALL n_flength(AMX *amx, cell *params)
 {
-  int idx=params[1]-1;
   long l=0,c;
 
-  if (0<idx && idx<MAX_FILE_STREAMS) {
-    if (filestreams[idx]!=0) {
-      int fn=fileno(filestreams[idx]->file);
-      c=lseek(fn,0,SEEK_CUR); /* save the current position */
-      l=lseek(fn,0,SEEK_END); /* return the file position at its end */
-      lseek(fn,c,SEEK_SET);   /* restore the file pointer */
-    } /* if */
-  } /* if */
+  if (verify_stream(amx,(FILE*)params[1])==0)
+    return l;
+
+  int fn=fileno((FILE*)params[1]);
+  c=lseek(fn,0,SEEK_CUR); /* save the current position */
+  l=lseek(fn,0,SEEK_END); /* return the file position at its end */
+  lseek(fn,c,SEEK_SET);   /* restore the file pointer */
   UNUSED_PARAM(amx);
   return l;
 }
@@ -758,9 +792,7 @@ AMX_NATIVE_INFO file_Natives[] = {
   { "fgetchar",    n_fgetchar },
   { "fblockwrite", n_fblockwrite },
   { "fblockread",  n_fblockread },
-#ifdef AMX_WANT_FILE_FTEMP
   { "ftemp",       n_ftemp },
-#endif
   { "fseek",       n_fseek },
   { "fexist",      n_fexist },
   { "flength",     n_flength },
@@ -770,24 +802,25 @@ AMX_NATIVE_INFO file_Natives[] = {
 
 int AMXEXPORT amx_FileInit(AMX *amx)
 {
-  static int initialized=0;
-  if (!initialized) {
-    for (unsigned i=0; i<MAX_FILE_STREAMS; i++)
-      filestreams[i]=0;
-    initialized=1;
-  } /* if */
   return amx_Register(amx, file_Natives, -1);
 }
 
 int AMXEXPORT amx_FileCleanup(AMX *amx)
 {
-  unsigned i=0;
-  for (; i<MAX_FILE_STREAMS; i++) {
-    if (filestreams[i]!=0 && filestreams[i]->amx==amx) {
-      fclose(filestreams[i]->file);
-      free(filestreams[i]);
-      filestreams[i]=0;
-    } /* if */
-  } /* if */
+  //file_stream* curr = filestream;
+  //file_stream* prev = NULL;
+  //while(curr != NULL) {
+  //  if (curr->amx == amx) {
+  //    fclose(curr->file);
+  //    curr->file = NULL;
+  //    if(prev)
+  //      prev->next = curr->next;
+  //    curr->next = NULL;
+  //    curr->amx = NULL;
+  //    free(curr);
+  //  } /* if */
+  //  prev = curr;
+  //  curr = curr->next;
+  //} /* while */
   return AMX_ERR_NONE;
 }

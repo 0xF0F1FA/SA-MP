@@ -13,7 +13,7 @@
 #include "game.h"
 #include "../main.h"
 
-DWORD dwPlayerPedPtrs[MAX_PLAYERS];
+DWORD dwPlayerPedPtrs[MAX_CLIENT_PLAYERS];
 
 #define NUM_RADAR_COLORS 200
 
@@ -615,7 +615,7 @@ void __stdcall GamePrepareTrain(VEHICLE_TYPE *pVehicle)
 
 void __stdcall InitPlayerPedPtrRecords() 
 {
-	memset(&dwPlayerPedPtrs[0],0,sizeof(DWORD) * MAX_PLAYERS);
+	memset(&dwPlayerPedPtrs[0],0,sizeof(DWORD) * MAX_CLIENT_PLAYERS);
 }
 
 //-----------------------------------------------------------
@@ -630,7 +630,7 @@ void __stdcall SetPlayerPedPtrRecord(BYTE bytePlayer, DWORD dwPedPtr)
 BYTE __stdcall FindPlayerNumFromPedPtr(DWORD dwPedPtr)
 {
 	BYTE x = 0;
-	while(x != MAX_PLAYERS)
+	while(x != MAX_CLIENT_PLAYERS)
 	{
 		if(dwPlayerPedPtrs[x] == dwPedPtr) return x;
 		x++;

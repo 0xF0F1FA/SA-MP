@@ -17,7 +17,7 @@
 
 GTA_CONTROLSET *pGcsInternalKeys = (GTA_CONTROLSET *)ADDR_KEYSTATES;
 GTA_CONTROLSET GcsLocalPlayerKeys;
-GTA_CONTROLSET GcsRemotePlayerKeys[MAX_PLAYERS];
+GTA_CONTROLSET GcsRemotePlayerKeys[MAX_CLIENT_PLAYERS];
 
 BYTE	byteSaveDriveByLeft;
 BYTE	byteSaveDriveByRight;
@@ -30,7 +30,7 @@ void GameKeyStatesInit()
 {
 	int x=0;
 	memset(&GcsLocalPlayerKeys,0,sizeof(GTA_CONTROLSET));
-	while(x!=MAX_PLAYERS) {		
+	while(x!=MAX_CLIENT_PLAYERS) {		
 		memset(&GcsRemotePlayerKeys[x],0,sizeof(GTA_CONTROLSET));
 		x++;
 	}

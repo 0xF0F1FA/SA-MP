@@ -15,14 +15,14 @@
 
 CAMERA_AIM * pcaInternalAim = (CAMERA_AIM *)0xB6F32C;
 static CAMERA_AIM caLocalPlayerAim;
-static CAMERA_AIM caRemotePlayerAim[MAX_PLAYERS];
+static CAMERA_AIM caRemotePlayerAim[MAX_CLIENT_PLAYERS];
 extern BYTE * pbyteCameraMode;
 
 static float * pfCameraExtZoom = (float *)0xB6F250;
-static float fCameraExtZoom[MAX_PLAYERS];		// stored as a normalized multiplier float
+static float fCameraExtZoom[MAX_CLIENT_PLAYERS];		// stored as a normalized multiplier float
 static float fLocalCameraExtZoom;
 
-static BYTE byteCameraMode[MAX_PLAYERS];
+static BYTE byteCameraMode[MAX_CLIENT_PLAYERS];
 
 static float * pfPlayerStats = (float *)0xB79380;
 static float fLocalWeaponSkills[11];
@@ -74,8 +74,8 @@ float __stdcall GameGetPlayerCameraExtZoom(BYTE bytePlayerID)
 
 float __stdcall GameGetLocalPlayerCameraExtZoom()
 {
-	float value = ((*pfCameraExtZoom) - 35.0f) / 35.0f;	// normalize for 35.0 to 70.0
-	return value;
+	// Same as ((*pfCameraExtZoom) - 35.0f) * 0.028571429f; (1.0f/35.0f)
+	return ((*pfCameraExtZoom) - 35.0f) / 35.0f;
 }
 
 //----------------------------------------------------------
@@ -115,11 +115,14 @@ BYTE __stdcall GameGetLocalPlayerCameraMode()
 void __stdcall GameAimSyncInit()
 {
 	memset(&caLocalPlayerAim,0,sizeof(CAMERA_AIM));
-	memset(caRemotePlayerAim,0,sizeof(CAMERA_AIM) * MAX_PLAYERS);
-	memset(byteCameraMode,4,MAX_PLAYERS);
+	memset(caRemotePlayerAim,0,sizeof(CAMERA_AIM) * MAX_CLIENT_PLAYERS);
+	memset(byteCameraMode,4,MAX_CLIENT_PLAYERS);
+	for (int i=0; i<MAX_CLIENT_PLAYERS; i++)
+		for (int j=0; j<11; j++)
+			fWeaponSkills[i][j] = 999.0f;
 	for(int i=0; i<MAX_CLIENT_PLAYERS; i++)
 		fAspectRatio[i] = 0.333f;
-	for(int i=0; i<MAX_PLAYERS; i++)
+	for(int i=0; i<MAX_CLIENT_PLAYERS; i++)
 		fCameraExtZoom[i] = 1.0f;
 }
 
@@ -168,6 +171,25 @@ CAMERA_AIM * __stdcall GameGetRemotePlayerAim(int iPlayer)
 
 //----------------------------------------------------------
 
+void __stdcall GameSetPlayerWeaponSkill(int iPlayer, int iSkill, float fLevel)
+{
+	if (iSkill < 11 && iPlayer < MAX_CLIENT_PLAYERS) {
+		fWeaponSkills[iPlayer][iSkill] = fLevel;
+	}
+}
+
+//----------------------------------------------------------
+
+void __stdcall GameSetLocalPlayerWeaponSkill(int iSkill, float fLevel)
+{
+	if(iSkill < 11) {
+		fLocalWeaponSkills[iSkill] = fLevel;
+		pfPlayerStats[iSkill + 69] = fLevel;
+	}
+}
+
+//----------------------------------------------------------
+
 void __stdcall GameStoreLocalPlayerWeaponSkills()
 {
 	for (int i = 0; i < ARRAY_SIZE(fLocalWeaponSkills); i++)
@@ -199,3 +221,5 @@ void __stdcall GameSetRemotePlayerWeaponSkills(int iPlayer)
 	for (int i = 0; i < ARRAY_SIZE(fLocalWeaponSkills); i++)
 		pfPlayerStats[69+i] = fWeaponSkills[iPlayer][i];
 }
+
+//----------------------------------------------------------

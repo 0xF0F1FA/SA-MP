@@ -154,7 +154,7 @@ void CDialog::UpdateLayout()
 
 bool CDialog::IsCandicateActive()
 {
-	return (m_pEditBox && CDXUTIMEEditBox::IsCandicateActive());
+	return (m_pEditBox && CDXUTIMEEditBox::IsCandidateActive());
 }
 
 void CDialog::GetRect(RECT* rect)

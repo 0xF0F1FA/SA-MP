@@ -308,6 +308,39 @@ void CPlayer::StreamPickupOut(int iPickupID)
 	}
 }
 
+bool CPlayer::IsLabelStreamedIn(WORD wLabelID)
+{
+	if (wLabelID < MAX_LABEL_GLOBAL)
+	{
+		return m_bStreamedInLabel[wLabelID];
+	}
+	return false;
+}
+
+//----------------------------------------------------
+
+void CPlayer::StreamLabelIn(WORD wLabelID)
+{
+	if (pNetGame->GetLabelPool())
+	{
+		pNetGame->GetLabelPool()->InitForPlayer(wLabelID, m_bytePlayerID);
+		m_bStreamedInLabel[wLabelID] = true;
+		m_wStreamedLabelCount++;
+	}
+}
+
+//----------------------------------------------------
+
+void CPlayer::StreamLabelOut(WORD wLabelID)
+{
+	if (pNetGame->GetLabelPool())
+	{
+		pNetGame->GetLabelPool()->DeleteForPlayer(wLabelID, m_bytePlayerID);
+		m_bStreamedInLabel[wLabelID] = false;
+		m_wStreamedLabelCount--;
+	}
+}
+
 bool CPlayer::IsActorStreamedIn(int iActorID)
 {
 	if (iActorID >= 0 && iActorID < MAX_ACTORS)

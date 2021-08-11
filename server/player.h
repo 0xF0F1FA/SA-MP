@@ -46,6 +46,9 @@ private:
 	float					m_fRaceCheckpointSize;
 	bool					m_bInRaceCheckpoint;
 
+	bool m_bStreamedInLabel[MAX_LABEL_GLOBAL];
+	WORD m_wStreamedLabelCount;
+
 	bool m_bStreamedInPickup[MAX_PICKUPS];
 	unsigned short m_usPickupLimitCount;
 
@@ -134,6 +137,10 @@ public:
 	bool IsPickupStreamedIn(int iPickupID);
 	void StreamPickupIn(int iPickupID);
 	void StreamPickupOut(int iPickupID);
+
+	bool IsLabelStreamedIn(WORD wLabelID);
+	void StreamLabelIn(WORD wLabelID);
+	void StreamLabelOut(WORD wLabelID);
 
 	bool IsActorStreamedIn(int iActorID);
 	void StreamActorIn(int iActorID);

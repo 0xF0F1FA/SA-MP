@@ -49,6 +49,8 @@ int iConnCookies = 1;
 int iCookieLogging = 1;
 bool bUseArtwork = false;
 
+CServerVars ServerVars;
+
 #ifdef WIN32
 extern LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf);
 #endif

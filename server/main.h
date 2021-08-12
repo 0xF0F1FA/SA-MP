@@ -117,6 +117,7 @@ typedef struct _SERVER_SETTINGS {
 #include "console.h"
 #include "sampmap.h"
 #include "variable.h"
+#include "servervars.h"
 #include "artwork.h"
 #include "httpclient.h"
 #include "threadedhttp.h"
@@ -170,6 +171,7 @@ extern float g_fStreamDistance;
 extern int g_iStreamRate;
 extern bool bQueryLogging;
 extern int iSleepTime;
+extern CServerVars ServerVars;
 
 // -------------------
 // FUNCTION PROTOTYPES

@@ -51,7 +51,6 @@ private:
 	CMenuPool					*m_pMenuPool;
 	CTextDrawPool				*m_pTextPool;
 	CGangZonePool				*m_pGangZonePool;
-	CVariables					*m_pVariable;
 	CActorPool					*m_pActorPool;
 	CLabelPool					*m_pLabelPool;
 
@@ -70,7 +69,6 @@ public:
 
 	CScriptTimers* GetTimers() { return m_pScriptTimers; };
 	CThreadedHttp* GetThreadedHttp() { return m_pThreadedHttp; };
-	CVariables* GetVariable() const { return m_pVariable; };
 
 	bool m_bNameTagLOS;
 	bool m_bShowPlayerMarkers;

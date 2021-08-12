@@ -56,7 +56,6 @@ CNetGame::CNetGame()
 	m_pMenuPool = NULL;
 	m_pTextPool = NULL;
 	m_pGangZonePool = NULL;
-	m_pVariable = NULL;
 	m_pActorPool = NULL;
 	m_pLabelPool = NULL;
 	m_bLanMode = false;
@@ -223,7 +222,6 @@ CNetGame::~CNetGame()
 	SAFE_DELETE(m_pMenuPool);
 	SAFE_DELETE(m_pTextPool);
 	SAFE_DELETE(m_pGangZonePool);
-	SAFE_DELETE(m_pVariable);
 	SAFE_DELETE(m_pActorPool);
 	SAFE_DELETE(m_pLabelPool);
 
@@ -402,8 +400,6 @@ void CNetGame::Init(bool bFirst = false)
 	if(!m_pGameMode) {
 		m_pGameMode = new CGameMode();
 	}
-
-	if (!m_pVariable) m_pVariable = new CVariables;
 
 	if (!m_pLabelPool) {
 		m_pLabelPool = new CLabelPool();

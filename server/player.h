@@ -57,7 +57,7 @@ private:
 
 	RakNet::Time32			m_ConnectedTime;
 public:
-	CVariables				*m_pVariables;
+	CPlayerVars				*m_pPlayerVars;
 	CPlayerTextDrawPool		*m_pTextDraw;
 	CPlayerLabelPool		*m_pLabelPool;
 	PLAYER_SPAWN_INFO		m_SpawnInfo;
@@ -112,6 +112,7 @@ public:
 	SPECTATOR_SYNC_DATA* GetSpectatorSyncData() { return &m_spSync; }
 
 	CPlayerLabelPool* GetLabelPool() { return m_pLabelPool; };
+	CPlayerVars* GetPlayerVars() { return m_pPlayerVars; };
 
 	void SetState(BYTE byteState);
 	BYTE GetState() { return m_byteState; };

@@ -88,7 +88,6 @@ CPlayer::CPlayer()
 	m_ucFightingMove = 0;
 	m_bIsNPC = false;
 
-	m_pVariables = new CVariables;
 	m_pTextDraw = new CPlayerTextDrawPool(m_bytePlayerID);
 	m_pLabelPool = NULL;
 
@@ -125,9 +124,9 @@ CPlayer::CPlayer()
 
 CPlayer::~CPlayer()
 {
-	SAFE_DELETE(m_pVariables);
 	SAFE_DELETE(m_pTextDraw);
 	SAFE_DELETE(m_pLabelPool);
+	SAFE_DELETE(m_pPlayerVars);
 }
 
 //----------------------------------------------------
@@ -144,6 +143,9 @@ void CPlayer::Deactivate()
 	m_fArmour = 0.0f;
 	m_wTargetedPlayer = INVALID_PLAYER_ID;
 	m_wTargetedActor = INVALID_ACTOR_ID;
+
+	SAFE_DELETE(m_pPlayerVars);
+	m_pPlayerVars = new CPlayerVars();
 
 	SAFE_DELETE(m_pLabelPool);
 	m_pLabelPool = new CPlayerLabelPool();

@@ -21,17 +21,18 @@ public:
 	~CGangZonePool() {};
 	WORD New(float fMinX, float fMinY, float fMaxX, float fMaxY);
 	void Delete(WORD wZone);
-	void ShowForPlayer(BYTE bytePlayer, WORD wZone, DWORD dwColor);
+	void ShowForPlayer(WORD wPlayer, WORD wZone, DWORD dwColor);
 	void ShowForAll(WORD wZone, DWORD dwColor);
-	void HideForPlayer(BYTE bytePlayer, WORD wZone);
+	void HideForPlayer(WORD wPlayer, WORD wZone);
 	void HideForAll(WORD wZone);
-	void FlashForPlayer(BYTE bytePlayer, WORD wZone, DWORD dwColor);
+	void FlashForPlayer(WORD wPlayer, WORD wZone, DWORD dwColor);
 	void FlashForAll(WORD wZone, DWORD dwColor);
-	void StopFlashForPlayer(BYTE bytePlayer, WORD wZone);
+	void StopFlashForPlayer(WORD wPlayer, WORD wZone);
 	void StopFlashForAll(WORD wZone);
-	bool GetSlotState(int iZone)
+	bool GetSlotState(WORD wZone)
 	{
-		return (iZone >= 0 && iZone < MAX_GANG_ZONES) ? m_bSlotState[iZone] : false;
+		if (wZone >= MAX_GANG_ZONES) return FALSE;
+		return m_bSlotState[wZone];
 	}
 };
 

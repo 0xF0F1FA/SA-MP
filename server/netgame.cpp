@@ -744,6 +744,58 @@ bool CNetGame::SendToAll(UniqueID nUniqId, RakNet::BitStream* pBitStream)
 	return m_pRak->RPC(nUniqId, pBitStream, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
 }
 
+//----------------------------------------------------
+
+void CNetGame::BroadcastData(UniqueID uniqueID,
+							RakNet::BitStream* pBitStream,
+							WORD wExcludedPlayer,
+							char orderingChannel)
+{
+	PacketReliability reliability;
+
+	if (!m_pPlayerPool) return;
+
+	reliability = RELIABLE_ORDERED;
+	if (orderingChannel == 3)
+		reliability = RELIABLE;
+
+	for (int i = 0; i <= m_pPlayerPool->GetPoolSize(); i++)
+	{
+		if (m_pPlayerPool->GetSlotState(i) && (WORD)i != wExcludedPlayer)
+		{
+			m_pRak->RPC(uniqueID, pBitStream, HIGH_PRIORITY, reliability, orderingChannel,
+				m_pRak->GetPlayerIDFromIndex(i), false, false);
+		}
+	}
+}
+
+//----------------------------------------------------
+
+void CNetGame::RPC(	UniqueID uniqueID,
+					RakNet::BitStream* bitStream,
+					WORD wPlayerID,
+					char orderingStream)
+{
+	PacketReliability reliability;
+	PlayerID playerId;
+
+	if (!m_pPlayerPool) return;
+
+	reliability = RELIABLE_ORDERED;
+	if (orderingStream == 3)
+		reliability = RELIABLE;
+
+	if (m_pPlayerPool->GetSlotState(wPlayerID))
+	{
+		playerId = m_pRak->GetPlayerIDFromIndex(wPlayerID);
+
+		m_pRak->RPC(uniqueID, bitStream, HIGH_PRIORITY, reliability,
+			orderingStream, playerId, false, false);
+	}
+}
+
+//----------------------------------------------------
+
 // TODO: Uncomment IsVehicleStreamedIn() when it's done
 void CNetGame::BroadcastVehicleRPC(UniqueID UniqueID, RakNet::BitStream* bitStream,
 	VEHICLEID VehicleID, PLAYERID ExludedPlayer)
@@ -789,32 +841,6 @@ int CNetGame::GetBroadcastSendRateFromPlayerDistance(float fDistance)
 	if(fDistance < 2000.0f) return 50;
 
 	return 75;
-}
-
-//----------------------------------------------------
-
-void CNetGame::BroadcastData(UniqueID uniqueID, RakNet::BitStream* bitStream,
-	WORD wExcludedPlayer, char orderingStream)
-{
-	int x = 0;
-	CPlayer* pPlayer;
-
-	if (m_pPlayerPool)
-	{
-		while (x <= m_pPlayerPool->GetLastPlayerId())
-		{
-			if (m_pPlayerPool->GetSlotState(x) == TRUE && x != (int)wExcludedPlayer)
-			{
-				pPlayer = m_pPlayerPool->GetAt(x);
-				if (pPlayer /*&& pPlayer->IsPlayerStreamedIn(wExcludedPlayer)*/) // TODO!
-				{
-					m_pRak->RPC(uniqueID, bitStream, HIGH_PRIORITY, RELIABLE,
-						0, m_pRak->GetPlayerIDFromIndex(x), false, false);
-				}
-			}
-			x++;
-		}
-	}
 }
 
 //----------------------------------------------------

@@ -151,6 +151,7 @@ public:
 	void BroadcastVehicleRPC(UniqueID UniqueID, RakNet::BitStream* bitStream, VEHICLEID VehicleID, PLAYERID ExludedPlayer);
 
 	void BroadcastData(UniqueID uniqueID, RakNet::BitStream* bitStream, WORD wExcludedPlayer, char orderingStream);
+	void RPC(UniqueID uniqueID, RakNet::BitStream* bitStream, WORD wPlayerID, char orderingStream);
 
 	void BroadcastData( RakNet::BitStream *bitStream, PacketPriority priority,
 						PacketReliability reliability,

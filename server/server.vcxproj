@@ -149,6 +149,7 @@
     <ClCompile Include="playerlabelpool.cpp" />
     <ClCompile Include="playerpool.cpp" />
     <ClCompile Include="playertextdrawpool.cpp" />
+    <ClCompile Include="playervars.cpp" />
     <ClCompile Include="plugins.cpp" />
     <ClCompile Include="query.cpp" />
     <ClCompile Include="runutil.cpp" />
@@ -157,9 +158,9 @@
     <ClCompile Include="scrcustom.cpp" />
     <ClCompile Include="scrdatabase.cpp" />
     <ClCompile Include="scrtimers.cpp" />
+    <ClCompile Include="servervars.cpp" />
     <ClCompile Include="textdrawpool.cpp" />
     <ClCompile Include="threadedhttp.cpp" />
-    <ClCompile Include="variable.cpp" />
     <ClCompile Include="vehicle.cpp" />
     <ClCompile Include="vehiclepool.cpp" />
   </ItemGroup>
@@ -262,6 +263,7 @@
     <ClInclude Include="playerlabelpool.h" />
     <ClInclude Include="playerpool.h" />
     <ClInclude Include="playertextdrawpool.h" />
+    <ClInclude Include="playervars.h" />
     <ClInclude Include="plugincommon.h" />
     <ClInclude Include="plugininternal.h" />
     <ClInclude Include="plugins.h" />
@@ -269,10 +271,10 @@
     <ClInclude Include="sampmap.h" />
     <ClInclude Include="scrcore.h" />
     <ClInclude Include="scrtimers.h" />
+    <ClInclude Include="servervars.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="textdrawpool.h" />
     <ClInclude Include="threadedhttp.h" />
-    <ClInclude Include="variable.h" />
     <ClInclude Include="vehicle.h" />
     <ClInclude Include="vehiclepool.h" />
   </ItemGroup>

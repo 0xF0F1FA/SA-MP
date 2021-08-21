@@ -153,7 +153,6 @@
       <Filter>sdk\raknet</Filter>
     </ClCompile>
     <ClCompile Include="scrdatabase.cpp" />
-    <ClCompile Include="variable.cpp" />
     <ClCompile Include="..\sdk\sha2\sha256.cpp">
       <Filter>sdk\sha2</Filter>
     </ClCompile>
@@ -169,6 +168,8 @@
     </ClCompile>
     <ClCompile Include="artwork.cpp" />
     <ClCompile Include="sampmap.cpp" />
+    <ClCompile Include="servervars.cpp" />
+    <ClCompile Include="playervars.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h" />
@@ -418,7 +419,6 @@
       <Filter>sdk</Filter>
     </ClInclude>
     <ClInclude Include="scrcore.h" />
-    <ClInclude Include="variable.h" />
     <ClInclude Include="..\sdk\sha2\sha256.h">
       <Filter>sdk\sha2</Filter>
     </ClInclude>
@@ -434,6 +434,8 @@
     </ClInclude>
     <ClInclude Include="artwork.h" />
     <ClInclude Include="sampmap.h" />
+    <ClInclude Include="servervars.h" />
+    <ClInclude Include="playervars.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sdk">

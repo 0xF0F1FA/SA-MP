@@ -158,6 +158,12 @@ bool CLocalPlayer::Process()
 				m_pPlayerPed->StopPissing();
 			}
 
+			if (m_pPlayerPed->GetBarAnim()) {
+				m_pPlayerPed->StopBarAnim();
+			}
+
+			m_pPlayerPed->SetDrunkLevel(0);
+
 			// A hack for reseting the animations/tasks
 			m_pPlayerPed->TogglePlayerControllable(1);
 
@@ -204,6 +210,15 @@ bool CLocalPlayer::Process()
 
 		if(m_pPlayerPed->IsInVehicle() && m_pPlayerPed->IsDancing()) 
 			m_pPlayerPed->StopDancing(); // can't dance in vehicle
+
+		if (m_pPlayerPed->GetBarAnim()) {
+			if (GameGetInternalKeys()->wKeys1[15] || m_pPlayerPed->IsInVehicle())
+				m_pPlayerPed->StopBarAnim();
+			else
+				m_pPlayerPed->ProcessBarAnim();
+		}
+
+		m_pPlayerPed->ProcessDrunk();
 
 		dwThisTick = GetTickCount();
 
@@ -472,6 +487,14 @@ void CLocalPlayer::ApplySpecialAction(BYTE byteSpecialAction)
 {
 	switch(byteSpecialAction) {
 
+		case SPECIAL_ACTION_NONE:
+			if (m_pPlayerPed->IsDancing()) m_pPlayerPed->StopDancing();
+			if (m_pPlayerPed->IsCellphoneEnabled()) m_pPlayerPed->ToggleCellphone(0);
+			if (m_pPlayerPed->IsPissing()) m_pPlayerPed->StartPissing();
+			if (m_pPlayerPed->GetBarAnim()) m_pPlayerPed->StopBarAnim();
+			if (m_pPlayerPed->IsInJetpackMode()) m_pPlayerPed->StartJetpack();
+			break;
+
 		case SPECIAL_ACTION_USEJETPACK:
 			if(!m_pPlayerPed->IsInJetpackMode()) m_pPlayerPed->StartJetpack();
 			break;
@@ -505,6 +528,30 @@ void CLocalPlayer::ApplySpecialAction(BYTE byteSpecialAction)
 		case SPECIAL_ACTION_STOPUSECELLPHONE:
 			if(m_pPlayerPed->IsCellphoneEnabled()) {
 				m_pPlayerPed->ToggleCellphone(0);
+			}
+			break;
+
+		case SPECIAL_ACTION_DRINK_BEER:
+			if (!m_pPlayerPed->IsInVehicle()) {
+				m_pPlayerPed->SetBarAnim(1);
+			}
+			break;
+
+		case SPECIAL_ACTION_SMOKE_CIGGY:
+			if (!m_pPlayerPed->IsInVehicle()) {
+				m_pPlayerPed->SetBarAnim(4);
+			}
+			break;
+
+		case SPECIAL_ACTION_DRINK_WINE:
+			if (!m_pPlayerPed->IsInVehicle()) {
+				m_pPlayerPed->SetBarAnim(2);
+			}
+			break;
+
+		case SPECIAL_ACTION_DRINK_SPRUNK:
+			if (!m_pPlayerPed->IsInVehicle()) {
+				m_pPlayerPed->SetBarAnim(3);
 			}
 			break;
 
@@ -557,6 +604,19 @@ BYTE CLocalPlayer::GetSpecialAction()
 
 	if(m_pPlayerPed->IsPissing()) {
 		return SPECIAL_ACTION_URINATE;
+	}
+
+	if (m_pPlayerPed->GetBarAnim() == 1) {
+		return SPECIAL_ACTION_DRINK_BEER;
+	}
+	if (m_pPlayerPed->GetBarAnim() == 2) {
+		return SPECIAL_ACTION_DRINK_WINE;
+	}
+	if (m_pPlayerPed->GetBarAnim() == 3) {
+		return SPECIAL_ACTION_DRINK_SPRUNK;
+	}
+	if (m_pPlayerPed->GetBarAnim() == 4) {
+		return SPECIAL_ACTION_SMOKE_CIGGY;
 	}
 
 	return SPECIAL_ACTION_NONE;
@@ -1224,11 +1284,13 @@ void CLocalPlayer::SendStatsUpdate()
 {
 	RakNet::BitStream bsStats;
 	int iMoney = pGame->GetLocalMoney();
+	int iDrunkLevel = m_pPlayerPed->GetDrunkLevel();
 	WORD wAmmo = m_pPlayerPed->GetAmmo();
 	//ScriptCommand(&get_player_weapon_ammo, GetCurrentWeapon()
 
 	bsStats.Write((BYTE)ID_STATS_UPDATE);
 	bsStats.Write(iMoney);
+	bsStats.Write(iDrunkLevel);
 	bsStats.Write(wAmmo);
 	pNetGame->GetRakClient()->Send(&bsStats,HIGH_PRIORITY,UNRELIABLE,0);
 }

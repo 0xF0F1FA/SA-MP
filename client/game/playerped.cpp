@@ -57,6 +57,12 @@ CPlayerPed::CPlayerPed()
 
 	m_iPissingState = 0;
 	m_dwPissParticlesHandle = 0;
+
+	m_iDrunkLevel = 0;
+	m_dwLastDrunkTick = GetTickCount();
+
+	m_iBarAnimType = 0;
+	m_dwBarAnimObject = 0;
 }
 
 //-----------------------------------------------------------
@@ -102,6 +108,12 @@ CPlayerPed::CPlayerPed(int iPlayerNumber, int iSkin, float fX, float fY,float fZ
 	m_iPissingState = 0;
 	m_dwPissParticlesHandle = 0;
 
+	m_iDrunkLevel = 0;
+	m_dwLastDrunkTick = GetTickCount();
+
+	m_iBarAnimType = 0;
+	m_dwBarAnimObject = 0;
+
 	SetModelIndex(iSkin);
 	SetTargetRotation(fRotation);
 }
@@ -136,6 +148,10 @@ void CPlayerPed::Destroy()
 		ScriptCommand(&disassociate_object,m_dwParachuteObject,0.0f,0.0f,0.0f,0);
 		ScriptCommand(&destroy_object_with_fade,m_dwParachuteObject);
 		m_dwParachuteObject = 0;
+	}
+
+	if (m_iBarAnimType) {
+		StopBarAnim();
 	}
 
 	if(IN_VEHICLE(m_pPed)) {
@@ -2026,6 +2042,199 @@ int CPlayerPed::IsPissing()
 	//if(!m_pPed) return 0;
 	//if(!GamePool_Ped_GetAt(m_dwGTAId)) return 0;
 	return m_iPissingState;
+}
+
+//-----------------------------------------------------------
+
+void CPlayerPed::ProcessDrunk()
+{
+	if (!m_pPed) return;
+	if (m_bytePlayerNumber) return;
+
+	if (m_iDrunkLevel <= 2000)
+	{
+		if(m_iDrunkLevel > 0)
+			m_iDrunkLevel--;
+
+		ScriptCommand(&set_player_drunk_level, 0, 0);
+	}
+	else if (m_iDrunkLevel > 2000)
+	{
+		int iDrunkMul = (int)(m_iDrunkLevel * 0.02);
+
+		if (iDrunkMul >= 250) {
+			iDrunkMul = 250;
+		}
+		else if (iDrunkMul < 5) {
+			iDrunkMul = 0;
+		}
+
+		ScriptCommand(&set_player_drunk_level, 0, iDrunkMul);
+
+		if (m_iDrunkLevel > 2000) 
+		{
+			if (m_pPed->pVehicle && IN_VEHICLE(m_pPed) && !IsAPassenger()) 
+			{
+				VEHICLE_TYPE* pVehicle = (VEHICLE_TYPE*)m_pPed->pVehicle;
+
+				if (!m_dwLastDrunkTick || (GetTickCount() - m_dwLastDrunkTick) > 200) 
+				{
+					float fPosZ = 0.0f;
+					int iRand = rand() % 40;
+
+					if (iRand >= 20)
+					{
+						if (iRand <= 30) {
+							fPosZ = -0.012f;
+
+							if(m_iDrunkLevel >= 5000)
+								fPosZ = -0.015f;
+						}
+						else if (m_iDrunkLevel >= 5000) {
+							fPosZ = 0.015f;
+						}
+						else {
+							fPosZ = 0.012f;
+						}
+					}
+
+					if (FloatOffset(pVehicle->entity.vecMoveSpeed.X, 0.0f) > 0.05f &&
+						FloatOffset(pVehicle->entity.vecMoveSpeed.Y, 0.0f) > 0.05f) 
+					{
+						pVehicle->entity.vecTurnSpeed.Z += fPosZ;
+					}
+
+					m_dwLastDrunkTick = GetTickCount();
+				}
+			}
+		}
+		m_iDrunkLevel--;
+	}
+}
+
+int CPlayerPed::GetDrunkLevel()
+{
+	return m_iDrunkLevel;
+}
+
+void CPlayerPed::SetDrunkLevel(int iLevel)
+{
+	m_iDrunkLevel = iLevel;
+}
+
+//-----------------------------------------------------------
+
+void CPlayerPed::ProcessBarAnim()
+{
+	if (!m_iBarAnimType || !m_pPed || !IsAdded()) return;
+
+	GTA_CONTROLSET* pPlayerControls;
+
+	if (!m_bytePlayerNumber) {
+		pPlayerControls = GameGetInternalKeys();
+	}
+	else {
+		pPlayerControls = GameGetPlayerKeys(m_bytePlayerNumber);
+	}
+
+	SetArmedWeapon(0);
+
+	if (/*!m_bytePlayerNumber &&*/ !IsPerformingCustomAnim() && pPlayerControls->wKeys1[17])
+	{
+		if (m_iBarAnimType == 1 || m_iBarAnimType == 2 ||
+			m_iBarAnimType == 3)
+		{
+			if (GetPedStat() == 5 || GetPedStat() == 22)
+				ApplyAnimation("dnk_stndF_loop", "BAR", 4.0, 0, 0, 0, 0, -1);
+			else
+				ApplyAnimation("dnk_stndM_loop", "BAR", 4.0, 0, 0, 0, 0, -1);
+
+			if (m_iBarAnimType != 3) {
+				m_iDrunkLevel += 1250;
+
+				if (m_iDrunkLevel > 50000)
+					m_iDrunkLevel = 50000;
+			}
+		}
+		else if (m_iBarAnimType == 4) {
+			ApplyAnimation("smkcig_prtl", "GANGS", 700.0, 0, 0, 0, 0, 2750);
+		}
+	}
+}
+
+void CPlayerPed::StopBarAnim()
+{
+	if (m_iBarAnimType) {
+		ScriptCommand(&attach_to_object, m_dwGTAId, m_dwBarAnimObject, 0.0, 0.0, 0.0, 6, 16, "NULL", "NULL", 0);
+		m_dwBarAnimObject = 0;
+	}
+
+	MATRIX4X4 mat;
+	GetMatrix(&mat);
+	TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+
+	m_iBarAnimType = 0;
+}
+
+int CPlayerPed::GetBarAnim()
+{
+	return m_iBarAnimType;
+}
+
+void CPlayerPed::SetBarAnim(int iType)
+{
+	if (m_dwBarAnimObject) StopBarAnim();
+
+	MATRIX4X4 mat;
+	GetMatrix(&mat);
+
+	switch (iType)
+	{
+	case 4:
+		ScriptCommand(&create_object, 1485, mat.pos.X, mat.pos.Y, mat.pos.Z, &m_dwBarAnimObject);
+
+		if (GamePool_Object_GetAt(m_dwBarAnimObject)) {
+			ScriptCommand(&attach_to_object, m_dwGTAId, m_dwBarAnimObject, 0.0, 0.0, 0.0, 6, 16, "NULL", "NULL", -1);
+			m_iBarAnimType = 4;
+			return;
+		}
+		break;
+
+	case 1:
+		ScriptCommand(&create_object, 1543, mat.pos.X, mat.pos.Y, mat.pos.Z, &m_dwBarAnimObject);
+
+		if (GamePool_Object_GetAt(m_dwBarAnimObject)) {
+			ScriptCommand(&attach_to_object, m_dwGTAId, m_dwBarAnimObject, 0.05, 0.02, -0.3, 6, 16, "NULL", "NULL", -1);
+			m_iBarAnimType = 1;
+			return;
+		}
+		break;
+
+	case 2:
+		ScriptCommand(&create_object, 1486, mat.pos.X, mat.pos.Y, mat.pos.Z, &m_dwBarAnimObject);
+
+		if (GamePool_Object_GetAt(m_dwBarAnimObject)) {
+			ScriptCommand(&attach_to_object, m_dwGTAId, m_dwBarAnimObject, 0.05, 0.02, -0.05, 6, 16, "NULL", "NULL", -1);
+			m_iBarAnimType = 2;
+			return;
+		}
+		break;
+
+	case 3:
+		ScriptCommand(&create_object, 1546, mat.pos.X, mat.pos.Y, mat.pos.Z, &m_dwBarAnimObject);
+
+		if (GamePool_Object_GetAt(m_dwBarAnimObject)) {
+			ScriptCommand(&attach_to_object, m_dwGTAId, m_dwBarAnimObject, 0.03, 0.1, -0.01, 6, 16, "NULL", "NULL", -1);
+			m_iBarAnimType = 3;
+			return;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	m_dwBarAnimObject = 0;
 }
 
 //-----------------------------------------------------------

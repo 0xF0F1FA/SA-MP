@@ -220,6 +220,7 @@ const SCRIPT_COMMAND get_actor_distance_from_ground 	= { 0x0819, "iv" }; // iAct
 const SCRIPT_COMMAND is_actor_falling_think				= { 0x0818, "i" }; // iActor
 
 const SCRIPT_COMMAND attach_object_to_actor				= { 0x069b, "iiffffff" };
+const SCRIPT_COMMAND attach_to_object					= { 0x070a, "iifffiissi" };
 const SCRIPT_COMMAND set_object_visible					= { 0x0750, "ii" };
 const SCRIPT_COMMAND destroy_object_with_fade			= { 0x09A2, "i" };
 const SCRIPT_COMMAND disassociate_object				= { 0x0682, "ifffi" };
@@ -314,3 +315,5 @@ const SCRIPT_COMMAND add_sprite_blip_for_coord			= { 0x02A8, "fffiv" };
 const SCRIPT_COMMAND clear_mission_audio = { 0x040D, "i" };
 const SCRIPT_COMMAND load_mission_audio = { 0x03CF, "ii" };
 const SCRIPT_COMMAND set_mission_audio_position = { 0x03D7, "ifff" };
+
+const SCRIPT_COMMAND set_player_drunk_level = { 0x052C, "ii" };

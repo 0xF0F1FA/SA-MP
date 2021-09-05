@@ -177,6 +177,15 @@ public:
 	float		GetAimZ();
 	void		SetAimZ(float fAimZ);
 
+	void ProcessDrunk();
+	int GetDrunkLevel();
+	void SetDrunkLevel(int iLevel);
+
+	void ProcessBarAnim();
+	void StopBarAnim();
+	int GetBarAnim();
+	void SetBarAnim(int iType);
+
 	void SetFightingStyle(unsigned char style, unsigned char move);
 	void GetFightingStyle(unsigned char* style, unsigned char* move);
 
@@ -205,6 +214,12 @@ public:
 
 	DWORD 		m_dwArrow;
 	BYTE		m_byteCreateMarker;
+	
+	int			m_iDrunkLevel;
+	DWORD       m_dwLastDrunkTick;
+
+	int			m_iBarAnimType;
+	DWORD		m_dwBarAnimObject;
 };
 
 //-----------------------------------------------------------

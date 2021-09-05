@@ -1460,9 +1460,9 @@ static void ScrSetPlayer(RPCParameters* rpcParams)
 	{
 	case 1:
 	{
-		float fDrunkLevel = 0.0f;
-		in.Read(fDrunkLevel);
-		pGame->SetDrunkLevel(fDrunkLevel);
+		int iDrunkLevel = 0;
+		in.Read(iDrunkLevel);
+		pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->SetDrunkLevel(iDrunkLevel);
 		break;
 	}
 	case 2:

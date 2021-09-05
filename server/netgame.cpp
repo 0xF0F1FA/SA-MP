@@ -1109,15 +1109,18 @@ void CNetGame::Packet_StatsUpdate(Packet *p)
 	CPlayerPool *pPlayerPool = GetPlayerPool();
 	//BYTE bytePlayerID = (BYTE)p->playerIndex;
 	int iMoney;
+	int iDrunkLevel;
 	WORD wAmmo;
 
 	bsStats.IgnoreBits(8);
 	bsStats.Read(iMoney);
+	bsStats.Read(iDrunkLevel);
 	bsStats.Read(wAmmo);
 
 	if(pPlayerPool) {
 		if(pPlayerPool->GetSlotState(p->playerIndex)) {
 			pPlayerPool->GetAt(p->playerIndex)->m_iMoney = iMoney;
+			pPlayerPool->GetAt(p->playerIndex)->m_iDrunkLevel = iDrunkLevel;
 			pPlayerPool->GetAt(p->playerIndex)->SetCurrentWeaponAmmo((DWORD)wAmmo);
 		}
 	}	

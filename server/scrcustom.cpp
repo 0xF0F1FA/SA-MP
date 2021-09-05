@@ -3131,7 +3131,7 @@ static cell n_SetPlayerDrunkLevel(AMX* amx, cell* params)
 
 	RakNet::BitStream out;
 	out.Write<int>(1); // OP code
-	out.Write((float)params[2]);
+	out.Write(params[2]);
 	pNetGame->SendToPlayer(params[1], RPC_ScrSetPlayer, &out);
 
 	pPlayer->m_iDrunkLevel = params[2];

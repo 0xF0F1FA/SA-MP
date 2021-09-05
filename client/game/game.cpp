@@ -1021,10 +1021,6 @@ void CGame::EnableStuntBonus(bool bEnable)
 	*(DWORD*)0xA4A474 = (int)bEnable;
 }
 
-void CGame::SetDrunkLevel(float fLevel)
-{
-	((void(__cdecl*)(float))0x71D730)(fLevel);
-}
 //-----------------------------------------------------------
 
 void CGame::DisableEnterExits(bool bDisable)

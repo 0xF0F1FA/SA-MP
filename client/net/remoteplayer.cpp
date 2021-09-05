@@ -493,6 +493,33 @@ void CRemotePlayer::ProcessSpecialActions(BYTE byteSpecialAction)
 
 	if(m_pPlayerPed->IsDancing()) m_pPlayerPed->ProcessDancing();
 
+	if (byteSpecialAction == SPECIAL_ACTION_DRINK_BEER && m_pPlayerPed->GetBarAnim() != 1) {
+		m_pPlayerPed->SetBarAnim(1);
+	}
+	if (byteSpecialAction == SPECIAL_ACTION_DRINK_WINE && m_pPlayerPed->GetBarAnim() != 2) {
+		m_pPlayerPed->SetBarAnim(2);
+	}
+	if (byteSpecialAction == SPECIAL_ACTION_DRINK_SPRUNK && m_pPlayerPed->GetBarAnim() != 3) {
+		m_pPlayerPed->SetBarAnim(3);
+	}
+	if (byteSpecialAction == SPECIAL_ACTION_SMOKE_CIGGY && m_pPlayerPed->GetBarAnim() != 4) {
+		m_pPlayerPed->SetBarAnim(4);
+	}
+
+	if (m_pPlayerPed->GetBarAnim())
+	{
+		if (byteSpecialAction == SPECIAL_ACTION_DRINK_BEER ||
+			byteSpecialAction == SPECIAL_ACTION_SMOKE_CIGGY ||
+			byteSpecialAction == SPECIAL_ACTION_DRINK_WINE ||
+			byteSpecialAction == SPECIAL_ACTION_DRINK_SPRUNK)
+		{
+			m_pPlayerPed->ProcessBarAnim();
+		}
+		else {
+			m_pPlayerPed->StopBarAnim();
+		}
+	}
+
 	// pissing:start
 	if(!m_pPlayerPed->IsPissing() && byteSpecialAction == SPECIAL_ACTION_URINATE) {
 		m_pPlayerPed->StartPissing();

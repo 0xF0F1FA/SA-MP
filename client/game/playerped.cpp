@@ -57,9 +57,6 @@ CPlayerPed::CPlayerPed()
 
 	m_iPissingState = 0;
 	m_dwPissParticlesHandle = 0;
-
-	m_bCarrying = false;
-	m_bCuffed = false;
 }
 
 //-----------------------------------------------------------

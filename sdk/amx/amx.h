@@ -362,6 +362,17 @@ enum {
       else (result) = NULL;                                                 \
     } while (0)
 
+#define amx_StrParamEx(amx,param,result)                                      \
+    do {                                                                    \
+      cell *amx_cstr_; int amx_length_;                                     \
+      amx_GetAddr((amx), (param), &amx_cstr_);                              \
+      amx_StrLen(amx_cstr_, &amx_length_);                                  \
+      if (amx_length_ > 0 &&                                                \
+          ((result) = (char*)alloca((amx_length_ + 1) * sizeof(*(result)))) != NULL) \
+        amx_GetString((char*)(result), amx_cstr_, sizeof(*(result))>1, amx_length_ + 1); \
+      else (result) = "";                                                 \
+    } while (0)
+
 uint16_t * AMXAPI amx_Align16(uint16_t *v);
 uint32_t * AMXAPI amx_Align32(uint32_t *v);
 #if defined _I64_MAX || defined HAVE_I64

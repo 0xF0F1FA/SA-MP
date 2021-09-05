@@ -759,7 +759,7 @@ void CNetGame::BroadcastData(UniqueID uniqueID,
 	if (orderingChannel == 3)
 		reliability = RELIABLE;
 
-	for (int i = 0; i <= m_pPlayerPool->GetPoolSize(); i++)
+	for (int i = 0; i <= m_pPlayerPool->GetLastPlayerId(); i++)
 	{
 		if (m_pPlayerPool->GetSlotState(i) && (WORD)i != wExcludedPlayer)
 		{

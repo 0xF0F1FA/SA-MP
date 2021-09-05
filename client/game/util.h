@@ -72,8 +72,8 @@ unsigned int CRC32UppercaseString(char* szString);
 
 void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius);
 
-void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION * quat);
-void QuatNormalize(D3DXQUATERNION* pQuat);
+//void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION * quat);
+//void QuatNormalize(D3DXQUATERNION* pQuat);
 MODEL_INFO_TYPE* GetModelInfo(int iModelID);
 MODEL_COL_TYPE* GetModelColInfo(int iModelID);
 WORD GetModelUseCount(int iModelID);

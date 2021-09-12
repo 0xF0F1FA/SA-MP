@@ -724,24 +724,54 @@ static cell n_GetPickupVirtualWorld(AMX* amx, cell* params)
 	return 0;
 }
 
+//----------------------------------------------------------------------------------
+
+// native ClearPlayerWorldBounds(playerid)
+static cell n_ClearPlayerWorldBounds(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "ClearPlayerWorldBounds", 1);
+
+	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt((WORD)params[1]);
+	if (pPlayer == NULL)
+		return 0;
+
+	RakNet::BitStream bsBounds;
+
+	pPlayer->m_fWorldBounds[0] = 20000.0f;
+	pPlayer->m_fWorldBounds[1] = -20000.0f;
+	pPlayer->m_fWorldBounds[2] = 20000.0f;
+	pPlayer->m_fWorldBounds[3] = -20000.0f;
+
+	bsBounds.Write(pPlayer->m_fWorldBounds[0]);
+	bsBounds.Write(pPlayer->m_fWorldBounds[1]);
+	bsBounds.Write(pPlayer->m_fWorldBounds[2]);
+	bsBounds.Write(pPlayer->m_fWorldBounds[3]);
+
+	pNetGame->RPC(RPC_ScrSetWorldBounds, &bsBounds, (WORD)params[1], 2);
+
+	return 1;
+}
+
+//----------------------------------------------------------------------------------
+
 // native GetPlayerWorldBounds(playerid,&Float:x_max,&Float:y_max,&Float:x_min,&Float:y_min);
 static cell n_GetPlayerWorldBounds(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPlayerWorldBounds", 5);
 	
-	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt((WORD)params[1]);
 	if (pPlayer == NULL)
 		return 0;
 
 	cell* cptr;
-	amx_GetAddr(amx, params[2], &cptr);
-	*cptr = amx_ftoc(pPlayer->m_fWorldBounds[0]);
-	amx_GetAddr(amx, params[3], &cptr);
-	*cptr = amx_ftoc(pPlayer->m_fWorldBounds[1]);
-	amx_GetAddr(amx, params[4], &cptr);
-	*cptr = amx_ftoc(pPlayer->m_fWorldBounds[2]);
-	amx_GetAddr(amx, params[5], &cptr);
-	*cptr = amx_ftoc(pPlayer->m_fWorldBounds[3]);
+	if(!amx_GetAddr(amx, params[2], &cptr))
+		*cptr = amx_ftoc(pPlayer->m_fWorldBounds[0]);
+	if(!amx_GetAddr(amx, params[3], &cptr))
+		*cptr = amx_ftoc(pPlayer->m_fWorldBounds[1]);
+	if(!amx_GetAddr(amx, params[4], &cptr))
+		*cptr = amx_ftoc(pPlayer->m_fWorldBounds[2]);
+	if(!amx_GetAddr(amx, params[5], &cptr))
+		*cptr = amx_ftoc(pPlayer->m_fWorldBounds[3]);
 
 	return 1;
 }
@@ -750,24 +780,30 @@ static cell n_GetPlayerWorldBounds(AMX* amx, cell* params)
 static cell n_SetPlayerWorldBounds(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "SetPlayerWorldBounds", 5);
-
 	RakNet::BitStream bsBounds;
-	
+	float fBounds[4];
+
 	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
 	if(!pPlayer) return 0;
 
-	// Update player's new bound 
-	pPlayer->m_fWorldBounds[0] = amx_ctof(params[2]);
-	pPlayer->m_fWorldBounds[1] = amx_ctof(params[3]);
-	pPlayer->m_fWorldBounds[2] = amx_ctof(params[4]);
-	pPlayer->m_fWorldBounds[3] = amx_ctof(params[5]);
-	
-	bsBounds.Write(pPlayer->m_fWorldBounds[0]);
-	bsBounds.Write(pPlayer->m_fWorldBounds[1]);
-	bsBounds.Write(pPlayer->m_fWorldBounds[2]);
-	bsBounds.Write(pPlayer->m_fWorldBounds[3]);
+	fBounds[0] = amx_ctof(params[2]);
+	fBounds[1] = amx_ctof(params[3]);
+	fBounds[2] = amx_ctof(params[4]);
+	fBounds[3] = amx_ctof(params[5]);
 
-	pNetGame->SendToPlayer(params[1], RPC_ScrSetWorldBounds, &bsBounds);
+	// Update player's new bound 
+	pPlayer->m_fWorldBounds[0] = fBounds[0];
+	pPlayer->m_fWorldBounds[1] = fBounds[1];
+	pPlayer->m_fWorldBounds[2] = fBounds[2];
+	pPlayer->m_fWorldBounds[3] = fBounds[3];
+	
+	bsBounds.Write(fBounds[0]);
+	bsBounds.Write(fBounds[1]);
+	bsBounds.Write(fBounds[2]);
+	bsBounds.Write(fBounds[3]);
+
+	pNetGame->RPC(RPC_ScrSetWorldBounds, &bsBounds, (WORD)params[1], 2);
+
 	return 1;
 }
 
@@ -8185,8 +8221,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetPickupCount),
 	DEFINE_NATIVE(GetPickupVirtualWorld),
 
-	DEFINE_NATIVE(GetPlayerWorldBounds),
-	DEFINE_NATIVE(SetPlayerWorldBounds),
+	{ "ClearPlayerWorldBounds", n_ClearPlayerWorldBounds },
+	{ "GetPlayerWorldBounds",	n_GetPlayerWorldBounds },
+	{ "SetPlayerWorldBounds",	n_SetPlayerWorldBounds },
 	{ "ShowNameTags",			n_ShowNameTags },
 	{ "ShowPlayerMarkers",		n_ShowPlayerMarkers },
 	{ "SetWorldTime",			n_SetWorldTime },

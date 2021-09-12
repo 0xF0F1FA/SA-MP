@@ -62,9 +62,6 @@
     <ClCompile Include="..\sdk\raknet\DataCompressor.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
-    <ClCompile Include="..\sdk\raknet\DirectoryDeltaTransfer.cpp">
-      <Filter>sdk\raknet</Filter>
-    </ClCompile>
     <ClCompile Include="..\sdk\raknet\DS_HuffmanEncodingTree.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
@@ -72,9 +69,6 @@
       <Filter>sdk\raknet</Filter>
     </ClCompile>
     <ClCompile Include="..\sdk\raknet\FileList.cpp">
-      <Filter>sdk\raknet</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\raknet\FileListTransfer.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
     <ClCompile Include="..\sdk\raknet\FileOperations.cpp">
@@ -87,9 +81,6 @@
       <Filter>sdk\raknet</Filter>
     </ClCompile>
     <ClCompile Include="..\sdk\raknet\LinuxStrings.cpp">
-      <Filter>sdk\raknet</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdk\raknet\NatPunchthrough.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
     <ClCompile Include="..\sdk\raknet\NetworkIDGenerator.cpp">
@@ -226,9 +217,6 @@
     <ClInclude Include="..\sdk\raknet\DataCompressor.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
-    <ClInclude Include="..\sdk\raknet\DirectoryDeltaTransfer.h">
-      <Filter>sdk\raknet</Filter>
-    </ClInclude>
     <ClInclude Include="..\sdk\raknet\DS_BinarySearchTree.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
@@ -259,9 +247,6 @@
     <ClInclude Include="..\sdk\raknet\DS_MemoryPool.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
-    <ClInclude Include="..\sdk\raknet\DS_OrderedChannelHeap.h">
-      <Filter>sdk\raknet</Filter>
-    </ClInclude>
     <ClInclude Include="..\sdk\raknet\DS_OrderedList.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
@@ -289,9 +274,6 @@
     <ClInclude Include="..\sdk\raknet\FileList.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
-    <ClInclude Include="..\sdk\raknet\FileListTransfer.h">
-      <Filter>sdk\raknet</Filter>
-    </ClInclude>
     <ClInclude Include="..\sdk\raknet\FileListTransferCBInterface.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
@@ -311,12 +293,6 @@
       <Filter>sdk\raknet</Filter>
     </ClInclude>
     <ClInclude Include="..\sdk\raknet\MTUSize.h">
-      <Filter>sdk\raknet</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\raknet\Multiplayer.h">
-      <Filter>sdk\raknet</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\raknet\NatPunchthrough.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
     <ClInclude Include="..\sdk\raknet\NetworkIDGenerator.h">

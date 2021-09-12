@@ -140,16 +140,13 @@
     <ClCompile Include="..\sdk\raknet\CheckSum.cpp" />
     <ClCompile Include="..\sdk\raknet\DataBlockEncryptor.cpp" />
     <ClCompile Include="..\sdk\raknet\DataCompressor.cpp" />
-    <ClCompile Include="..\sdk\raknet\DirectoryDeltaTransfer.cpp" />
     <ClCompile Include="..\sdk\raknet\DS_HuffmanEncodingTree.cpp" />
     <ClCompile Include="..\sdk\raknet\DS_Table.cpp" />
     <ClCompile Include="..\sdk\raknet\FileList.cpp" />
-    <ClCompile Include="..\sdk\raknet\FileListTransfer.cpp" />
     <ClCompile Include="..\sdk\raknet\FileOperations.cpp" />
     <ClCompile Include="..\sdk\raknet\GetTime.cpp" />
     <ClCompile Include="..\sdk\raknet\InternalPacketPool.cpp" />
     <ClCompile Include="..\sdk\raknet\LinuxStrings.cpp" />
-    <ClCompile Include="..\sdk\raknet\NatPunchthrough.cpp" />
     <ClCompile Include="..\sdk\raknet\NetworkIDGenerator.cpp" />
     <ClCompile Include="..\sdk\raknet\NetworkTypes.cpp" />
     <ClCompile Include="..\sdk\raknet\PluginInterface.cpp" />
@@ -510,7 +507,6 @@
     <ClInclude Include="..\sdk\raknet\CheckSum.h" />
     <ClInclude Include="..\sdk\raknet\DataBlockEncryptor.h" />
     <ClInclude Include="..\sdk\raknet\DataCompressor.h" />
-    <ClInclude Include="..\sdk\raknet\DirectoryDeltaTransfer.h" />
     <ClInclude Include="..\sdk\raknet\DS_BinarySearchTree.h" />
     <ClInclude Include="..\sdk\raknet\DS_BPlusTree.h" />
     <ClInclude Include="..\sdk\raknet\DS_Heap.h" />
@@ -521,7 +517,6 @@
     <ClInclude Include="..\sdk\raknet\DS_List.h" />
     <ClInclude Include="..\sdk\raknet\DS_Map.h" />
     <ClInclude Include="..\sdk\raknet\DS_MemoryPool.h" />
-    <ClInclude Include="..\sdk\raknet\DS_OrderedChannelHeap.h" />
     <ClInclude Include="..\sdk\raknet\DS_OrderedList.h" />
     <ClInclude Include="..\sdk\raknet\DS_Queue.h" />
     <ClInclude Include="..\sdk\raknet\DS_QueueLinkedList.h" />
@@ -531,7 +526,6 @@
     <ClInclude Include="..\sdk\raknet\DS_WeightedGraph.h" />
     <ClInclude Include="..\sdk\raknet\Export.h" />
     <ClInclude Include="..\sdk\raknet\FileList.h" />
-    <ClInclude Include="..\sdk\raknet\FileListTransfer.h" />
     <ClInclude Include="..\sdk\raknet\FileListTransferCBInterface.h" />
     <ClInclude Include="..\sdk\raknet\FileOperations.h" />
     <ClInclude Include="..\sdk\raknet\GetTime.h" />
@@ -539,8 +533,6 @@
     <ClInclude Include="..\sdk\raknet\InternalPacketPool.h" />
     <ClInclude Include="..\sdk\raknet\LinuxStrings.h" />
     <ClInclude Include="..\sdk\raknet\MTUSize.h" />
-    <ClInclude Include="..\sdk\raknet\Multiplayer.h" />
-    <ClInclude Include="..\sdk\raknet\NatPunchthrough.h" />
     <ClInclude Include="..\sdk\raknet\NetworkIDGenerator.h" />
     <ClInclude Include="..\sdk\raknet\NetworkTypes.h" />
     <ClInclude Include="..\sdk\raknet\PacketEnumerations.h" />

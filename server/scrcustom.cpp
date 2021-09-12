@@ -2169,7 +2169,7 @@ static cell n_GetWeaponName(AMX *amx, cell *params)
 	CHECK_PARAMS(amx, "GetWeaponName", 3);
 	if(params[1] > WEAPON_COLLISION) return 0;
 
-	return set_amxstring(amx,params[2],GetWeaponName(params[1]),params[3]);
+	return set_amxstring(amx,params[2],pNetGame->GetWeaponName(params[1]),params[3]);
 }
 
 // native FindWeaponID(const name[])
@@ -2181,9 +2181,9 @@ static cell n_FindWeaponID(AMX* amx, cell* params)
 	if (mn) {
 		for (unsigned char i = 0; i <= 46; i++) {
 #ifdef WIN32
-			if (StrStrI(GetWeaponName(i), mn) != NULL)
+			if (StrStrI(pNetGame->GetWeaponName(i), mn) != NULL)
 #else
-			if (strcasestr(GetWeaponName(i), mn) != NULL)
+			if (strcasestr(pNetGame->GetWeaponName(i), mn) != NULL)
 #endif
 			{
 				return (cell)i;

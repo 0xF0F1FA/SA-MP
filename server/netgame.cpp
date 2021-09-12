@@ -200,7 +200,7 @@ CNetGame::CNetGame()
 			dwPort, dwMaxPlayers, bLanMode?"ON":"OFF" );
 	}
 
-	m_iInitialTime = RakNet::GetTime32();
+	m_dwInitialTime = GetTime();
 
 	m_iGameState = GAMESTATE_STOPPED;
 }
@@ -514,6 +514,13 @@ void CNetGame::ReInitWhenRestarting()
 		}
 		bytePlayerID++;
 	}
+}
+
+//----------------------------------------------------
+
+DWORD CNetGame::GetTime()
+{
+	return (DWORD)RakNet::GetTime();
 }
 
 //----------------------------------------------------

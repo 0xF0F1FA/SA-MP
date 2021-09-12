@@ -4228,7 +4228,17 @@ static cell n_GetTickCount(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetTickCount", 0);
 
-	return (cell)RakNet::GetTime32() - pNetGame->m_iInitialTime;
+	return (cell)pNetGame->GetTime();
+}
+
+//----------------------------------------------------------------------------------
+
+// native GetServerTickCount()
+static cell n_GetServerTickCount(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetServerTickCount", 0);
+
+	return (cell)(pNetGame->GetTime() - pNetGame->m_dwInitialTime);
 }
 
 //----------------------------------------------------------------------------------
@@ -8163,6 +8173,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "KillTimer",				n_KillTimer },
 	DEFINE_NATIVE(SetMaxRconLoginAttempt),
 	{ "GetTickCount",			n_GetTickCount },
+	{ "GetServerTickCount",		n_GetServerTickCount },
 	{ "GetMaxPlayers",			n_GetMaxPlayers },
 	{ "SetTimerEx",				n_SetTimerEx },
 	{"VectorSize", n_VectorSize},

@@ -96,7 +96,7 @@ public:
 	unsigned int m_uiMaxRconAttempt;
 	bool m_bManualEngineAndLights;
 
-	RakNet::Time32 m_iInitialTime;
+	DWORD m_dwInitialTime;
 
 	RakNet::Time64 m_iLastTimeSaved;
 	unsigned int m_uiNumOfTicksInSec;
@@ -110,6 +110,8 @@ public:
 
 	CNetGame();
 	~CNetGame();
+
+	DWORD GetTime();
 
 	void Init(bool bFirst);
 	void ShutdownForGameModeRestart();

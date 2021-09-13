@@ -20,7 +20,7 @@ CVehiclePool::CVehiclePool()
 		if (VehicleID < 212)
 			m_usVehicleModelsUsed[VehicleID] = 0;
 	}
-	m_iPoolSize = 0;
+	m_iLastVehicleId = -1;
 }
 
 //----------------------------------------------------
@@ -57,7 +57,14 @@ VEHICLEID CVehiclePool::New(int iVehicleType, VECTOR * vecPos, float fRotation,
 		m_bVehicleSlotState[VehicleID] = true;
 		//m_byteVirtualWorld[VehicleID] = 0;
 
-		UpdatePoolSize();
+		m_iLastVehicleId = -1;
+		for (int i = 0; i < MAX_VEHICLES; i++)
+		{
+			if (m_bVehicleSlotState[i])
+			{
+				m_iLastVehicleId = i;
+			}
+		}
 
 		m_usVehicleModelsUsed[iVehicleType - 400]++;
 
@@ -84,24 +91,15 @@ bool CVehiclePool::Delete(VEHICLEID VehicleID)
 	delete m_pVehicles[VehicleID];
 	m_pVehicles[VehicleID] = NULL;
 
-	UpdatePoolSize();
-
-	return true;
-}
-
-//----------------------------------------------------
-
-void CVehiclePool::UpdatePoolSize()
-{
-	int iNewSize = 0;
-	for (int i = 0; i < MAX_PLAYERS; i++)
+	m_iLastVehicleId = -1;
+	for (int i = 0; i < MAX_VEHICLES; i++)
 	{
 		if (m_bVehicleSlotState[i])
 		{
-			iNewSize = i;
+			m_iLastVehicleId = i;
 		}
 	}
-	m_iPoolSize = iNewSize;
+	return true;
 }
 
 //----------------------------------------------------

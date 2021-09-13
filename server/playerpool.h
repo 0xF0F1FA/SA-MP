@@ -29,7 +29,7 @@ private:
 	//bool	m_bIsAnAdmin[MAX_PLAYERS];
 	//BYTE	m_byteVirtualWorld[MAX_PLAYERS];
 	int		m_iPlayerCount;
-	int		m_iPoolSize;
+	int		m_iLastPlayerId;
 	float	m_fLastTimerTime;
 
 public:
@@ -41,8 +41,6 @@ public:
 	bool New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC = false);
 	bool Delete(BYTE bytePlayerID, BYTE byteReason);
 		
-	void UpdatePoolSize();
-
 	// Retrieve a player
 	CPlayer* GetAt(WORD wPlayerID) {
 		if (wPlayerID >= MAX_PLAYERS) { return NULL; }
@@ -112,13 +110,13 @@ public:
 	bool  IsNickInUse(PCHAR szNick);
 
 	int GetPlayerCount() { return m_iPlayerCount; };
-	int GetPoolSize() { return m_iPoolSize; };
 
 	void DestroyActorForPlayers(unsigned short usActorID);
 
 	void UpdateTimersForAll();
 
 	void DeactivateAll();
+	int GetLastPlayerId() const { return m_iLastPlayerId; }
 };
 
 //----------------------------------------------------

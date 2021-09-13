@@ -21,7 +21,7 @@ private:
 	bool m_bVehicleSlotState[MAX_VEHICLES];
 	CVehicle *m_pVehicles[MAX_VEHICLES];
 	//BYTE m_byteVirtualWorld[MAX_VEHICLES];
-	int m_iLastVehicleId;
+	int m_iPoolSize;
 	unsigned short m_usVehicleModelsUsed[212];
 public:
 	CVehiclePool();
@@ -31,6 +31,8 @@ public:
 
 	bool Delete(VEHICLEID VehicleID);	
 		
+	void UpdatePoolSize();
+
 	// Retrieve a vehicle by id
 	CVehicle* GetAt(int iVehicleID)
 	{

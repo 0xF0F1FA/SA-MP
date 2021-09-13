@@ -1031,10 +1031,9 @@ static cell n_GetPlayerCount(AMX* amx, cell* params)
 
 static cell n_GetPlayerPoolSize(AMX* amx, cell* params)
 {
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
-		return pPlayerPool->GetLastPlayerId();
-	return 0;
+	CHECK_PARAMS(amx, "GetPlayerPoolSize", 0);
+	if (!pNetGame || !pNetGame->GetPlayerPool()) return -1;
+	return pNetGame->GetPlayerPool()->GetPoolSize();
 }
 
 // native GetPlayerVersion(playerid, version[], len)
@@ -4796,7 +4795,8 @@ static cell n_SHA256_PassHash(AMX* amx, cell* params)
 	char* szSalt;
 	amx_StrParam(amx, params[1], szPassword);
 	amx_StrParam(amx, params[2], szSalt);
-	if (szPassword == NULL) return 0;
+	if (!szPassword) szPassword = "";
+	if (!szSalt) szSalt = "";
 
 	const std::string& out(szPassword);
 	return set_amxstring(amx, params[3], sha256(szSalt == NULL ? szPassword : out + szSalt).c_str(), params[4]);
@@ -8195,7 +8195,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(IsPlayerNPC),
 
 	// Hash
-	DEFINE_NATIVE(SHA256_PassHash),
+	{ "SHA256_PassHash",		n_SHA256_PassHash },
 
 	// Server Variable
 	{ "SetSVarInt",				n_SetSVarInt },
@@ -8326,8 +8326,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(IsPickupStreamedIn),
 	{ "GetPlayerIDFromName", n_GetPlayerIDFromName },
 	{ "GetPlayerCount", n_GetPlayerCount},
-	{"GetPlayerPoolSize", n_GetPlayerPoolSize },
 	DEFINE_NATIVE(GetPlayerVersion),
+	{ "GetPlayerPoolSize",		n_GetPlayerPoolSize },
 	{ "SetSpawnInfo",			n_SetSpawnInfo },
 	{ "SpawnPlayer",			n_SpawnPlayer },
 	{ "SetPlayerTeam",			n_SetPlayerTeam },
@@ -8455,9 +8455,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(GetPlayerDistanceFromPoint),
 
 		// Vehicle
-	{ "GetVehiclePoolSize", n_GetVehiclePoolSize },
 	DEFINE_NATIVE(GetVehicleModelCount),
 	DEFINE_NATIVE(GetVehicleModelsUsed),
+	{ "GetVehiclePoolSize",		n_GetVehiclePoolSize },
 	{ "IsValidVehicle",			n_IsValidVehicle },
 	{ "CreateVehicle",			n_CreateVehicle },
 	{ "DestroyVehicle",			n_DestroyVehicle },

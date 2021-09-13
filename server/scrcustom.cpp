@@ -4796,7 +4796,8 @@ static cell n_SHA256_PassHash(AMX* amx, cell* params)
 	char* szSalt;
 	amx_StrParam(amx, params[1], szPassword);
 	amx_StrParam(amx, params[2], szSalt);
-	if (szPassword == NULL) return 0;
+	if (!szPassword) szPassword = "";
+	if (!szSalt) szSalt = "";
 
 	const std::string& out(szPassword);
 	return set_amxstring(amx, params[3], sha256(szSalt == NULL ? szPassword : out + szSalt).c_str(), params[4]);
@@ -8195,7 +8196,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	DEFINE_NATIVE(IsPlayerNPC),
 
 	// Hash
-	DEFINE_NATIVE(SHA256_PassHash),
+	{ "SHA256_PassHash",		n_SHA256_PassHash },
 
 	// Server Variable
 	{ "SetSVarInt",				n_SetSVarInt },

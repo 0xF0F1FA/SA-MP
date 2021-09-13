@@ -1465,7 +1465,7 @@ void CNetGame::SetWeather(BYTE byteWeather)
 	RakNet::BitStream bsWeather;
 	m_byteWeather = byteWeather;
 	bsWeather.Write(m_byteWeather);
-	GetRakServer()->RPC(RPC_Weather, &bsWeather, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+	BroadcastData(RPC_Weather, &bsWeather, INVALID_PLAYER_ID, 2);
 	
 	char szWeather[128];
 	sprintf(szWeather, "%d", m_byteWeather);

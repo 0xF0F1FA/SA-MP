@@ -4742,6 +4742,16 @@ static cell n_SetWeather(AMX *amx, cell *params)
 
 //----------------------------------------------------------------------------------
 
+// native GetWeather()
+static cell n_GetWeather(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetWeather", 0);
+
+	return pNetGame->m_byteWeather;
+}
+
+//----------------------------------------------------------------------------------
+
 // native SetPlayerWeather(playerid, weather)
 static cell n_SetPlayerWeather(AMX *amx, cell *params)
 {
@@ -8183,6 +8193,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "LimitGlobalChatRadius",	n_LimitGlobalChatRadius },
 	DEFINE_NATIVE(LimitPlayerMarkerRadius),
 	{ "SetWeather",				n_SetWeather },
+	{ "GetWeather",				n_GetWeather },
 	{ "SetPlayerWeather",		n_SetPlayerWeather },
 	{ "CallRemoteFunction",		n_CallRemoteFunction },
 	{ "CallLocalFunction",		n_CallLocalFunction },

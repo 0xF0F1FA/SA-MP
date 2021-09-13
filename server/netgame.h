@@ -188,6 +188,8 @@ public:
 
 
 	void KickPlayer(BYTE byteKickPlayer);
+	void BlockIpAddress(char* ip_mask, RakNet::Time time);
+	void UnBlockIpAddress(char* ip_mask);
 	void AddBan(char * nick, char * ip_mask, char * reason);
 	void RemoveBan(char * ip_mask);
 	void LoadBanList();

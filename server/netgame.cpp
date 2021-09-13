@@ -1504,6 +1504,20 @@ void CNetGame::KickPlayer(BYTE byteKickPlayer)
 
 //----------------------------------------------------
 
+void CNetGame::BlockIpAddress(char* ip_mask, RakNet::Time time)
+{
+	m_pRak->AddToBanList(ip_mask, time);
+}
+
+//----------------------------------------------------
+
+void CNetGame::UnBlockIpAddress(char* ip_mask)
+{
+	m_pRak->RemoveFromBanList(ip_mask);
+}
+
+//----------------------------------------------------
+
 void CNetGame::AddBan(char * nick, char * ip_mask, char * reason)
 {
 	const struct tm *tm;

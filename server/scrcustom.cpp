@@ -896,13 +896,16 @@ static cell n_BlockIpAddress(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "BlockIpAddress", 2);
 
+	cell* cstr; int length;
 	char* szIP;
-	amx_StrParam(amx, params[1], szIP);
-	if (pNetGame->GetRakServer() && szIP && 0 <= params[2])
-	{
-		pNetGame->GetRakServer()->AddToBanList(szIP, params[2]);
+	amx_GetAddr(amx, params[1], &cstr);
+	amx_StrLen(cstr, &length);
+	if (length > 0 && (szIP = (char*)alloca(length + 1)) != NULL) {
+		amx_GetString(szIP, cstr, 0, length + 1);
+		pNetGame->BlockIpAddress(szIP, (RakNet::Time)params[2]);
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -911,13 +914,16 @@ static cell n_UnBlockIpAddress(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "UnBlockIpAddress", 1);
 
+	cell* cstr; int length;
 	char* szIP;
-	amx_StrParam(amx, params[1], szIP);
-	if (pNetGame->GetRakServer() && szIP)
-	{
-		pNetGame->GetRakServer()->RemoveFromBanList(szIP);
+	amx_GetAddr(amx, params[1], &cstr);
+	amx_StrLen(cstr, &length);
+	if (length > 0 && (szIP = (char*)alloca(length + 1)) != NULL) {
+		amx_GetString(szIP, cstr, 0, length + 1);
+		pNetGame->UnBlockIpAddress(szIP);
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -8311,9 +8317,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "BanEx",					n_BanEx },
 	{ "RemoveBan", n_RemoveBan},
 	{ "IsBanned", n_IsBanned},
-	DEFINE_NATIVE(BlockIpAddress),
-	DEFINE_NATIVE(UnBlockIpAddress),
 	DEFINE_NATIVE(GetServerTickRate),
+	{ "BlockIpAddress",			n_BlockIpAddress },
+	{ "UnBlockIpAddress",		n_UnBlockIpAddress },
 	{ "SendRconCommand",		n_SendRconCommand },
 	{ "GetServerVarAsString",	n_GetServerVarAsString },
 	{ "GetServerVarAsInt",		n_GetServerVarAsInt },

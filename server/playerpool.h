@@ -52,7 +52,6 @@ public:
 		if (wPlayerID >= MAX_PLAYERS) { return FALSE; }
 		return m_bPlayerSlotState[wPlayerID];
 	};
-	};
 
 	/*PCHAR GetPlayerName(BYTE bytePlayerID) {
 		if(bytePlayerID >= MAX_PLAYERS) { return NULL; }
@@ -116,7 +115,7 @@ public:
 	void UpdateTimersForAll();
 
 	void DeactivateAll();
-	int GetLastPlayerId() const { return m_iLastPlayerId; }
+	int GetLastPlayerId() const { return m_iLastPlayerId; };
 };
 
 //----------------------------------------------------

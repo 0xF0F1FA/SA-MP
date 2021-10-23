@@ -9,12 +9,14 @@
 
 #include <string>
 
-D3DXMATRIX matView, matProj;
+D3DXMATRIX matView, matProj, matSource;
 void d3d9DestroyDeviceObjects();
 void d3d9RestoreDeviceObjects();
 
 int GetScreenshotFileName(std::string& FileName);
 extern BOOL g_bTakeScreenshot;
+
+void CallRwRenderStateSet(int state, int option);
 
 void DoCheatDataStoring();
 
@@ -22,7 +24,7 @@ typedef float (*FindGroundZForCoord_t)(float x, float y);
 static FindGroundZForCoord_t FindGroundZForCoord = (FindGroundZForCoord_t)0x569660;
 
 static MATRIX4X4 matPlayer,/*matTest,*/matLocal;
-//D3DXVECTOR3 PlayerPos;
+D3DXVECTOR3 PlayerPos;
 
 //VECTOR vecCam;
 //VECTOR vecColPoint;
@@ -32,74 +34,71 @@ static MATRIX4X4 matPlayer,/*matTest,*/matLocal;
 static DWORD dwHitEntity = 0;
 //DWORD *pHitEntity = &dwHitEntity;
 
-static char szBuffer[MAX_PLAYER_NAME + 7];
+static char szBuffer[128];
 
 //-------------------------------------------
 
-void __stdcall RenderPlayerTags()
+void __stdcall RenderPlayerBars()
 {
-	if(pNetGame && pNetGame->m_bShowPlayerTags)
+	if (pNetGame && pNetGame->m_bShowPlayerTags)
 	{
-		pPlayerTags->Begin();
-
 		CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 		pGame->FindPlayerPed()->GetMatrix(&matLocal);
 
-		for (int x=0; x < MAX_PLAYERS; x++)
+		pNewPlayerTags->BeginBars();
+
+		for (int x = 0; x <= pPlayerPool->GetPoolSize(); x++)
 		{
-			if (pPlayerPool->GetSlotState(x) == TRUE) // player is in use
+			if (pPlayerPool->GetSlotState(x) == true) // player is in use
 			{
 				CRemotePlayer* Player = pPlayerPool->GetAt(x);
-				if(Player && Player->IsActive() && Player->m_bShowNameTag)
+				if (Player)
 				{
 					CPlayerPed* PlayerPed = Player->GetPlayerPed();
-					if(PlayerPed && PlayerPed->IsAdded() && PlayerPed->GetDistanceFromLocalPlayerPed() <= pNetGame->m_fNameTagDrawDistance)
-					{	
-						PlayerPed->GetMatrix(&matPlayer);
-			
-						// -- LINE OF SIGHT TESTING --
-						
-						if (pNetGame->m_bNameTagLOS)
-						{
-							CAMERA_AIM* pCam = GameGetInternalAim();
-							dwHitEntity = ScriptCommand(&get_line_of_sight,
-								matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z,
-								pCam->pos1x, pCam->pos1y, pCam->pos1z,
-								1, 1, 0, 0, 0);
-						}
-						else
-							dwHitEntity = 1;
-
-						if (dwHitEntity) {
-							sprintf_s(szBuffer, "%s(%d)", Player->GetName(), x);
-							pPlayerTags->Draw(
-								{matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z},
-								szBuffer,
-								Player->GetPlayerColorAsARGB(),
-								Player->GetReportedHealth(), Player->GetReportedArmour(),
-								Player->GetDistanceFromLocalPlayer());
-						}		
-					}						
+					if (PlayerPed && Player->IsActive())
+					{
+						PlayerPed->GetDistanceFromLocalPlayerPed();
+					}
 				}
 			}
 		}
 
-		pPlayerTags->End();
+		pNewPlayerTags->EndBars();
+	}
+}
 
-				/*
-				#ifdef _DEBUG
-					CLocalPlayer* pLocalPlayer = pPlayerPool->GetLocalPlayer();
-					CPlayerPed* pLocalPlayerPed = pLocalPlayer->GetPlayerPed();
-					MATRIX4X4 matLocPlayer;
-					pLocalPlayerPed->GetMatrix(&matLocPlayer);
-					D3DXVECTOR3 LocPlayerPos;
-					LocPlayerPos.x = matLocPlayer.pos.X;
-					LocPlayerPos.y = matLocPlayer.pos.Y;
-					LocPlayerPos.z = matLocPlayer.pos.Z;
-					pNewPlayerTags->Draw(&LocPlayerPos, pPlayerPool->GetLocalPlayerName(), pLocalPlayer->GetPlayerColorAsARGB(), 100.0f, 75.0f, 0.0f);
-				#endif*/	
+//-------------------------------------------
 
-	} // if(pNetGame->m_byteShowPlayerTags)
+void __stdcall RenderPlayerLabels()
+{
+	if (pNetGame && pNetGame->m_bShowPlayerTags)
+	{
+		pNewPlayerTags->BeginLabels();
+
+		CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+		pGame->FindPlayerPed()->GetMatrix(&matLocal);
+
+		for (int x=0; x <= pPlayerPool->GetPoolSize(); x++)
+		{
+			if (pPlayerPool->GetSlotState(x) == true) // player is in use
+			{
+				CRemotePlayer* Player = pPlayerPool->GetAt(x);
+				if (Player)
+				{
+					CPlayerPed* PlayerPed = Player->GetPlayerPed();
+
+					sprintf(szBuffer, "%s (%d)", pPlayerPool->GetPlayerName(x), x);
+					{
+						pNewPlayerTags->Draw(&PlayerPos, szBuffer,
+							Player->GetPlayerColorAsARGB(),
+							PlayerPed->GetDistanceFromCamera());
+					}
+				}
+			}
+		}
+
+		pNewPlayerTags->EndLabels();
+	}
 }
 
 //-------------------------------------------------
@@ -144,8 +143,17 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 				pNewPlayerTags->m_DrawPlayerIDs = !pNewPlayerTags->m_DrawPlayerIDs;
 			}*/
 
-			RenderPlayerTags();
+			if (pNetGame->m_bShowPlayerTags)
+			{
+				RenderPlayerTags_Bars();
+				RenderPlayerTags_Label();
+			}
 			
+			// BUILD INFORMATION
+			RECT rBuild;
+			rBuild.top = pGame->GetScreenHeight() - 20;
+			rBuild.left = 15;
+			pDefaultFont->RenderText(BUILD_INFO, rBuild, 0xDDFFFFFF);
 
 			// DEBUG LABELS
 			if (bShowDebugLabels && pLabel)
@@ -253,47 +261,45 @@ HRESULT __stdcall IDirect3DDevice9Hook::Present(CONST RECT* pSourceRect, CONST R
 			} // if (bShowDebugLabels && pLabel)
 		} // if(pNetGame){}
 
-
-		// Scoreboard
 		if (pNetGame && pScoreBoard && pScoreBoard->IsVisible())
 		{
 			pGame->DisplayHud(FALSE);
 			pScoreBoard->Draw();
-		}		
-		// Help Dialog
-		/*else if(pNetGame && GetAsyncKeyState(VK_F1))
+		}
+		else if(pNetGame && GetAsyncKeyState(VK_F5) &&
+			pNetGame->GetGameState() == GAMESTATE_RESTARTING)
 		{
 			pGame->DisplayHud(FALSE);
-			pHelpDialog->Draw(); 
-		} */
-		// Net Statistics
-		else if(pNetGame && GetAsyncKeyState(VK_F5))
+			pNetStats->Draw();
+		}
+		/*else if (pNetGame && GetAsyncKeyState(VK_F10))
 		{
 			pGame->DisplayHud(FALSE);
-			pNetStats->Draw(); 
-		} 
-		// Server Net Statistics
-		/*else if(pNetGame && GetAsyncKeyState(VK_F10))
+			if(pSvrNetStats)
+				pSvrNetStats->Draw();
+		}
+		else if (pNetGame && GetAsyncKeyState(VK_F1) && pHelpDialog)
 		{
-			pGame->DisplayHud(FALSE);
-			pSvrNetStats->Draw(); 
+			pHelpDialog->Draw();
 		}*/
 		else
 		{
-			pGame->DisplayHud(TRUE);
-			if(pChatBubble) pChatBubble->Draw();
-			if(pGameUI) pGameUI->OnRender(10.0f);
-			if(pSpawnScreen) pSpawnScreen->Draw();
-			if(pChatWindow) pChatWindow->Draw();
-			if(pCmdWindow) pCmdWindow->Draw();
-			if(pDeathWindow) pDeathWindow->Draw();		
-		}
+			pGame->DisplayHud(pChatWindow->IsEnabled());
 
+			if (pChatBubble) pChatBubble->Draw();
 
-		if (pNetGame)
-		{
-			if (pNetGame->GetLabelPool())
-				pNetGame->GetLabelPool()->Draw();
+			if (pNetGame)
+			{
+				if (pNetGame->GetLabelPool())
+					pNetGame->GetLabelPool()->Draw();
+			}
+
+			if (pChatWindow) pChatWindow->Draw();
+			if (pCmdWindow) pCmdWindow->Draw();
+			if (pDeathWindow) pDeathWindow->Draw();
+			if (pGameUI) pGameUI->OnRender(10.0f);
+			if (pSpawnScreen) pSpawnScreen->Draw();
+			if (pTextDrawSelect) pTextDrawSelect->Process();
 		}
 
 #ifndef _DEBUG
@@ -428,7 +434,7 @@ HRESULT __stdcall IDirect3DDevice9Hook::Reset(D3DPRESENT_PARAMETERS* pPresentati
 
 	HRESULT hr = pD3DDevice->Reset(pPresentationParameters);
 
-	if (hr == D3D_OK)
+	if (SUCCEEDED(hr))
 	{			
 		d3d9RestoreDeviceObjects();
 	}
@@ -572,11 +578,13 @@ HRESULT __stdcall IDirect3DDevice9Hook::SetTransform(D3DTRANSFORMSTATETYPE State
 	switch (State)
 	{
 	case D3DTS_PROJECTION:
-		matProj = *mat;
+		memcpy(&matProj, mat, sizeof(D3DMATRIX));
 		break;
 	case D3DTS_VIEW:
-		matView = *mat;
+		memcpy(&matView, mat, sizeof(D3DMATRIX));
 		break;
+	case 256:
+		memcpy(&matSource, mat, sizeof(D3DMATRIX));
 	}
 
 	return pD3DDevice->SetTransform(State, mat);
@@ -682,8 +690,30 @@ HRESULT __stdcall IDirect3DDevice9Hook::GetTexture(DWORD Stage, IDirect3DBaseTex
 	return pD3DDevice->GetTexture(Stage, ppTexture);
 }
 
+
+
 HRESULT __stdcall IDirect3DDevice9Hook::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
+	/*extern DWORD dwVehiclePlateTexture;
+
+	if (pNetGame) {
+		CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
+		CVehicle* pVehicle;
+		if (pVehiclePool) {
+			pVehicle = pVehiclePool->GetAt(pVehiclePool->FindIDFromGtaPtr((VEHICLE_TYPE*)dwVehiclePlateTexture));
+			if (pVehicle && pVehicle->m_pPlateTexture) {
+				CallRwRenderStateSet(9, 2);
+				return pD3DDevice->SetTexture(Stage, pVehicle->m_pPlateTexture);
+			}
+		}
+
+		if (pLicensePlate && pLicensePlate->m_pLastTexture)
+		{
+			CallRwRenderStateSet(9, 2);
+			return pD3DDevice->SetTexture(Stage, pLicensePlate->m_pLastTexture);
+		}
+	}*/
+
 	return pD3DDevice->SetTexture(Stage, pTexture);
 }
 

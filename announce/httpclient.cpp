@@ -30,10 +30,19 @@
 
 //----------------------------------------------------
 
-CHttpClient::CHttpClient()
+CHttpClient::CHttpClient(char *szBindAddress)
 {
 	memset(&m_Request,0,sizeof(HTTP_REQUEST));
 	memset(&m_Response,0,sizeof(HTTP_RESPONSE));
+
+	m_bHasBindAddress=0;
+	memset(m_szBindAddress,0,256);
+
+	if(szBindAddress) {
+		m_bHasBindAddress=1;
+		strcpy(m_szBindAddress,szBindAddress);
+	}
+
 	m_iError = HTTP_SUCCESS; // Request is successful until otherwise indicated
 	m_iSocket = (-1);
 
@@ -99,10 +108,12 @@ bool CHttpClient::GetHeaderValue(char *szHeaderName,char *szReturnBuffer, int iB
 
 //----------------------------------------------------
 
-bool CHttpClient::Connect(char *szHost, int iPort)
+bool CHttpClient::Connect(char *szHost, int iPort, char *szBindAddress)
 {
 	struct sockaddr_in	sa;
+	struct sockaddr_in	sa2;
 	struct hostent		*hp;
+	struct hostent		*hp2;
 
 	// Hostname translation
 	if((hp=(struct hostent *)gethostbyname(szHost)) == NULL ) {
@@ -112,12 +123,28 @@ bool CHttpClient::Connect(char *szHost, int iPort)
 
 	// Prepare a socket	
 	memset(&sa,0,sizeof(sa));
+	memset(&sa2,0,sizeof(sa2));
 	memcpy(&sa.sin_addr,hp->h_addr,hp->h_length);
 	sa.sin_family = hp->h_addrtype;
 	sa.sin_port = htons((unsigned short)iPort);
 
+	if(szBindAddress) {
+		if((hp2=(struct hostent *)gethostbyname(szBindAddress)) == NULL) {
+			m_iError=HTTP_ERROR_BAD_HOST;
+			return false;
+		}
+		memcpy(&sa2.sin_addr,hp2->h_addr,hp2->h_length);
+		sa2.sin_family = hp2->h_addrtype;
+		sa2.sin_port = 0;
+	}
+
 	if((m_iSocket=socket(AF_INET,SOCK_STREAM,0)) < 0) {
 		m_iError=HTTP_ERROR_NO_SOCKET;
+		return false;
+	}
+
+	if(szBindAddress && bind(m_iSocket,(struct sockaddr *)&sa2,sizeof sa2) < 0) {
+		m_iError=HTTP_ERROR_CANT_CONNECT;
 		return false;
 	}
 
@@ -220,8 +247,15 @@ void CHttpClient::Process()
 	int   header_len;
 	char  request_head[16384];
 
-	if(!Connect(m_Request.host,m_Request.port)) {
-		return;
+	if(m_bHasBindAddress) {
+		if(!Connect(m_Request.host,m_Request.port,m_szBindAddress)) {
+			return;
+		}
+	}
+	else {
+		if(!Connect(m_Request.host,m_Request.port,0)) {
+			return;
+		}
 	}
 
 	// Build the HTTP Header
@@ -294,17 +328,6 @@ void CHttpClient::HandleEntity()
 				memcpy(header,response,header_len);
 				header[header_len]='\0';
 
-				if((*(response+header_len))=='\n') /* LFLF */
-				{
-					bytes_total-=(header_len+2);
-					memmove(response,(response+(header_len+2)),bytes_total);
-				}
-				else /* assume CRLFCRLF */
-				{
-					bytes_total-=(header_len+4);
-					memmove(response,(response+(header_len+4)),bytes_total);
-				}
-
 				/* find the content-length if available */
 				if((pcontent_buf=Util_stristr(header,"CONTENT-LENGTH:"))!=NULL)
 				{
@@ -326,20 +349,9 @@ void CHttpClient::HandleEntity()
 					else {
 					   content_len_str[content_len]='\0';
 					}
-
-					content_len=atoi(content_len_str);
-	
-					if(content_len > MAX_ENTITY_LENGTH) {
-						CloseConnection();
-						m_iError = HTTP_ERROR_CONTENT_TOO_BIG;
-						return;
-					}
 				}
 			}
 		}
-
-		if(header_got && has_content_len)
-			if(bytes_total>=content_len) break;
 	}
 
 	CloseConnection();
@@ -379,7 +391,7 @@ void CHttpClient::HandleEntity()
 
 	char szContentType[256];
 
-	if(GetHeaderValue((char*)"CONTENT-TYPE:",szContentType,256) == true) {
+	if(GetHeaderValue("CONTENT-TYPE:",szContentType,256) == true) {
 		if(strstr(szContentType,"text/html") != NULL) {
 			m_Response.content_type = CONTENT_TYPE_HTML;
 		}

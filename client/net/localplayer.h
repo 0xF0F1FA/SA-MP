@@ -23,8 +23,9 @@ class CLocalPlayer
 {
 public:
 	CPlayerPed				*m_pPlayerPed;
+	ONFOOT_SYNC_DATA		m_ofSync;
+	TRAILER_SYNC_DATA		m_trSync;
 	AIM_SYNC_DATA			m_aimSync;
-	char					m_szName[MAX_PLAYER_NAME];
 	bool					m_bIsActive;
 	bool					m_bIsWasted;
 	bool					m_bWantsAnotherClass;
@@ -32,8 +33,6 @@ public:
 	bool					m_bWaitingForSpawnRequestReply;
 	bool					m_bControlsVisible;
 	int						m_iVirtualWorld;
-	int						m_iScore;
-	unsigned short			m_usPing;
 
 	BYTE					m_byteSpectateMode;
 	BYTE					m_byteSpectateType;
@@ -95,9 +94,6 @@ public:
 	CLocalPlayer();
 	~CLocalPlayer(){};
 
-	void SetName(const char* szName);
-	const char* GetName();
-
 	bool IsActive() { return m_bIsActive; };
 	bool IsWasted() { return m_bIsWasted; };
 
@@ -113,6 +109,7 @@ public:
 	void SendOnFootFullSyncData();
 	void SendInCarFullSyncData();
 	void SendPassengerFullSyncData();
+	void SendTrailerSyncData(VEHICLEID TrailerID);
 	void SendAimSyncData();
 	void ResetAllSyncAttributes();
 
@@ -137,6 +134,8 @@ public:
 	void SendExitVehicleNotification(VEHICLEID VehicleID);
 	void SendEnterVehicleNotification(VEHICLEID VehicleID,bool bPassenger);
 	
+	void SendTakeDamageNotification(WORD wPlayerID, float fDamage, int iWeaponID, int iBodyPart);
+	void SendGiveDamageNotification(WORD wPlayerID, float fDamage, int iWeaponID, int iBodyPart);
 	void SendActorDamageNotification(unsigned short usActorID, float fDamage, int iWeapon, int iBodyPart);
 
 	void SetPlayerColor(DWORD dwColor);
@@ -169,6 +168,8 @@ public:
 	bool IsInRCMode() { return m_bInRCMode; };
 
 	int DetermineNumberOfPlayersInLocalRange();
+
+	bool GetTargetInfo();
 };
 
 //----------------------------------------------------------

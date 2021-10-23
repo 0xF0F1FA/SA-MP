@@ -393,6 +393,7 @@ int AMXAPI amx_GetNative(AMX *amx, int index, char *funcname);
 int AMXAPI amx_GetPublic(AMX *amx, int index, char *funcname);
 int AMXAPI amx_GetPubVar(AMX *amx, int index, char *varname, cell *amx_addr);
 int AMXAPI amx_GetString(char *dest,const cell *source, int use_wchar, size_t size);
+int AMXAPI amx_GetRawString(char *dest, const cell *source, int use_wchar, size_t size);
 int AMXAPI amx_GetTag(AMX *amx, int index, char *tagname, cell *tag_id);
 int AMXAPI amx_GetUserData(AMX *amx, long tag, void **ptr);
 int AMXAPI amx_Init(AMX *amx, void *program);

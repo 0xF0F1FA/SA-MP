@@ -25,6 +25,7 @@ using namespace RakNet;
 #define NETMODE_HEADSYNC_SENDRATE		1000
 #define NETMODE_AIM_SENDRATE			500
 #define NETMODE_FIRING_SENDRATE			40
+#define NETMODE_SYNC_SENDRATE			500
 
 #define LANMODE_IDLE_ONFOOT_SENDRATE	20
 #define LANMODE_NORMAL_ONFOOT_SENDRATE	15
@@ -68,9 +69,6 @@ CLocalPlayer::CLocalPlayer()
 	m_bInRCMode = false;
 	m_sNormalOnfootRate = NETMODE_NORMAL_ONFOOT_SENDRATE;
 	m_sNormalIncarRate = NETMODE_NORMAL_INCAR_SENDRATE;
-	m_iScore = 0;
-	m_usPing = 0;
-	m_szName[0] = '\0';
 
 	m_iVehicleDamageStatus.MonitoredVehicleID = INVALID_VEHICLE_ID;
 	m_iVehicleDamageStatus.iPanels = 0;
@@ -95,16 +93,6 @@ CLocalPlayer::CLocalPlayer()
 
 //----------------------------------------------------------
 
-void CLocalPlayer::SetName(const char* szName)
-{
-	strncpy_s(m_szName, szName, MAX_PLAYER_NAME);
-}
-
-const char* CLocalPlayer::GetName()
-{
-	return m_szName;
-}
-
 bool CLocalPlayer::DestroyPlayer()
 {
 	return true;
@@ -122,6 +110,8 @@ void CLocalPlayer::ResetAllSyncAttributes()
 	m_dwLastWeaponsUpdateTick = GetTickCount();
 	m_byteLastHeldWeapon = 0;
 	
+	SecureZeroMemory(&m_ofSync, sizeof(ONFOOT_SYNC_DATA));
+	SecureZeroMemory(&m_trSync, sizeof(TRAILER_SYNC_DATA));
 	SecureZeroMemory(&m_aimSync, sizeof(AIM_SYNC_DATA));
 }
 
@@ -157,12 +147,6 @@ bool CLocalPlayer::Process()
 			if(m_pPlayerPed->IsPissing()) {
 				m_pPlayerPed->StopPissing();
 			}
-
-			if (m_pPlayerPed->GetBarAnim()) {
-				m_pPlayerPed->StopBarAnim();
-			}
-
-			m_pPlayerPed->SetDrunkLevel(0);
 
 			// A hack for reseting the animations/tasks
 			m_pPlayerPed->TogglePlayerControllable(1);
@@ -210,15 +194,6 @@ bool CLocalPlayer::Process()
 
 		if(m_pPlayerPed->IsInVehicle() && m_pPlayerPed->IsDancing()) 
 			m_pPlayerPed->StopDancing(); // can't dance in vehicle
-
-		if (m_pPlayerPed->GetBarAnim()) {
-			if (GameGetInternalKeys()->wKeys1[15] || m_pPlayerPed->IsInVehicle())
-				m_pPlayerPed->StopBarAnim();
-			else
-				m_pPlayerPed->ProcessBarAnim();
-		}
-
-		m_pPlayerPed->ProcessDrunk();
 
 		dwThisTick = GetTickCount();
 
@@ -486,15 +461,20 @@ void CLocalPlayer::HandlePassengerEntry()
 void CLocalPlayer::ApplySpecialAction(BYTE byteSpecialAction)
 {
 	switch(byteSpecialAction) {
-
-		case SPECIAL_ACTION_NONE:
-			if (m_pPlayerPed->IsDancing()) m_pPlayerPed->StopDancing();
-			if (m_pPlayerPed->IsCellphoneEnabled()) m_pPlayerPed->ToggleCellphone(0);
-			if (m_pPlayerPed->IsPissing()) m_pPlayerPed->StartPissing();
-			if (m_pPlayerPed->GetBarAnim()) m_pPlayerPed->StopBarAnim();
-			if (m_pPlayerPed->IsInJetpackMode()) m_pPlayerPed->StartJetpack();
-			break;
-
+	case SPECIAL_ACTION_NONE:
+	{
+		if (m_pPlayerPed->IsDancing())
+			m_pPlayerPed->StopDancing();
+		if (m_pPlayerPed->IsCellphoneEnabled())
+			m_pPlayerPed->ToggleCellphone(0);
+		if (m_pPlayerPed->IsPissing())
+			m_pPlayerPed->StopPissing();
+		// drinking or smoking
+		if (m_pPlayerPed->IsInJetpackMode())
+			m_pPlayerPed->StopJetpack();
+		//cuffed and carrying
+		break;
+	}
 		case SPECIAL_ACTION_USEJETPACK:
 			if(!m_pPlayerPed->IsInJetpackMode()) m_pPlayerPed->StartJetpack();
 			break;
@@ -528,30 +508,6 @@ void CLocalPlayer::ApplySpecialAction(BYTE byteSpecialAction)
 		case SPECIAL_ACTION_STOPUSECELLPHONE:
 			if(m_pPlayerPed->IsCellphoneEnabled()) {
 				m_pPlayerPed->ToggleCellphone(0);
-			}
-			break;
-
-		case SPECIAL_ACTION_DRINK_BEER:
-			if (!m_pPlayerPed->IsInVehicle()) {
-				m_pPlayerPed->SetBarAnim(1);
-			}
-			break;
-
-		case SPECIAL_ACTION_SMOKE_CIGGY:
-			if (!m_pPlayerPed->IsInVehicle()) {
-				m_pPlayerPed->SetBarAnim(4);
-			}
-			break;
-
-		case SPECIAL_ACTION_DRINK_WINE:
-			if (!m_pPlayerPed->IsInVehicle()) {
-				m_pPlayerPed->SetBarAnim(2);
-			}
-			break;
-
-		case SPECIAL_ACTION_DRINK_SPRUNK:
-			if (!m_pPlayerPed->IsInVehicle()) {
-				m_pPlayerPed->SetBarAnim(3);
 			}
 			break;
 
@@ -606,26 +562,51 @@ BYTE CLocalPlayer::GetSpecialAction()
 		return SPECIAL_ACTION_URINATE;
 	}
 
-	if (m_pPlayerPed->GetBarAnim() == 1) {
-		return SPECIAL_ACTION_DRINK_BEER;
-	}
-	if (m_pPlayerPed->GetBarAnim() == 2) {
-		return SPECIAL_ACTION_DRINK_WINE;
-	}
-	if (m_pPlayerPed->GetBarAnim() == 3) {
-		return SPECIAL_ACTION_DRINK_SPRUNK;
-	}
-	if (m_pPlayerPed->GetBarAnim() == 4) {
-		return SPECIAL_ACTION_SMOKE_CIGGY;
-	}
-
 	return SPECIAL_ACTION_NONE;
 }
 
 //----------------------------------------------------------
 
 void CLocalPlayer::UpdateSurfing()
-{	
+{
+	DWORD dwEntity = m_pPlayerPed->GetEntityStandingOn();
+	VEHICLEID VehicleID = INVALID_VEHICLE_ID;
+	WORD ObjectID = INVALID_OBJECT_ID;
+	int iSurfType=0;
+
+	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+
+	if (dwEntity)
+	{
+		VehicleID = pVehiclePool->FindIDFromGtaPtr((VEHICLE_TYPE*)dwEntity);
+		
+		if (VehicleID && VehicleID != INVALID_VEHICLE_ID) {
+			CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(VehicleID);
+			if (pVehicle) {
+				if ((pVehicle->IsPrimaryPedInVehicle()
+					|| pVehicle->GetModelIndex() == TRAIN_PASSENGER
+					|| pVehicle->GetModelIndex() == TRAIN_FREIGHT)
+					&& pVehicle->GetDistanceFromLocalPlayerPed() < 30.0f)
+				{
+					iSurfType = 1;
+				}
+			}
+		}
+		else
+		{
+			ObjectID = pObjectPool->FindIDFromGtaPtr((ENTITY_TYPE*)dwEntity);
+			if (ObjectID && ObjectID != INVALID_OBJECT_ID) {
+				CObject* pObject = pObjectPool->GetAt(ObjectID);
+				if (pObject) {
+
+				}
+			}
+		}
+	}
+
+
+
 	VEHICLE_TYPE *Contact = m_pPlayerPed->GetGtaContactVehicle();
 
 	if(!Contact) {
@@ -690,6 +671,7 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	VECTOR vecMoveSpeed;
 	WORD lrAnalog,udAnalog;
 	WORD wKeys = m_pPlayerPed->GetKeys(&lrAnalog,&udAnalog);
+	BYTE byteSpecialKey = m_pPlayerPed->GetSpecialKey();
 
 	ONFOOT_SYNC_DATA ofSync;
 
@@ -700,10 +682,24 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	ofSync.lrAnalog = lrAnalog;
 	ofSync.udAnalog = udAnalog;
 	ofSync.wKeys = wKeys;
+	ofSync.byteSpecialKey = byteSpecialKey;
 	ofSync.vecPos = matPlayer.pos;
 
 	// Rotation stuff
-	ofSync.fRotation = m_pPlayerPed->GetTargetRotation();
+	MatrixToQuaternion(&matPlayer, &ofSync.quatRot);
+	QuatNormalize(&ofSync.quatRot);
+
+	if (FloatOffset(ofSync.quatRot.W, m_ofSync.quatRot.W) < 0.00001f &&
+		FloatOffset(ofSync.quatRot.X, m_ofSync.quatRot.X) < 0.00001f &&
+		FloatOffset(ofSync.quatRot.Y, m_ofSync.quatRot.Y) < 0.00001f &&
+		FloatOffset(ofSync.quatRot.Z, m_ofSync.quatRot.Z) < 0.00001f)
+	{
+		ofSync.quatRot.W = m_ofSync.quatRot.W;
+		ofSync.quatRot.X = m_ofSync.quatRot.X;
+		ofSync.quatRot.Y = m_ofSync.quatRot.Y;
+		ofSync.quatRot.Z = m_ofSync.quatRot.Z;
+	}
+
 	ofSync.byteHealth = (BYTE)m_pPlayerPed->GetHealth();
 	ofSync.byteArmour = (BYTE)m_pPlayerPed->GetArmour();
 	
@@ -784,6 +780,7 @@ void CLocalPlayer::SendInCarFullSyncData()
 
 	WORD lrAnalog,udAnalog;
 	WORD wKeys = m_pPlayerPed->GetKeys(&lrAnalog,&udAnalog);
+	BYTE byteSpecialKey = m_pPlayerPed->GetSpecialKey();
 	CVehicle *pGameVehicle=NULL;
 	
 	INCAR_SYNC_DATA icSync;
@@ -797,6 +794,7 @@ void CLocalPlayer::SendInCarFullSyncData()
 		icSync.lrAnalog = lrAnalog;
 		icSync.udAnalog = udAnalog;
 		icSync.wKeys = wKeys;
+		icSync.byteSpecialKey = byteSpecialKey;
 
 		// get the vehicle matrix
 		pGameVehicle = pVehiclePool->GetAt(icSync.VehicleID);
@@ -897,25 +895,7 @@ void CLocalPlayer::SendInCarFullSyncData()
 			
 		if (icSync.TrailerID && icSync.TrailerID < MAX_VEHICLES)
 		{
-			MATRIX4X4 matTrailer;
-			TRAILER_SYNC_DATA trSync;
-			CVehicle* pTrailer = pVehiclePool->GetAt(icSync.TrailerID);
-			if (pTrailer)
-			{
-				pTrailer->GetMatrix(&matTrailer);
-				
-				CompressNormalVector(&matTrailer.right,&trSync.cvecRoll);
-				CompressNormalVector(&matTrailer.up,&trSync.cvecDirection);
-				
-				trSync.vecPos = matTrailer.pos;
-				
-				pTrailer->GetMoveSpeedVector(&trSync.vecMoveSpeed);
-				
-				RakNet::BitStream bsTrailerSync;
-				bsTrailerSync.Write((BYTE)ID_TRAILER_SYNC);
-				bsTrailerSync.Write((PCHAR)&trSync, sizeof (TRAILER_SYNC_DATA));
-				pNetGame->GetRakClient()->Send(&bsTrailerSync,HIGH_PRIORITY,UNRELIABLE_SEQUENCED,0);
-			}
+			SendTrailerSyncData(icSync.TrailerID);
 		}
 	}
 }
@@ -929,6 +909,7 @@ void CLocalPlayer::SendPassengerFullSyncData()
 
 	WORD lrAnalog,udAnalog;
 	WORD wKeys = m_pPlayerPed->GetKeys(&lrAnalog,&udAnalog);
+	BYTE byteSpecialKey = m_pPlayerPed->GetSpecialKey();
 	PASSENGER_SYNC_DATA psSync;
 	MATRIX4X4 mat;
 
@@ -936,6 +917,7 @@ void CLocalPlayer::SendPassengerFullSyncData()
 	
 	if(psSync.VehicleID == INVALID_VEHICLE_ID) return;  // not valid
 
+	psSync.byteSpecialKey = byteSpecialKey;
 	psSync.lrAnalog = lrAnalog;
 	psSync.udAnalog = udAnalog;
 	psSync.wKeys = wKeys;
@@ -955,6 +937,49 @@ void CLocalPlayer::SendPassengerFullSyncData()
 	pNetGame->GetRakClient()->Send(&bsPassengerSync,HIGH_PRIORITY,UNRELIABLE_SEQUENCED,0);
 
 	if(m_bPassengerDriveByMode)	SendAimSyncData();
+}
+
+//----------------------------------------------------------
+
+void CLocalPlayer::SendTrailerSyncData(VEHICLEID TrailerID)
+{
+	CVehicle* pTrailer = pNetGame->GetVehiclePool()->GetAt(TrailerID);
+	if (pTrailer)
+	{
+		TRAILER_SYNC_DATA trSync;
+		MATRIX4X4 matTrailer;
+		QUATERNION quatRot;
+
+		pTrailer->GetMatrix(&matTrailer);
+		MatrixToQuaternion(&matTrailer, &quatRot);
+		QuatNormalize(&quatRot);
+
+		trSync.TrailerID = TrailerID;
+		trSync.vecPos.X = matTrailer.pos.X;
+		trSync.vecPos.Y = matTrailer.pos.Y;
+		trSync.vecPos.Z = matTrailer.pos.Z;
+		trSync.quatRot.W = quatRot.W;
+		trSync.quatRot.X = quatRot.X;
+		trSync.quatRot.Y = quatRot.Y;
+		trSync.quatRot.Z = quatRot.Z;
+
+		pTrailer->GetMoveSpeedVector(&trSync.vecMoveSpeed);
+		pTrailer->GetTurnSpeedVector(&trSync.vecTurnSpeed);
+
+		DWORD dwTickNow = GetTickCount();
+		if((dwTickNow - m_dwLastSyncSendTick) > NETMODE_SYNC_SENDRATE ||
+			memcpy(&m_trSync, &trSync, sizeof(TRAILER_SYNC_DATA)))
+		{
+			m_dwLastSyncSendTick = dwTickNow;
+
+			RakNet::BitStream bsTrailerSync;
+			bsTrailerSync.Write((BYTE)ID_TRAILER_SYNC);
+			bsTrailerSync.Write((PCHAR)&trSync, sizeof(TRAILER_SYNC_DATA));
+			pNetGame->GetRakClient()->Send(&bsTrailerSync, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0);
+
+			memcpy(&m_trSync, &trSync, sizeof(TRAILER_SYNC_DATA));
+		}
+	}
 }
 
 //----------------------------------------------------------
@@ -1026,13 +1051,13 @@ void CLocalPlayer::SendWastedNotification()
 {
 	RakNet::BitStream bsPlayerDeath;
 	BYTE byteDeathReason;
-	BYTE byteWhoWasResponsible;
+	WORD wWhoWasResponsible;
 
-	byteDeathReason = m_pPlayerPed->FindDeathReasonAndResponsiblePlayer(&byteWhoWasResponsible);
+	byteDeathReason = m_pPlayerPed->FindDeathReasonAndResponsiblePlayer(&wWhoWasResponsible);
 	
 	bsPlayerDeath.Write(byteDeathReason);
-	bsPlayerDeath.Write(byteWhoWasResponsible);
-	pNetGame->GetRakClient()->RPC(RPC_Death,&bsPlayerDeath,HIGH_PRIORITY,RELIABLE_SEQUENCED,0,false);
+	bsPlayerDeath.Write(wWhoWasResponsible);
+	pNetGame->GetRakClient()->RPC(RPC_Death,&bsPlayerDeath,HIGH_PRIORITY,RELIABLE_ORDERED,0,false);
 }
 
 //----------------------------------------------------------
@@ -1152,11 +1177,11 @@ bool CLocalPlayer::Spawn()
 
 void CLocalPlayer::Say(PCHAR szText)
 {
-	size_t uiTextLen = strlen(szText);
+	BYTE byteTextLen = (BYTE)strlen(szText);
 
 	RakNet::BitStream bsSend;
-	bsSend.Write(uiTextLen);
-	bsSend.Write(szText, uiTextLen);
+	bsSend.Write(byteTextLen);
+	bsSend.Write(szText, byteTextLen);
 
 	pNetGame->GetRakClient()->RPC(RPC_Chat,&bsSend,HIGH_PRIORITY,RELIABLE,0,false);
 	
@@ -1174,11 +1199,15 @@ void CLocalPlayer::Say(PCHAR szText)
 void CLocalPlayer::SendEnterVehicleNotification(VEHICLEID VehicleID, bool bPassenger)
 {
 	RakNet::BitStream bsSend;
+	BYTE bytePassenger=0;
 
 	//pChatWindow->AddDebugMessage("Enter Vehicle: %u %d",VehicleID,bPassenger);
 
+	if(bPassenger) {
+		bytePassenger = 1;
+	}
 	bsSend.Write(VehicleID);
-	bsSend.Write(bPassenger);
+	bsSend.Write(bytePassenger);
 
 	pNetGame->GetRakClient()->RPC(RPC_EnterVehicle,&bsSend,HIGH_PRIORITY,RELIABLE_SEQUENCED,0,false);
 
@@ -1186,8 +1215,8 @@ void CLocalPlayer::SendEnterVehicleNotification(VEHICLEID VehicleID, bool bPasse
 	CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
 
 	if (pVehicle && pVehicle->IsATrainPart()) {
-		//DWORD dwVehicle = pVehicle->m_dwGTAId;
-		//ScriptCommand(&camera_on_vehicle, dwVehicle, 3, 2);
+		DWORD dwVehicle = pVehicle->m_dwGTAId;
+		ScriptCommand(&camera_on_vehicle, dwVehicle, 3, 2);
 		dwEnterVehTimeElasped = GetTickCount();
 	}
 }
@@ -1284,13 +1313,11 @@ void CLocalPlayer::SendStatsUpdate()
 {
 	RakNet::BitStream bsStats;
 	int iMoney = pGame->GetLocalMoney();
-	int iDrunkLevel = m_pPlayerPed->GetDrunkLevel();
 	WORD wAmmo = m_pPlayerPed->GetAmmo();
 	//ScriptCommand(&get_player_weapon_ammo, GetCurrentWeapon()
 
 	bsStats.Write((BYTE)ID_STATS_UPDATE);
 	bsStats.Write(iMoney);
-	bsStats.Write(iDrunkLevel);
 	bsStats.Write(wAmmo);
 	pNetGame->GetRakClient()->Send(&bsStats,HIGH_PRIORITY,UNRELIABLE,0);
 }
@@ -1707,6 +1734,34 @@ void CLocalPlayer::SendVehicleDamageStatus(VEHICLEID VehicleID)
 
 //-----------------------------------------------------------
 
+void CLocalPlayer::SendTakeDamageNotification(WORD wPlayerID, float fDamage, int iWeaponID, int iBodyPart)
+{
+	RakNet::BitStream bsTakeDamage;
+	float fAmount = fDamage * 0.33f;
+	bsTakeDamage.Write1();
+	bsTakeDamage.Write(wPlayerID);
+	bsTakeDamage.Write(fAmount);
+	bsTakeDamage.Write(iWeaponID);
+	bsTakeDamage.Write(iBodyPart);
+	pNetGame->GetRakClient()->RPC(RPC_PlayerDamage,&bsTakeDamage,HIGH_PRIORITY,RELIABLE_ORDERED,0,false);
+}
+
+//-----------------------------------------------------------
+
+void CLocalPlayer::SendGiveDamageNotification(WORD wPlayerID, float fDamage, int iWeaponID, int iBodyPart)
+{
+	RakNet::BitStream bsGiveDamage;
+	float fAmount = fDamage * 0.33f;
+	bsGiveDamage.Write0();
+	bsGiveDamage.Write(wPlayerID);
+	bsGiveDamage.Write(fAmount);
+	bsGiveDamage.Write(iWeaponID);
+	bsGiveDamage.Write(iBodyPart);
+	pNetGame->GetRakClient()->RPC(RPC_PlayerDamage,&bsGiveDamage,HIGH_PRIORITY,RELIABLE_ORDERED,0,false);
+}
+
+//-----------------------------------------------------------
+
 void CLocalPlayer::SendActorDamageNotification(unsigned short usActorID, float fDamage, int iWeapon, int iBodyPart)
 {
 	RakNet::BitStream bsSend;
@@ -1718,4 +1773,29 @@ void CLocalPlayer::SendActorDamageNotification(unsigned short usActorID, float f
 	bsSend.Write(iBodyPart);
 
 	pNetGame->Send(RPC_ActorDamage, &bsSend);
+}
+
+bool CLocalPlayer::GetTargetInfo()
+{
+	CAMERA_AIM* Aim = GameGetInternalAim();
+	VECTOR vecLine, vecOrig, vecColPoint;
+	DWORD dwHitEntity;
+
+	vecOrig.X = Aim->f1x + Aim->pos1x;
+	vecOrig.Y = Aim->f1y + Aim->pos1y;
+	vecOrig.Z = Aim->f1z + Aim->pos1z;
+	//vecLine.X = Aim->f1x * 70.0f + vecOrig.X;
+	//vecLine.Y = Aim->f1y * 70.0f + vecOrig.Y;
+	//vecLine.Z = Aim->f1z * 70.0f + vecOrig.Z;
+	vecLine.X = Aim->f1x * 70.0f + Aim->pos1x;
+	vecLine.Y = Aim->f1y * 70.0f + Aim->pos1y;
+	vecLine.Z = Aim->f1z * 70.0f + Aim->pos1z;
+
+	ProcessLineOfSight(&vecOrig, &vecLine, &vecColPoint, &dwHitEntity,
+		true, false, false, false, false, false, false, false);
+	if (dwHitEntity)
+	{
+
+	}
+	return false;
 }

@@ -31,6 +31,7 @@ public:
 
 	void  SetKeys(WORD wKeys, WORD lrAnalog, WORD udAnalog);
 	WORD  GetKeys(WORD* lrAnalog, WORD* udAnalog);
+	BYTE GetSpecialKey();
 
 	CAMERA_AIM * GetCurrentAim();
 	void SetCurrentAim(CAMERA_AIM *pAim);
@@ -83,6 +84,7 @@ public:
 	void GiveWeapon(int iWeaponID, int iAmmo);
 	void ClearAllWeapons();
 	void SetArmedWeapon(int iWeaponType, bool bDirectCall = false);
+	void HideAllWeapons();
 	WEAPON_SLOT_TYPE * GetCurrentWeaponSlot();
 	WEAPON_SLOT_TYPE * FindWeaponSlot(DWORD dwWeapon);
 	bool HasAmmoForCurrentWeapon();
@@ -107,12 +109,21 @@ public:
 
 	int GetVehicleSeatID();
 	void TogglePlayerControllable(int iControllable);
-	BYTE FindDeathReasonAndResponsiblePlayer(BYTE * nPlayer);
+	BYTE FindDeathReasonAndResponsiblePlayer(WORD * nPlayer);
 	void RestartIfWastedAt(VECTOR *vecRestart, float fRotation);
+
+	DWORD GetEntityStandingOn();
+	VECTOR* GetWeaponFireOffset();
 
 	void StartJetpack();
 	void StopJetpack();
 	bool IsInJetpackMode();
+
+	BYTE m_byteDrinkingOrSmokingType;
+	DWORD m_dwDrinkingOrSmokingObject;
+	BYTE GetDrinkingOrSmokingType();
+	void StartDrinkingOrSmoking(int iType);
+	void StopDrinkingOrSmoking();
 
 	bool StartPassengerDriveByMode();
 	bool PerformingDriveByFreeAimTask();
@@ -126,7 +137,7 @@ public:
 	void ApplyAnimation(char *szAnimName, char *szAnimFile, float fT,
 						int opt1, int opt2, int opt3, int opt4, int iUnk);
 
-	void SetInterior(BYTE byteID);
+	void SetInterior(BYTE byteID, bool bRestream = true);
 	bool IsOnGround();
 	void ResetDamageEntity();
 	bool IsPerformingAnimation(char *szAnimName);
@@ -155,10 +166,14 @@ public:
 	char		*GetDanceAnimForMove(int iMove);
 	void		HandsUp();
 	bool		HasHandsUp();
-	bool		IsJumpTask();
-	bool		IsTakeDamageFallTask();
-	bool		IsSwimTask();
+	bool		IsJumping();
+	bool		IsTakingFallDamage();
+	bool		IsSwimming();
 	void		HoldItem(int iObject);
+
+	bool		IsCarrying();
+
+	bool		IsCuffed();
 
 	void		StartPissing();
     void		StopPissing();
@@ -177,26 +192,30 @@ public:
 	float		GetAimZ();
 	void		SetAimZ(float fAimZ);
 
-	void ProcessDrunk();
-	int GetDrunkLevel();
-	void SetDrunkLevel(int iLevel);
-
-	void ProcessBarAnim();
-	void StopBarAnim();
-	int GetBarAnim();
-	void SetBarAnim(int iType);
-
+	void SetFightingStyle(int iStyle);
 	void SetFightingStyle(unsigned char style, unsigned char move);
 	void GetFightingStyle(unsigned char* style, unsigned char* move);
 
 	bool IsDucking();
+	void StartDucking();
+	void StopDucking();
+
 	unsigned char IsEnteringVehicle();
 	bool IsExitingVehicle();
 
+	char* GetShoppingSectionName();
 	void SetEntryExit(char* szSectionName);
+	DWORD* GetEntryExit();
 	void LoadShoppingData(char* szSectionName);
 
+	void SetWeaponSkill(int iSkill, float fLevel);
+	void ResetHungriness();
 	VECTOR* GetBonePosition(int iBoneID, VECTOR* pPos);
+
+	DWORD* GetNamedAnimationTask();
+	DWORD GetAnimationFlag();
+
+	void CPlayerPed::sub_100AE680(int iID);
 
 	PED_TYPE    *m_pPed;
 	BYTE		m_bytePlayerNumber;
@@ -214,12 +233,13 @@ public:
 
 	DWORD 		m_dwArrow;
 	BYTE		m_byteCreateMarker;
-	
-	int			m_iDrunkLevel;
-	DWORD       m_dwLastDrunkTick;
 
-	int			m_iBarAnimType;
-	DWORD		m_dwBarAnimObject;
+	bool m_bCarrying;
+	bool m_bCuffed;
+
+	bool m_bDisableJump;
+	bool m_bDisableCrouch;
+	bool m_bDisableSprint;
 };
 
 //-----------------------------------------------------------

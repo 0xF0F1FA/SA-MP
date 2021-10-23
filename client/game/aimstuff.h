@@ -10,10 +10,10 @@
 
 typedef struct _CAMERA_AIM
 {
-	float f1x,f1y,f1z;
-	float pos1x,pos1y,pos1z;
-	float pos2x,pos2y,pos2z;
-	float f2x,f2y,f2z;
+	float f1x,f1y,f1z; // m_vecFront
+	float pos1x,pos1y,pos1z; // m_vecSource
+	float pos2x,pos2y,pos2z; // m_vecSourceBeforeLookBehind
+	float f2x,f2y,f2z; // m_vecUp
 
 } CAMERA_AIM;
 

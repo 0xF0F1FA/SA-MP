@@ -52,7 +52,7 @@ void CArtwork::AddCharModelEntry(char* szParams)
 	szParam = strtok(0, ",");
 	FilterInvalidCharacters(szTxdName, sizeof(szTxdName), szParam);
 
-	AddModelEntry(1, -1, iBaseID, iNewID, szDffName, szTxdName, false, false);
+	AddModelEntry(MODEL_TYPE_CHAR, -1, iBaseID, iNewID, szDffName, szTxdName, false, false);
 }
 
 void CArtwork::AddSimpleModelEntry(char* szParams)
@@ -74,7 +74,7 @@ void CArtwork::AddSimpleModelEntry(char* szParams)
 	szParam = strtok(0, ",");
 	FilterInvalidCharacters(szTxdName, sizeof(szTxdName), szParam);
 
-	AddModelEntry(2, iVirtualWorld, iBaseID, iNewID, szDffName, szTxdName, false, false);
+	AddModelEntry(MODEL_TYPE_SIMPLE, iVirtualWorld, iBaseID, iNewID, szDffName, szTxdName, false, false);
 }
 
 char* CArtwork::GetParams(char* szFuncLine)
@@ -126,9 +126,9 @@ void CArtwork::ReadConfig(char* szArtConfig)
 	}
 }
 
-DWORD CArtwork::GetFileChecksum(char* szFileName)
+DWORD CArtwork::GetStringChecksum(char* szStr)
 {
-	return CRC32(0, szFileName, strlen(szFileName));
+	return CRC32(0, szStr, strlen(szStr));
 }
 
 DWORD CArtwork::GetFileChecksum(char* szFileName, DWORD* pdwCRC)
@@ -163,7 +163,7 @@ int CArtwork::AddModelEntry(BYTE byteType, int iVW, int iBaseID, int iNewID,
 
 	if (byteType == 4)
 	{
-		pData->dwDffCRC = GetFileChecksum(pData->szDffName);
+		pData->dwDffCRC = GetStringChecksum(pData->szDffName);
 	}
 	else
 	{
@@ -262,6 +262,24 @@ DWORD CArtwork::GetBaseID(int iNewID)
 			{
 				return pData->iBaseID;
 			}
+		}
+	}
+	return -1;
+}
+
+int CArtwork::GetBaseIDFromNewID(int iSkin)
+{
+	if (m_map.m_dwSize == 0) return -1;
+	
+	ARTWORK_DATA* pData;
+
+	for (DWORD i = 0; i < m_map.m_dwSize; i++)
+	{
+		pData = (ARTWORK_DATA*)m_map.GetAt(i);
+
+		if (pData && pData->iNewID == iSkin)
+		{
+			return pData->iBaseID;
 		}
 	}
 	return -1;

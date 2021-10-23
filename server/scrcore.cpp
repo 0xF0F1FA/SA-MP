@@ -180,6 +180,7 @@ int set_amxstring(AMX *amx,cell amx_addr,const char *source,int max)
 char* format_amxstring(AMX *amx, cell *params, int parm, int &len)
 {
 	static char outbuf[4096];
+	memset(outbuf, 0, sizeof(outbuf));
 	cell *addr = get_amxaddr(amx, params[parm++]);
 	len = atcprintf(outbuf, sizeof(outbuf)-1, addr, amx, params, &parm);
 	return outbuf;

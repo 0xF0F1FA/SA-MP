@@ -179,7 +179,9 @@ public:
     HRESULT DrawPolyLine( POINT* apPoints, UINT nNumPoints, D3DCOLOR color );
     HRESULT DrawSprite( CDXUTElement* pElement, RECT* prcDest );
     HRESULT CalcTextRect( LPCTSTR strText, CDXUTElement* pElement, RECT* prcDest, int nCount = -1 );
+    HRESULT CalcTextRect( LPCWSTR strText, CDXUTElement* pElement, RECT* prcDest, int nCount = -1 );
     HRESULT DrawText( LPCTSTR strText, CDXUTElement* pElement, RECT* prcDest, bool bShadow = false, int nCount = -1 );
+    HRESULT DrawText( LPCWSTR strText, CDXUTElement* pElement, RECT* prcDest, bool bShadow = false, int nCount = -1 );
 
     // Attributes
     bool GetVisible() { return m_bVisible; }
@@ -231,6 +233,8 @@ public:
 
     static void ClearFocus();
     void FocusDefaultControl();
+
+    void SetFonts();
 
     bool m_bNonUserEvents;
     bool m_bKeyboardInput;
@@ -640,7 +644,7 @@ public:
 
     enum STYLE { MULTISELECTION = 1 };
 
-    int m_nColumns;
+    int m_nColumns; // Number of columns in the list box. 3 is the max.
     int m_nColumnWidth[3];
 protected:
     RECT m_rcText;      // Text rendering bound
@@ -768,6 +772,11 @@ protected:
 
     bool m_bPressed;
     RECT m_rcButton;
+
+public:
+    bool m_bUseCustomColor;
+    D3DXCOLOR m_ButtonColor;
+
 };
 
 
@@ -785,17 +794,19 @@ public:
 
     int  GetBufferSize() { return m_nBufferSize; }
     bool SetBufferSize( int nSize );
-    int  GetTextSize()  { return strlen( m_pwszBuffer ); }
-    const TCHAR* GetBuffer() { return m_pwszBuffer; }
-    const TCHAR& operator[]( int n ) const { return m_pwszBuffer[n]; }
-    TCHAR& operator[]( int n );
+    int  GetTextSize()  { return (int)wcslen( m_pwszBuffer ); }
+    const WCHAR* GetBuffer() { return m_pwszBuffer; }
+    const WCHAR& operator[]( int n ) const { return m_pwszBuffer[n]; }
+    WCHAR& operator[]( int n );
     DXUTFontNode* GetFontNode() { return m_pFontNode; }
     void SetFontNode( DXUTFontNode *pFontNode ) { m_pFontNode = pFontNode; }
     void Clear();
 
-    bool InsertChar( int nIndex, TCHAR TCHAR ); // Inserts the char at specified index. If nIndex == -1, insert to the end.
+    bool InsertChar( int nIndex, WCHAR wChar ); // Inserts the char at specified index. If nIndex == -1, insert to the end.
+    bool InsertChar( int nIndex, TCHAR tchr );
     bool RemoveChar( int nIndex );  // Removes the char at specified index. If nIndex == -1, remove the last char.
-    bool InsertString( int nIndex, const TCHAR *pStr, int nCount = -1 );  // Inserts the first nCount characters of the string pStr at specified index.  If nCount == -1, the entire string is inserted. If nIndex == -1, insert to the end.
+    bool InsertString( int nIndex, const WCHAR* pStr, int nCount = -1 );  // Inserts the first nCount characters of the string pStr at specified index.  If nCount == -1, the entire string is inserted. If nIndex == -1, insert to the end.
+    bool SetText( LPCWSTR wszText );
     bool SetText( LPCTSTR wszText );
 
     // Uniscribe
@@ -804,16 +815,22 @@ public:
     void GetPriorItemPos( int nCP, int *pPrior );
     void GetNextItemPos( int nCP, int *pPrior );
 
+    char* WideToAnsiString(const WCHAR* pStr);
+
 private:
     HRESULT Analyse();      // Uniscribe -- Analyse() analyses the string in the buffer
 
-    TCHAR* m_pwszBuffer;    // Buffer to hold text
+    WCHAR* m_pwszBuffer;    // Buffer to hold text
     int    m_nBufferSize;   // Size of the buffer allocated, in characters
+    TCHAR  m_LeadChar;
 
     // Uniscribe-specific
     DXUTFontNode* m_pFontNode;          // Font node for the font that this buffer uses
     bool m_bAnalyseRequired;            // True if the string has changed since last analysis.
     SCRIPT_STRING_ANALYSIS m_Analysis;  // Analysis for the current string
+
+public:
+    bool m_bHideCharacters; // Hide characters with dots
 
 private:
     // Empty implementation of the Uniscribe API
@@ -856,9 +873,9 @@ public:
     virtual void OnFocusIn();
 
     void SetText( LPCTSTR wszText, bool bSelected = false );
-    LPCTSTR GetText() { return m_Buffer.GetBuffer(); }
+    LPCTSTR GetText();
     int GetTextLength() { return m_Buffer.GetTextSize(); }  // Returns text length in chars excluding NULL.
-    HRESULT GetTextCopy( PCHAR strDest, UINT bufferCount );
+    HRESULT GetTextCopy( LPWSTR strDest, UINT bufferCount );
     void ClearText();
     virtual void SetTextColor( D3DCOLOR Color ) { m_TextColor = Color; }  // Text color
     void SetSelectedTextColor( D3DCOLOR Color ) { m_SelTextColor = Color; }  // Selected text color
@@ -868,6 +885,7 @@ public:
     void SetSpacing( int nSpacing ) { m_nSpacing = nSpacing; UpdateRects(); }
     void ParseFloatArray( float *pNumbers, int nCount );
     void SetTextFloatArray( const float *pNumbers, int nCount );
+    void SetCharactersHidden(bool bHidden) { m_Buffer.m_bHideCharacters = m_bHideCharacters = bHidden; }
 
 protected:
     void PlaceCaret( int nCP );
@@ -888,6 +906,7 @@ protected:
     bool     m_bInsertMode;  // If true, control is in insert mode. Else, overwrite mode.
     int      m_nSelStart;    // Starting position of the selection. The caret marks the end.
     int      m_nFirstVisible;// First visible character in the edit control
+    bool     m_bHideCharacters; // Hide the characters with dots
     D3DCOLOR m_TextColor;    // Text color
     D3DCOLOR m_SelTextColor; // Selected text color
     D3DCOLOR m_SelBkColor;   // Selected background color
@@ -1060,7 +1079,7 @@ protected:
     static CUniBuffer s_CompString;       // Buffer to hold the composition string (we fix its length)
     static BYTE    s_abCompStringAttr[MAX_COMPSTRING_SIZE];
     static DWORD   s_adwCompStringClause[MAX_COMPSTRING_SIZE];
-    static TCHAR   s_wszReadingString[32];// Used only with horizontal reading window (why?)
+    static WCHAR   s_wszReadingString[32];// Used only with horizontal reading window (why?)
     static CCandList s_CandList;          // Data relevant to the candidate list
     static bool    s_bShowReadingWindow;  // Indicates whether reading window is visible
     static bool    s_bHorizontalReading;  // Indicates whether the reading window is vertical or horizontal

@@ -1,6 +1,21 @@
 
 #pragma once
 
+class CUnk1
+{
+public:
+	IDirect3DDevice9* m_pD3DDevice;
+	int m_iSliderWidth;
+	int m_iSliderHeight;
+	CDXUTDialog* m_pDialog;
+
+	CUnk1(IDirect3DDevice9* pD3DDevice);
+	void ResetDialogControls(CDXUTDialog* pDialog);
+	void Draw();
+};
+
+
+
 class CUnnamed1 // size=40
 {
 private:

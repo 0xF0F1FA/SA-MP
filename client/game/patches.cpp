@@ -15,14 +15,12 @@ DWORD dwStreamingMemory = 0;
 void InstallSCMEventsProcessor();
 void RelocateScanListHack();
 void RelocatePedsListHack();
-
-typedef struct {
-	unsigned char r, g, b, a;
-} RwRGBA;
+void RelocateObjectListHack();
+void RelocateVehicleColorListHack();
 
 static float fPickupDistance = 10000.0f;
 
-const RwRGBA g_pVehicleColor[] = {
+const RGBA VehicleColors[256] = {
 	{0x00,0x00,0x00,0xFF},{0xF5,0xF5,0xF5,0xFF},{0x2A,0x77,0xA1,0xFF},{0x84,0x04,0x10,0xFF},
 	{0x26,0x37,0x39,0xFF},{0x86,0x44,0x6E,0xFF},{0xD7,0x8E,0x10,0xFF},{0x4C,0x75,0xB7,0xFF},
 	{0xBD,0xBE,0xC6,0xFF},{0x5E,0x70,0x72,0xFF},{0x46,0x59,0x7A,0xFF},{0x65,0x6A,0x79,0xFF},
@@ -88,6 +86,9 @@ const RwRGBA g_pVehicleColor[] = {
 	{0x56,0x1A,0x28,0xFF},{0x4E,0x0E,0x27,0xFF},{0x70,0x6C,0x67,0xFF},{0x3B,0x3E,0x42,0xFF},
 	{0x2E,0x2D,0x33,0xFF},{0x7B,0x7E,0x7D,0xFF},{0x4A,0x44,0x42,0xFF},{0x28,0x34,0x4E,0xFF}
 };
+
+RGBA UseVehicleColors[256];
+
 //----------------------------------------------------------
 
 /*#define memadd(num,arr) dwAlloc+=num;cBytes=(char*)&dwAlloc;for(int i=0;i<4;i++)arr[i]=cBytes[i]
@@ -168,20 +169,20 @@ void SetTimedObjects(int iTimedObjects)
 
 //----------------------------------------------------------
 
-/*void UnFuckAndCheck(DWORD addr, int size, BYTE byteCheck)
+void UnFuckAndCheck(DWORD addr, int size, BYTE byteCheck)
 {
-	DWORD d;
-	char s[256];
-	VirtualProtect((PVOID)addr,size,PAGE_EXECUTE_READWRITE,&d);
+	//DWORD d;
+	//VirtualProtect((PVOID)addr,size,PAGE_EXECUTE_READWRITE,&d);
 
 	if(byteCheck != *(PBYTE)addr) {
 #ifdef _DEBUG
+		char s[256];
 		sprintf(s,"Failed Check At Addr: 0x%X",addr);
 		OutputDebugString(s);
 #endif
 		while(byteCheck != *(PBYTE)addr) Sleep(1);
 	}
-}*/
+}
 
 //----------------------------------------------------------
 
@@ -198,29 +199,6 @@ void ApplyDebugLevelPatches()
 	// Don't go back to player anims, use the peds IDE
 	//UnFuck(0x609A4E,6);
 	memset((PVOID)0x609A4E, 0x90, 6);
-}
-
-//----------------------------------------------------------
-
-void ApplyManualVehicleLightsPatch()
-{
-	static bool bInited = false;
-	if (bInited)
-	{
-		memset((void*)0x6E1BE3, 0x90, 37);
-		memset((void*)0x6E1C38, 0x90, 8);
-		memset((void*)0x6E1D98, 0x90, 15);
-		memset((void*)0x6E1DBC, 0x90, 8);
-		memset((void*)0x6E1BA0, 0x90, 6);
-		memset((void*)0x6E1BB1, 0x90, 6);
-		memset((void*)0x6E1BD2, 0x90, 7);
-
-		const BYTE byteVehicleLightRenderPatch[] = { 0x8A,0x86,0x28,0x04,0x00,0x00,0xA8,0x40,0x74,0x28 };
-		memcpy((void*)0x6E1BE5, byteVehicleLightRenderPatch, sizeof(byteVehicleLightRenderPatch));
-
-		// There's an another global variable set here to 1, but it's unused?
-		bInited = true;
-	}
 }
 
 //----------------------------------------------------------
@@ -270,6 +248,11 @@ bool ApplyPreGamePatches()
 	strcpy_s((PCHAR)0x866CD8,11,"title");
 	strcpy_s((PCHAR)0x866CCC,8,"title");
 
+	UnFuckAndCheck(0x561872, 30, 0x85);
+	*(BYTE*)0x561872 = 0x33;
+	*(BYTE*)0x561873 = 0xC0;
+	memset((void*)0x561874, 0x90, 27);
+
 	// Modify the streaming memory hardcoded values
 	MEMORYSTATUSEX state;
 	state.dwLength = sizeof(state);
@@ -290,8 +273,21 @@ bool ApplyPreGamePatches()
 	//UnFuck(0x5B8E6A,4);
 	*(DWORD *)0x5B8E6A = dwStreamingMemory;
 
+	// Ret loading GTA3 and GTA_INT IMG for to load SA-MP images first
+	//UnFuckAndCheck(0x4083C0, 1, 0xB8);
+	//*(BYTE*)0x4083C0 = 0xC3;
+
+	// Disable loading screen splash fading
+	memset((void*)0x590099, 0x90, 5);
+
 	// For SCM disable/enable
 	//UnFuck(0x469EF5,2);
+
+	// Change 14ms frame render wait time to 2ms
+	*(BYTE*)0x53E94C = 2;
+
+	// Increase txd pool
+	*(DWORD*)0x731F60 = 20000;
 
 	return true;
 }
@@ -306,6 +302,63 @@ static BYTE pbyteTrainDelrailmentPatch[] = { 0xB8, 0x89, 0x8F, 0x6F, 0x00, 0xFF,
 //extern DWORD dwFarClipHookAddr;
 //extern DWORD dwFarClipReturnAddr;
 
+void ApplyGamePoolPatches()
+{
+	// Increase the vehicle pool limit (see top of proc for patch)
+	UnFuckAndCheck(0x551024, sizeof(pbyteVehiclePoolAllocPatch), 0x68);
+	memcpy((PVOID)0x551024, pbyteVehiclePoolAllocPatch, sizeof(pbyteVehiclePoolAllocPatch));
+
+	// Increase the building pool limit
+	//UnFuck(0x55105F,4);
+	*(PDWORD)0x55105F = 20000;
+
+	// Increase the dummy pool limit
+	//UnFuck(0x5510CF,4);
+	*(PDWORD)0x5510CF = 16000;
+
+	// Increase the ptr node single pool limit
+	//UnFuck(0x550F46,4);
+	*(PDWORD)0x550F46 = 300000;
+
+	// Increase the ptr node double pool limit
+	//UnFuck(0x550F82,4);
+	*(PDWORD)0x550F82 = 210000;
+
+	// Increase the entry info node pool limit
+	//UnFuck(0x550FBA,4);
+	*(PDWORD)0x550FBA = 50000;
+
+	// Increase the object pool limit
+	//UnFuck(0x551097,4);
+	*(PDWORD)0x551097 = 3100;
+
+	// Increase the ped pool limit (210)
+	//UnFuck(0x550FF2,1);
+	*(PBYTE)0x550FF2 = 240;
+
+	// And we need 210 ped intelligence too plz
+	//UnFuck(0x551283,1);
+	*(PBYTE)0x551283 = 240;
+
+	// And a larger task pool
+	//UnFuck(0x551140,1);
+	*(PBYTE)0x551140 = 0x05;
+
+	// And a larger event pool
+	//UnFuck(0x551178,1);
+	*(PBYTE)0x551178 = 0x01; // 456
+
+	// And a larger matrix list pool
+	//UnFuck(0x54F3A1,4);
+	*(PDWORD)0x54F3A1 = 20000;
+
+	// Increase the collision model ptr
+	//UnFuck(0x551106,sizeof(pbyteCollisionPoolAllocPatch));
+	memcpy((PVOID)0x551106, pbyteCollisionPoolAllocPatch, sizeof(pbyteCollisionPoolAllocPatch));
+}
+
+//----------------------------------------------------------
+
 void ApplyInGamePatches()
 {	
 	/*if(GTASA_VERSION_USA10 == iGtaVersion) {
@@ -315,6 +368,13 @@ void ApplyInGamePatches()
 		dwFarClipHookAddr = 0x7EE2E0;
 		dwFarClipReturnAddr = dwFarClipHookAddr+9;
 	}*/
+
+	RelocateScanListHack();
+	RelocatePedsListHack(); // allows us to use all 300 ped model slots
+	RelocateVehicleColorListHack();
+	RelocateObjectListHack();
+
+	ApplyGamePoolPatches();
 
 	// APPLY THE DAMN NOP PATCH AND QUIT ASCIING QUESTIONS!
 
@@ -738,9 +798,6 @@ void ApplyInGamePatches()
 	memset((void*)0x442E47, 0x90, 5);
 	memset((void*)0x443200, 0x90, 6);
 
-	// Set CTimer tick delay from 14 to 0
-	*(unsigned char*)0x53E94C = 0;
-
 	// Set CLoadingScreen::g_bActive to 0
 	*(unsigned char*)0xBAB318 = 0;
 
@@ -788,15 +845,6 @@ void ApplyInGamePatches()
 	// Disable cinematic camera for trains
 	*(BYTE*)0x52A535 = 0;
 
-	// Patch for new vehicle colors
-	*(DWORD*)0x44B1C1 = (DWORD)&g_pVehicleColor;
-	*(DWORD*)0x4C8390 = (DWORD)&g_pVehicleColor;
-	*(DWORD*)0x4C8399 = (DWORD)&g_pVehicleColor->g;
-	*(DWORD*)0x4C83A3 = (DWORD)&g_pVehicleColor->b;
-	*(DWORD*)0x5817CC = (DWORD)&g_pVehicleColor;
-	*(DWORD*)0x582176 = (DWORD)&g_pVehicleColor;
-	*(DWORD*)0x6A6FFA = (DWORD)&g_pVehicleColor;
-
 	// NOPping out spawning with cigars and bottles
 	memset((void*)0x4217F4, 0x90, 21);
 	memset((void*)0x4218D8, 0x90, 17);
@@ -824,9 +872,6 @@ void ApplyInGamePatches()
 	*(BYTE*)0x71A3BB = 3;*/
 
 	// Rest of the stuff
-	RelocateScanListHack();
-	
-	RelocatePedsListHack(); // allows us to use all 300 ped model slots
 
 	// Stop ped rotations from the camera
 	//UnFuck(0x6884C4,6);
@@ -838,20 +883,21 @@ void ApplyInGamePatches()
 }
 
 //----------------------------------------------------------
-
-static struct
+#pragma pack(1)
+typedef struct _PED_MODEL
 {
 	DWORD func_tbl;
 	BYTE  data[64];
-} PedModelsMemory[600];
+} PED_MODEL;
+
+PED_MODEL PedModelsMemory[319];
 
 void RelocatePedsListHack()
 {
     BYTE *aPedsListMemory = (BYTE*)&PedModelsMemory[0];
-
 	// Init the mem
 	int x=0;
-	while(x!=600) {
+	while(x!=319) {
 		PedModelsMemory[x].func_tbl = 0x85BDC0;
 		memset(PedModelsMemory[x].data,0,64);
 		x++;
@@ -860,6 +906,41 @@ void RelocatePedsListHack()
 	// instead of the gta_sa.exe mem.
 	//UnFuck(0x4C67AD,4);
 	*(DWORD *)0x4C67AD = (DWORD)aPedsListMemory;
+}
+
+//----------------------------------------------------------
+#pragma pack(1)
+typedef struct _OBJECT_MODEL {
+	DWORD func_tbl;
+	BYTE  data[28];
+} OBJECT_MODEL;
+
+OBJECT_MODEL ObjectModelsMemory[20000];
+
+static DWORD dwPatchAddrObjectModelInfo[14] = {
+0x4C63F2,0x4C662D,0x4C6822,0x4C6829,0x4C6877,0x4C6881,
+0x4C6890,0x4C68A5,0x4C68F3,0x4C6932,0x4C6971,0x4C69B0,
+0x4C69EF,0x4C6A2E };
+
+void RelocateObjectListHack()
+{
+	DWORD oldProt;
+	BYTE *aObjectsListMemory = (BYTE*)&ObjectModelsMemory[0];
+	// Init the mem
+	int x=0;
+	while(x!=20000) {
+		ObjectModelsMemory[x].func_tbl = 0x85BBF0;
+		memset(ObjectModelsMemory[x].data,0,28);
+		x++;
+	}
+
+	x=0;
+	while (x!=14)
+	{
+		VirtualProtect((PVOID)dwPatchAddrObjectModelInfo[x],4,PAGE_EXECUTE_READWRITE,&oldProt);
+		*(PDWORD)dwPatchAddrObjectModelInfo[x] = (DWORD)aObjectsListMemory;
+		x++;
+	}
 }
 
 //----------------------------------------------------------
@@ -963,6 +1044,9 @@ void RelocateScanListHack()
 		x++;
 	}	
 
+	VirtualProtect((LPVOID)0x564DC7, 4, PAGE_EXECUTE_READWRITE, &oldProt);
+	*(PDWORD)0x564DC7 = (DWORD)(aScanListMemory+115200);
+
 	// Others that didn't fit.
 	VirtualProtect((PVOID)0x40936A,4,PAGE_EXECUTE_READWRITE,&oldProt);
 	*(PDWORD)0x40936A = (DWORD)(aScanListMemory+4);
@@ -973,3 +1057,67 @@ void RelocateScanListHack()
 
 //----------------------------------------------------------
 
+void ApplyManualVehicleLightsPatch()
+{
+	static bool bInited = false; // BOOL
+	if (!bInited)
+	{
+		//UnFuck(0x6E1BE3,37);
+		memset((PVOID)0x6E1BE3,0x90,37);
+
+		//UnFuck(0x6E1C38,8);
+		memset((PVOID)0x6E1C38,0x90,8);
+
+		//UnFuck(0x6E1D98,15);
+		memset((PVOID)0x6E1D98,0x90,15);
+
+		//UnFuck(0x6E1DBC,8);
+		memset((PVOID)0x6E1DBC,0x90,8);
+
+		//UnFuck(0x6E1BA0,6);
+		memset((PVOID)0x6E1BA0,0x90,6);
+
+		//UnFuck(0x6E1BB1,6);
+		memset((PVOID)0x6E1BB1,0x90,6);
+
+		//UnFuck(0x6E1BD2,7);
+		memset((PVOID)0x6E1BD2,0x90,7);
+
+		// .text:002E1BE5		mov		al, [esi+00000428]
+		// .text:002E1BEB		test	al, 40
+		// .text:002E1BED		je		loc_2E1C17
+		BYTE pbyteVehicleLightsPatch[] = { 0x8A,0x86,0x28,0x04,0x00,0x00,0xA8,0x40,0x74,0x28 };
+		memcpy((PVOID)0x6E1BE5,pbyteVehicleLightsPatch,sizeof(pbyteVehicleLightsPatch));
+
+		bInited = true;
+		//dword_102A927C = 1; // unused
+	}
+}
+
+//----------------------------------------------------------
+
+void RelocateVehicleColorListHack()
+{
+	memcpy(&UseVehicleColors, &VehicleColors, sizeof(UseVehicleColors));
+
+	//UnFuck(0x44B1C1,4);
+	*(DWORD*)0x44B1C1 = (DWORD)&UseVehicleColors;
+
+	//UnFuck(0x4C8390,4);
+	*(DWORD*)0x4C8390 = (DWORD)&UseVehicleColors;
+
+	//UnFuck(0x4C8399,4);
+	*(DWORD*)0x4C8399 = (DWORD)&UseVehicleColors->g;
+
+	//UnFuck(0x4C83A3,4);
+	*(DWORD*)0x4C83A3 = (DWORD)&UseVehicleColors->b;
+
+	//UnFuck(0x5817CC,4);
+	*(DWORD*)0x5817CC = (DWORD)&UseVehicleColors;
+
+	//UnFuck(0x582176,4);
+	*(DWORD*)0x582176 = (DWORD)&UseVehicleColors;
+
+	//UnFuck(0x6A6FFA,4);
+	*(DWORD*)0x6A6FFA = (DWORD)&UseVehicleColors;
+}

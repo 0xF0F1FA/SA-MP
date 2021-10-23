@@ -23,6 +23,8 @@
 #define WHEEL_DELTA 120 // (not always defined)
 #endif
 
+#define COUNTOF(a) ( sizeof( a ) / sizeof( ( a )[0] ) )
+
 // Minimum scroll bar thumb size
 #define SCROLLBAR_MINTHUMBSIZE 8
 
@@ -401,6 +403,9 @@ HRESULT CDXUTDialog::OnRender( float fElapsedTime )
 
     // Set up a state block here and restore it when finished drawing all the controls
     m_pManager->m_pStateBlock->Capture();
+
+    // SA-MP addition
+    //m_pManager->m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
 
     pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
     pd3dDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
@@ -1615,6 +1620,25 @@ HRESULT CDXUTDialog::CalcTextRect( LPCTSTR strText, CDXUTElement* pElement, RECT
 
 
 //--------------------------------------------------------------------------------------
+HRESULT CDXUTDialog::CalcTextRect( LPCWSTR strText, CDXUTElement* pElement, RECT* prcDest, int nCount )
+{
+    HRESULT hr = S_OK;
+
+    DXUTFontNode* pFontNode = GetFont( pElement->iFont );
+    if( pFontNode == NULL )
+        return E_FAIL;
+
+    DWORD dwTextFormat = pElement->dwTextFormat | DT_CALCRECT;
+    // Since we are only computing the rectangle, we don't need a sprite.
+    hr = pFontNode->pFont->DrawTextW( NULL, strText, nCount, prcDest, dwTextFormat, pElement->FontColor.Current );
+    if( FAILED(hr) )
+        return hr;
+
+    return S_OK;
+}
+
+
+//--------------------------------------------------------------------------------------
 HRESULT CDXUTDialog::DrawText( LPCTSTR strText, CDXUTElement* pElement, RECT* prcDest, bool bShadow, int nCount )
 {
     HRESULT hr = S_OK;
@@ -1660,6 +1684,58 @@ HRESULT CDXUTDialog::DrawText( LPCTSTR strText, CDXUTElement* pElement, RECT* pr
 	}
 
 	if( FAILED(hr) )
+        return hr;
+
+    return S_OK;
+}
+
+
+//--------------------------------------------------------------------------------------
+HRESULT CDXUTDialog::DrawText( LPCWSTR strText, CDXUTElement* pElement, RECT* prcDest, bool bShadow, int nCount )
+{
+    HRESULT hr = S_OK;
+
+    // No need to draw fully transparent layers
+    if ( pElement->FontColor.Current.a == 0 )
+        return S_OK;
+
+    RECT rcScreen = *prcDest;
+    OffsetRect( &rcScreen, m_x, m_y );
+
+    // If caption is enabled, offset the Y position by its height.
+    if( m_bCaption )
+        OffsetRect( &rcScreen, 0, m_nCaptionHeight );
+
+    //debug
+    //DrawRect( &rcScreen, D3DCOLOR_ARGB(100, 255, 0, 0) );
+
+    D3DXMATRIXA16 matTransform;
+    D3DXMatrixIdentity( &matTransform );
+    m_pManager->m_pSprite->SetTransform( &matTransform );
+
+    DXUTFontNode* pFontNode = GetFont( pElement->iFont );
+
+    if( bShadow )
+    {
+        RECT rcShadow = rcScreen;
+        OffsetRect( &rcShadow, 1, 1 );
+        if(pFontNode->pFont) {
+            hr = pFontNode->pFont->DrawTextW( m_pManager->m_pSprite, strText, nCount, &rcShadow, pElement->dwTextFormat, D3DCOLOR_ARGB(DWORD(pElement->FontColor.Current.a * 255), 0, 0, 0) );
+        } else {
+            m_pManager->CreateFont(pElement->iFont);
+        }
+
+        if (FAILED(hr))
+            return hr;
+    }
+
+    if(pFontNode->pFont) {
+        hr = pFontNode->pFont->DrawTextW( m_pManager->m_pSprite, strText, nCount, &rcScreen, pElement->dwTextFormat, pElement->FontColor.Current );
+    } else {
+        m_pManager->CreateFont(pElement->iFont);
+    }
+
+    if (FAILED(hr))
         return hr;
 
     return S_OK;
@@ -1721,6 +1797,21 @@ void CDXUTDialog::FocusDefaultControl()
 }
 
 
+//--------------------------------------------------------------------------------------
+int GetDXUTFontSize();
+int GetFontWeight();
+char* GetFontFace();
+
+void CDXUTDialog::SetFonts()
+{
+    char* szFontFace = GetFontFace();
+    int iFontSize = GetDXUTFontSize();
+    int iFontWeight = GetFontWeight();
+
+    SetFont(0, szFontFace, iFontSize, iFontWeight);
+    SetFont(1, szFontFace, iFontSize - 2, iFontWeight);
+}
+
 
 //--------------------------------------------------------------------------------------
 bool CDXUTDialog::OnCycleFocus( bool bForward )
@@ -1757,6 +1848,9 @@ bool CDXUTDialog::OnCycleFocus( bool bForward )
 
 
 //--------------------------------------------------------------------------------------
+
+#include "../client/colorembed.h"
+
 HRESULT CDXUTDialogResourceManager::CreateFont( UINT iFont )
 {
     HRESULT hr = S_OK;
@@ -1768,6 +1862,11 @@ HRESULT CDXUTDialogResourceManager::CreateFont( UINT iFont )
     D3DXCreateFont( m_pd3dDevice, pFontNode->nHeight, 0, pFontNode->nWeight, 1, FALSE, DEFAULT_CHARSET, 
                     OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, 
                      pFontNode->strFace, &pFontNode->pFont );
+
+
+    ID3DXFontCE* pFontCE = new ID3DXFontCE;
+    pFontCE->SetDXFont(pFontNode->pFont);
+    pFontNode->pFont = pFontCE;
 
 	/*
 	sprintf(szDebug,"CDXUTDialogResourceManager::CreateFont(pFont=0x%X,pD3DDevice=0x%X)",pFontNode->pFont,m_pd3dDevice);
@@ -1823,9 +1922,10 @@ HRESULT CDXUTDialogResourceManager::CreateTexture( UINT iTexture )
 void CDXUTDialog::InitDefaultElements()
 {
     //SetTexture( 0, "DXUTControls.dds" );
-	SetTexture( 0, "sampgui.png" );
+    SetTexture( 0, "sampgui.png" );
 
-    SetFont( 0, "Arial", 16, FW_BOLD );
+    //SetFont( 0, "Arial", 16, FW_BOLD );
+    SetFonts( );
     
     CDXUTElement Element;
     RECT rcTexture;
@@ -1833,12 +1933,12 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     // Element for the caption
     //-------------------------------------
-    m_CapElement.SetFont( 0 );
+    m_CapElement.SetFont( 1 );
     SetRect( &rcTexture, 17, 269, 241, 287 );
     m_CapElement.SetTexture( 0, &rcTexture );
-    m_CapElement.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(255, 255, 255, 255);
-    m_CapElement.FontColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(255, 255, 255, 255);
-    m_CapElement.SetFont( 0, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_VCENTER );
+    m_CapElement.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(200, 10, 10, 10);
+    m_CapElement.FontColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(255, 210, 210, 210);
+    m_CapElement.SetFont( 0, D3DCOLOR_ARGB(255, 210, 210, 210), DT_LEFT | DT_VCENTER );
     // Pre-blend as we don't need to transition the state
     m_CapElement.TextureColor.Blend( DXUT_STATE_NORMAL, 10.0f );
     m_CapElement.FontColor.Blend( DXUT_STATE_NORMAL, 10.0f );
@@ -1846,7 +1946,8 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     // CDXUTStatic
     //-------------------------------------
-    Element.SetFont( 0 );
+    Element.SetFont( 1 );
+    Element.SetFont( 1, D3DCOLOR_ARGB(255, 190, 190, 190), DT_LEFT | DT_EXPANDTABS | DT_VCENTER);
     Element.FontColor.States[ DXUT_STATE_DISABLED ] = D3DCOLOR_ARGB( 200, 200, 200, 200 );
 
     // Assign the Element
@@ -1859,10 +1960,12 @@ void CDXUTDialog::InitDefaultElements()
     SetRect( &rcTexture, 0, 0, 136, 54 );
     Element.SetTexture( 0, &rcTexture );
     Element.SetFont( 0 );
-    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(150, 255, 255, 255);
-    Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(200, 255, 255, 255);
-    Element.FontColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 0, 0, 0);
-    
+    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(200, 255, 255, 255);
+    Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(200, 149, 176, 208);
+    Element.TextureColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 185, 34, 40);
+    Element.FontColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 255, 255, 255);
+    Element.FontColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(255, 200, 200, 200);
+
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_BUTTON, 0, &Element );
     
@@ -1870,13 +1973,14 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     // CDXUTButton - Fill layer
     //-------------------------------------
-    SetRect( &rcTexture, 136, 0, 272, 54 );
+    //SetRect( &rcTexture, 136, 0, 272, 54 );
+    SetRect( &rcTexture, 0, 0, 136, 54 );
     Element.SetTexture( 0, &rcTexture, D3DCOLOR_ARGB(0, 255, 255, 255) );
-    Element.TextureColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(160, 255, 255, 255);
-    Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(60, 0, 0, 0);
-    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(30, 255, 255, 255);
-    
-    
+    Element.TextureColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 185, 34, 40);
+    Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(60, 80, 80, 80);
+    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(200, 255, 255, 255);
+
+
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_BUTTON, 1, &Element );
 
@@ -1937,10 +2041,11 @@ void CDXUTDialog::InitDefaultElements()
     SetRect( &rcTexture, 7, 81, 247, 123 );
     Element.SetTexture( 0, &rcTexture );
     Element.SetFont( 0 );
-    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(150, 200, 200, 200);
-    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(170, 230, 230, 230);
+    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(200, 255, 255, 255);
+    Element.TextureColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 185, 34, 40);
+    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(255, 185, 34, 40);
     Element.TextureColor.States[ DXUT_STATE_DISABLED ] = D3DCOLOR_ARGB(70, 200, 200, 200);
-    Element.FontColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 0, 0, 0);
+    Element.FontColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 255, 255, 255);
     Element.FontColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(255, 0, 0, 0);
     Element.FontColor.States[ DXUT_STATE_DISABLED ] = D3DCOLOR_ARGB(200, 200, 200, 200);
     
@@ -1954,9 +2059,9 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     SetRect( &rcTexture, 272, 0, 325, 49 );
     Element.SetTexture( 0, &rcTexture );
-    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(150, 255, 255, 255);
+    Element.TextureColor.States[ DXUT_STATE_NORMAL ] = D3DCOLOR_ARGB(200, 255, 255, 255);
     Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(255, 150, 150, 150);
-    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(200, 255, 255, 255);
+    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(255, 150, 150, 150);
     Element.TextureColor.States[ DXUT_STATE_DISABLED ] = D3DCOLOR_ARGB(70, 255, 255, 255);
     
     // Assign the Element
@@ -1968,7 +2073,8 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     SetRect( &rcTexture, 7, 123, 241, 265 );
     Element.SetTexture( 0, &rcTexture );
-    Element.SetFont( 0, D3DCOLOR_ARGB(255, 0, 0, 0), DT_LEFT | DT_TOP );
+    Element.SetFont( 0, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_TOP );
+    Element.TextureColor.Init(D3DCOLOR_ARGB(255, 185, 34, 40));
     
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_COMBOBOX, 2, &Element );
@@ -1980,6 +2086,7 @@ void CDXUTDialog::InitDefaultElements()
     SetRect( &rcTexture, 7, 266, 241, 289 );
     Element.SetTexture( 0, &rcTexture );
     Element.SetFont( 0, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_TOP );
+    Element.TextureColor.Init(D3DCOLOR_ARGB(255, 200, 200, 200));
     
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_COMBOBOX, 3, &Element );
@@ -2000,8 +2107,12 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     // CDXUTSlider - Button
     //-------------------------------------
-    SetRect( &rcTexture, 248, 55, 289, 96 );
+    SetRect( &rcTexture, 54, 54, 81, 81 );
     Element.SetTexture( 0, &rcTexture );
+    Element.TextureColor.Init(D3DCOLOR_ARGB(255, 185, 34, 40),D3DCOLOR_ARGB(255, 149, 176, 208));
+    Element.TextureColor.States[ DXUT_STATE_MOUSEOVER ] = D3DCOLOR_ARGB(255, 240, 240, 240);
+    Element.TextureColor.States[ DXUT_STATE_PRESSED ] = D3DCOLOR_ARGB(255, 185, 34, 40);
+    Element.TextureColor.States[ DXUT_STATE_FOCUS ] = D3DCOLOR_ARGB(255, 220, 220, 220);
 
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_SLIDER, 1, &Element );
@@ -2021,7 +2132,7 @@ void CDXUTDialog::InitDefaultElements()
     //-------------------------------------
     SetRect( &rcTexture, 243, 124, 265, 144 );
     Element.SetTexture( 0, &rcTexture );
-	Element.TextureColor.Init(D3DCOLOR_ARGB(255, 255, 255, 255),D3DCOLOR_ARGB(255, 255, 255, 255));
+    Element.TextureColor.Init(D3DCOLOR_ARGB(255, 255, 255, 255),D3DCOLOR_ARGB(255, 255, 255, 255));
         
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_SCROLLBAR, 1, &Element );
@@ -2060,7 +2171,7 @@ void CDXUTDialog::InitDefaultElements()
     //   7 - lower border
     //   8 - lower right border
 
-    Element.SetFont( 0, D3DCOLOR_ARGB( 255, 0, 0, 0 ), DT_LEFT | DT_TOP );
+    Element.SetFont( 0, D3DCOLOR_ARGB( 255, 0, 0, 0 ), DT_LEFT | DT_TOP | DT_VCENTER );
 
     // Assign the style
     SetRect( &rcTexture, 14, 90, 241, 113 );
@@ -2091,12 +2202,11 @@ void CDXUTDialog::InitDefaultElements()
     Element.SetTexture( 0, &rcTexture );
     SetDefaultElement( DXUT_CONTROL_EDITBOX, 8, &Element );
 
-
     //-------------------------------------
     // CDXUTIMEEditBox
     //-------------------------------------
 
-    Element.SetFont( 0, D3DCOLOR_ARGB( 255, 0, 0, 0 ), DT_LEFT | DT_TOP );
+    Element.SetFont( 0, D3DCOLOR_ARGB( 255, 0, 0, 0 ), DT_LEFT | DT_TOP | DT_VCENTER );
 
     // Assign the style
     SetRect( &rcTexture, 14, 90, 241, 113 );
@@ -2129,7 +2239,7 @@ void CDXUTDialog::InitDefaultElements()
     // Element 9 for IME text, and indicator button
     SetRect( &rcTexture, 0, 0, 136, 54 );
     Element.SetTexture( 0, &rcTexture );
-    Element.SetFont( 0, D3DCOLOR_ARGB( 255, 0, 0, 0 ), DT_CENTER | DT_VCENTER );
+    Element.SetFont( 0, D3DCOLOR_ARGB(255, 255, 255, 255), DT_CENTER | DT_VCENTER );
     SetDefaultElement( DXUT_CONTROL_IMEEDITBOX, 9, &Element );
 
     //-------------------------------------
@@ -2138,7 +2248,7 @@ void CDXUTDialog::InitDefaultElements()
 
     SetRect( &rcTexture, 13, 124, 241, 265 );
     Element.SetTexture( 0, &rcTexture );
-    Element.SetFont( 0, D3DCOLOR_ARGB(255, 0, 0, 0), DT_LEFT | DT_TOP );
+    Element.SetFont( 1, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_TOP | DT_EXPANDTABS );
 
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_LISTBOX, 0, &Element );
@@ -2149,7 +2259,8 @@ void CDXUTDialog::InitDefaultElements()
 
     SetRect( &rcTexture, 17, 269, 241, 287 );
     Element.SetTexture( 0, &rcTexture );
-    Element.SetFont( 0, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_TOP );
+    Element.SetFont( 1, D3DCOLOR_ARGB(255, 255, 255, 255), DT_LEFT | DT_TOP | DT_EXPANDTABS );
+    Element.TextureColor.Init(D3DCOLOR_ARGB(255, 185, 34, 40),D3DCOLOR_ARGB(200, 128, 128, 128));
 
     // Assign the Element
     SetDefaultElement( DXUT_CONTROL_LISTBOX, 1, &Element );
@@ -3489,6 +3600,7 @@ CDXUTSlider::CDXUTSlider( CDXUTDialog *pDialog )
     m_nValue = 50;
 
     m_bPressed = false;
+    m_bUseCustomColor = false;
 }
 
 
@@ -3716,6 +3828,12 @@ void CDXUTSlider::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
 
     //TODO: remove magic numbers
     pElement = m_Elements.GetAt( 1 );
+
+    if (m_bUseCustomColor)
+    {
+        // Replace the texture color of the inactive slider button
+        pElement->TextureColor.Current = m_ButtonColor;
+    }
        
     // Blend current color
     pElement->TextureColor.Blend( iState, fElapsedTime, fBlendRate );
@@ -4176,7 +4294,7 @@ HRESULT CDXUTListBox::AddItem(const TCHAR* wszText, int nIndex, D3DCOLOR Color)
     pNewItem->Color = Color;
     pNewItem->bForceUnselected = false;
     pNewItem->pData = NULL; // pData seems to be removed from DXUTListBoxItem
-
+    sizeof(DXUTListBoxItem);
     int i = 0;
     do {
         memset(pNewItem->strTextElements[i], 0, MAX_LISTBOX_TEXT_IN_COLUMN);
@@ -4907,11 +5025,35 @@ void CDXUTEditBox::SetText( LPCTSTR wszText, bool bSelected )
 
 
 //--------------------------------------------------------------------------------------
-HRESULT CDXUTEditBox::GetTextCopy( PCHAR strDest, UINT bufferCount )
+#define CONVERT_BUFFER_LEN 2048
+char* WideToAnsiString(const WCHAR* pStr)
+{
+    static char szBuffer[CONVERT_BUFFER_LEN + 1];
+    memset(szBuffer, 0, CONVERT_BUFFER_LEN);
+
+    int nCount = WideCharToMultiByte(CP_ACP, 0, pStr, (int)wcslen(pStr), NULL, 0, NULL, NULL);
+    if (nCount <= CONVERT_BUFFER_LEN)
+    {
+        WideCharToMultiByte(CP_ACP, 0, pStr, (int)wcslen(pStr), &szBuffer[0], nCount, NULL, NULL);
+        szBuffer[nCount] = 0;
+    }
+    return szBuffer;
+}
+
+
+//--------------------------------------------------------------------------------------
+LPCTSTR CDXUTEditBox::GetText()
+{
+    return WideToAnsiString( m_Buffer.GetBuffer() );
+}
+
+
+//--------------------------------------------------------------------------------------
+HRESULT CDXUTEditBox::GetTextCopy( LPWSTR strDest, UINT bufferCount )
 {
     assert( strDest );
 
-    StringCchCopy( strDest, bufferCount, m_Buffer.GetBuffer() );
+    wcscpy_s( strDest, bufferCount, m_Buffer.GetBuffer() );
 
     return S_OK;
 }
@@ -4964,20 +5106,20 @@ void CDXUTEditBox::CopyToClipboard()
     {
         EmptyClipboard();
 
-        HGLOBAL hBlock = GlobalAlloc( GMEM_MOVEABLE, sizeof(TCHAR) * ( m_Buffer.GetTextSize() + 1 ) );
+        HGLOBAL hBlock = GlobalAlloc( GMEM_MOVEABLE, sizeof(WCHAR) * ( m_Buffer.GetTextSize() + 1 ) );
         if( hBlock )
         {
-            TCHAR *pwszText = (TCHAR*)GlobalLock( hBlock );
+            auto pwszText = reinterpret_cast<WCHAR*>( GlobalLock( hBlock ) );
             if( pwszText )
             {
                 int nFirst = __min( m_nCaret, m_nSelStart );
                 int nLast = __max( m_nCaret, m_nSelStart );
                 if( nLast - nFirst > 0 )
-                    CopyMemory( pwszText, m_Buffer.GetBuffer() + nFirst, (nLast - nFirst) * sizeof(TCHAR) );
+                    memcpy( pwszText, m_Buffer.GetBuffer() + nFirst, (nLast - nFirst) * sizeof(WCHAR) );
                 pwszText[nLast - nFirst] = L'\0';  // Terminate it
                 GlobalUnlock( hBlock );
             }
-            SetClipboardData( CF_OEMTEXT, hBlock );
+            SetClipboardData( CF_UNICODETEXT, hBlock );
         }
         CloseClipboard();
         // We must not free the object until CloseClipboard is called.
@@ -4993,17 +5135,17 @@ void CDXUTEditBox::PasteFromClipboard()
 
     if( OpenClipboard( NULL ) )
     {
-        HANDLE handle = GetClipboardData( CF_OEMTEXT );
+        HANDLE handle = GetClipboardData( CF_UNICODETEXT );
         if( handle )
         {
             // Convert the ANSI string to Unicode, then
             // insert to our buffer.
-            TCHAR *pwszText = (TCHAR*)GlobalLock( handle );
+            auto pwszText = reinterpret_cast<WCHAR*>( GlobalLock( handle ) );
             if( pwszText )
             {
                 // Copy all characters up to null.
                 if( m_Buffer.InsertString( m_nCaret, pwszText ) )
-                    PlaceCaret( m_nCaret + lstrlenA( pwszText ) );
+                    PlaceCaret( m_nCaret + (int)wcslen( pwszText ) );
                 m_nSelStart = m_nCaret;
                 GlobalUnlock( handle );
             }
@@ -5357,6 +5499,22 @@ bool CDXUTEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 
 //--------------------------------------------------------------------------------------
+#define MAX_HIDDEN_BUFFER 255
+WCHAR* ToDotted( const WCHAR* wszText )
+{
+    static WCHAR wszBuffer[MAX_HIDDEN_BUFFER+1];
+    memset(wszBuffer, 0, sizeof(wszBuffer));
+
+    int nLen = (int)wcslen( wszText );
+
+    if (nLen <= MAX_HIDDEN_BUFFER && nLen > 0)
+    {
+        wmemset(wszBuffer, L'\x25CF', nLen);
+    }
+    return wszBuffer;
+}
+
+//--------------------------------------------------------------------------------------
 void CDXUTEditBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
 {
     if( m_bVisible == false )
@@ -5417,20 +5575,38 @@ void CDXUTEditBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
     //
     // Render the text
     //
-    // Element 0 for text
-    m_Elements.GetAt( 0 )->FontColor.Current = m_TextColor;
-    m_pDialog->DrawText( m_Buffer.GetBuffer() + m_nFirstVisible, m_Elements.GetAt( 0 ), &m_rcText );
-
-    // Render the selected text
-    if( m_nCaret != m_nSelStart )
+    if (m_bHideCharacters)
     {
-        int nFirstToRender = __max( m_nFirstVisible, __min( m_nSelStart, m_nCaret ) );
-        int nNumChatToRender = __max( m_nSelStart, m_nCaret ) - nFirstToRender;
-        m_Elements.GetAt( 0 )->FontColor.Current = m_SelTextColor;
-        m_pDialog->DrawText( m_Buffer.GetBuffer() + nFirstToRender,
-                             m_Elements.GetAt( 0 ), &rcSelection, false, nNumChatToRender );
+        // Element 0 for text
+        m_Elements.GetAt(0)->FontColor.Current = m_TextColor;
+        m_pDialog->DrawText(ToDotted(m_Buffer.GetBuffer() + m_nFirstVisible), m_Elements.GetAt(0), &m_rcText);
+    
+        // Render the selected text
+        if (m_nCaret != m_nSelStart)
+        {
+            int nFirstToRender = __max(m_nFirstVisible, __min(m_nSelStart, m_nCaret));
+            int nNumChatToRender = __max(m_nSelStart, m_nCaret) - nFirstToRender;
+            m_Elements.GetAt(0)->FontColor.Current = m_SelTextColor;
+            m_pDialog->DrawText(ToDotted(m_Buffer.GetBuffer() + nFirstToRender),
+                m_Elements.GetAt(0), &rcSelection, false, nNumChatToRender);
+        }
     }
+    else
+    {
+        // Element 0 for text
+        m_Elements.GetAt(0)->FontColor.Current = m_TextColor;
+        m_pDialog->DrawText(m_Buffer.GetBuffer() + m_nFirstVisible, m_Elements.GetAt(0), &m_rcText);
 
+        // Render the selected text
+        if (m_nCaret != m_nSelStart)
+        {
+            int nFirstToRender = __max(m_nFirstVisible, __min(m_nSelStart, m_nCaret));
+            int nNumChatToRender = __max(m_nSelStart, m_nCaret) - nFirstToRender;
+            m_Elements.GetAt(0)->FontColor.Current = m_SelTextColor;
+            m_pDialog->DrawText(m_Buffer.GetBuffer() + nFirstToRender,
+                m_Elements.GetAt(0), &rcSelection, false, nNumChatToRender);
+        }
+    }
     //
     /* Blink the caret
     //
@@ -5471,8 +5647,8 @@ void CDXUTEditBox::Render( IDirect3DDevice9* pd3dDevice, float fElapsedTime )
 void CDXUTEditBox::ParseFloatArray( float *pNumbers, int nCount )
 {
     int nWritten = 0;  // Number of floats written
-    const TCHAR *pToken, *pEnd;
-    TCHAR wszToken[60];
+    const WCHAR *pToken, *pEnd;
+    WCHAR wszToken[60];
 
     pToken = m_Buffer.GetBuffer();
     while( nWritten < nCount && *pToken != L'\0' )
@@ -5491,8 +5667,8 @@ void CDXUTEditBox::ParseFloatArray( float *pNumbers, int nCount )
 
         // Copy the token to our buffer
         int nTokenLen = __min( sizeof(wszToken) / sizeof(wszToken[0]) - 1, int(pEnd - pToken) );
-        StringCchCopy( wszToken, nTokenLen, pToken );
-        *pNumbers = (float)strtod( wszToken, NULL );
+        wcscpy_s( wszToken, nTokenLen, pToken );
+        *pNumbers = (float)wcstod( wszToken, NULL );
         ++nWritten;
         ++pNumbers;
         pToken = pEnd;
@@ -5601,9 +5777,9 @@ int       CDXUTIMEEditBox::s_nFirstTargetConv;  // Index of the first target con
 CUniBuffer CDXUTIMEEditBox::s_CompString = CUniBuffer( 0 );
 BYTE      CDXUTIMEEditBox::s_abCompStringAttr[MAX_COMPSTRING_SIZE];
 DWORD     CDXUTIMEEditBox::s_adwCompStringClause[MAX_COMPSTRING_SIZE];
-TCHAR     CDXUTIMEEditBox::s_wszReadingString[32];
+WCHAR     CDXUTIMEEditBox::s_wszReadingString[32];
 CDXUTIMEEditBox::CCandList CDXUTIMEEditBox::s_CandList;       // Data relevant to the candidate list
-bool      CDXUTIMEEditBox::s_bShowReadingWindow; // Indicates whether reading window is visible
+bool      CDXUTIMEEditBox::s_bShowReadingWindow; // Indicates whether reading window is visible 
 bool      CDXUTIMEEditBox::s_bHorizontalReading; // Indicates whether the reading window is vertical or horizontal
 bool      CDXUTIMEEditBox::s_bChineseIME;
 CGrowableArray< CDXUTIMEEditBox::CInputLocale > CDXUTIMEEditBox::s_Locale; // Array of loaded keyboard layout on system
@@ -5662,6 +5838,8 @@ void CDXUTIMEEditBox::SendKey( BYTE nVirtKey )
 // chance to initialize its default input context associated with the app window.
 HRESULT CDXUTIMEEditBox::StaticOnCreateDevice()
 {
+    ImmDisableTextFrameService(-1);
+
     // Save the default input context
     s_hImcDef = _ImmGetContext( DXUTGetHWND() );
     _ImmReleaseContext( DXUTGetHWND(), s_hImcDef );
@@ -5673,6 +5851,12 @@ HRESULT CDXUTIMEEditBox::StaticOnCreateDevice()
 //--------------------------------------------------------------------------------------
 void CDXUTIMEEditBox::UpdateRects()
 {
+    if( !s_bEnableImeSystem )
+    {
+        CDXUTEditBox::UpdateRects();
+        return;
+    }
+
     // Temporary adjust m_width so that CDXUTEditBox can compute
     // the correct rects for its rendering since we need to make space
     // for the indicator button
@@ -5933,7 +6117,7 @@ void CDXUTIMEEditBox::TruncateCompString( bool bUseBackSpace, int iNewStrLen )
     if( !s_bInsertOnType )
         return;
 
-    int cc = (int) strlen( s_CompString.GetBuffer() );
+    int cc = (int) wcslen( s_CompString.GetBuffer() );
     assert( iNewStrLen == 0 || iNewStrLen >= cc );
 
     // Send right arrow keystrokes to move the caret
@@ -5976,7 +6160,7 @@ void CDXUTIMEEditBox::TruncateCompString( bool bUseBackSpace, int iNewStrLen )
 // messages.
 void CDXUTIMEEditBox::SendCompString()
 {
-    for( int i = 0; i < lstrlen( s_CompString.GetBuffer() ); ++i )
+    for( int i = 0; i < (int)wcslen( s_CompString.GetBuffer() ); ++i )
         MsgProc( WM_CHAR, (WPARAM)s_CompString[i], 0 );
 }
 
@@ -6001,7 +6185,7 @@ void CDXUTIMEEditBox::FinalizeString( bool bSend )
     if( !s_bInsertOnType && bSend )
     {
         // Send composition string to app.
-        LONG lLength = lstrlen( s_CompString.GetBuffer() );
+        LONG lLength = (int)wcslen( s_CompString.GetBuffer() );
         // In case of CHT IME, don't send the trailing double byte space, if it exists.
         if( GetLanguage() == LANG_CHT
             && s_CompString[lLength - 1] == 0x3000 )
@@ -6458,7 +6642,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
             DXUTTRACE( "WM_IME_COMPOSITION\n" );
             {
                 LONG lRet;  // Returned count in CHARACTERS
-                TCHAR wszCompStr[MAX_COMPSTRING_SIZE];
+                WCHAR wszCompStr[MAX_COMPSTRING_SIZE];
 
                 *trapped = true;
                 if( NULL == ( hImc = _ImmGetContext( DXUTGetHWND() ) ) )
@@ -6490,9 +6674,9 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                     lRet = _ImmGetCompositionStringW( hImc, GCS_RESULTSTR, wszCompStr, sizeof( wszCompStr ) );
                     if( lRet > 0 )
                     {
-                        lRet /= sizeof(TCHAR);
+                        lRet /= sizeof(WCHAR);
                         wszCompStr[lRet] = 0;  // Force terminate
-                        TruncateCompString( false, (int)strlen( wszCompStr ) );
+                        TruncateCompString( false, (int)wcslen( wszCompStr ) );
                         s_CompString.SetText( wszCompStr );
                         SendCompString();
                         ResetCompositionString();
@@ -6510,19 +6694,19 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                     lRet = _ImmGetCompositionStringW( hImc, GCS_COMPSTR, wszCompStr, sizeof( wszCompStr ) );
                     if( lRet > 0 )
                     {
-                        lRet /= sizeof(TCHAR);  // Convert size in byte to size in char
+                        lRet /= sizeof(WCHAR);  // Convert size in byte to size in char
                         wszCompStr[lRet] = 0;  // Force terminate
                         //
                         // Remove the whole of the string
                         //
-                        TruncateCompString( false, (int)strlen( wszCompStr ) );
+                        TruncateCompString( false, (int)wcslen( wszCompStr ) );
 
                         s_CompString.SetText( wszCompStr );
 
                         // Older CHT IME uses composition string for reading string
                         if ( GetLanguage() == LANG_CHT && !GetImeId() )
                         {
-                            if( lstrlen( s_CompString.GetBuffer() ) )
+                            if( (int)wcslen( s_CompString.GetBuffer() ) )
                             {
                                 s_CandList.dwCount = 4;             // Maximum possible length for reading string is 4
                                 s_CandList.dwSelection = (DWORD)-1; // don't select any candidate
@@ -6530,7 +6714,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                                 // Copy the reading string to the candidate list
                                 for( int i = 3; i >= 0; --i )
                                 {
-                                    if( i > lstrlen( s_CompString.GetBuffer() ) - 1 )
+                                    if( i > (int)wcslen( s_CompString.GetBuffer() ) - 1 )
                                         s_CandList.awszCandidate[i][0] = 0;  // Doesn't exist
                                     else
                                     {
@@ -6540,7 +6724,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                                 }
                                 s_CandList.dwPageSize = MAX_CANDLIST;
                                 // Clear comp string after we are done copying
-                                ZeroMemory( (LPVOID)s_CompString.GetBuffer(), 4 * sizeof(TCHAR) );
+                                memset( (LPVOID)s_CompString.GetBuffer(), 0, 4 * sizeof(WCHAR) );
                                 s_bShowReadingWindow = true;
                                 GetReadingWindowOrientation( 0 );
                                 if( s_bHorizontalReading )
@@ -6558,8 +6742,10 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                                     for( UINT i = 0; i < s_CandList.dwCount; ++i )
                                     {
                                         if( s_CandList.dwSelection == i )
-                                            s_CandList.nReadingError = lstrlen( s_wszReadingString );
-                                        StringCchCat( s_wszReadingString, 32, s_CandList.awszCandidate[i] );
+                                            s_CandList.nReadingError = (int)wcslen( s_wszReadingString );
+                                        //LPCTSTR pszTmp = s_CandList.awszCandidate[i];
+                                        //wcscat_s( s_wszReadingString, COUNTOF(s_wszReadingString), pszTmp );
+                                        //wcscat_s(s_wszReadingString);
                                     }
                                 }
                             }
@@ -6578,7 +6764,7 @@ bool CDXUTIMEEditBox::MsgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
                             // It's at the end right now, so compute the number
                             // of times left arrow should be pressed to
                             // send it to the original position.
-                            int nCount = lstrlen( s_CompString.GetBuffer() + s_nCompCaret );
+                            int nCount = (int)wcslen( s_CompString.GetBuffer() + s_nCompCaret );
                             // Send left keystrokes
                             for( int i = 0; i < nCount; ++i )
                                 SendMessage( DXUTGetHWND(), WM_KEYDOWN, VK_LEFT, 0 );
@@ -7056,7 +7242,7 @@ void CDXUTIMEEditBox::RenderComposition( IDirect3DDevice9* pd3dDevice, float fEl
     // Render the window and string.
     // If the string is too long, we must wrap the line.
     pElement->FontColor.Current = TextColor;
-    const TCHAR *pwszComp = s_CompString.GetBuffer();
+    const WCHAR *pwszComp = s_CompString.GetBuffer();
     int nCharLeft = s_CompString.GetTextSize();
     for( ; ; )
     {
@@ -7113,7 +7299,7 @@ void CDXUTIMEEditBox::RenderComposition( IDirect3DDevice9* pd3dDevice, float fEl
     nXFirst = 0;
     s_nFirstTargetConv = -1;
     BYTE *pAttr;
-    const TCHAR *pcComp;
+    const WCHAR *pcComp;
     for( pcComp = s_CompString.GetBuffer(), pAttr = s_abCompStringAttr;
           *pcComp != L'\0'; ++pcComp, ++pAttr )
     {
@@ -7337,7 +7523,7 @@ bool CUniBuffer::SetBufferSize( int nNewSize )
 {
     // If the current size is already the maximum allowed,
     // we can't possibly allocate more.
-    if( m_nBufferSize == DXUT_MAX_EDITBOXLENGTH )
+    if( m_nBufferSize >= DXUT_MAX_EDITBOXLENGTH )
         return false;
 
     int nAllocateSize = ( nNewSize == -1 || nNewSize < m_nBufferSize * 2 ) ? ( m_nBufferSize ? m_nBufferSize * 2 : 256 ) : nNewSize * 2;
@@ -7346,17 +7532,16 @@ bool CUniBuffer::SetBufferSize( int nNewSize )
     if( nAllocateSize > DXUT_MAX_EDITBOXLENGTH )
         nAllocateSize = DXUT_MAX_EDITBOXLENGTH;
 
-    TCHAR *pTempBuffer = new TCHAR[nAllocateSize];
+    auto pTempBuffer = new (std::nothrow) WCHAR[nAllocateSize];
     if( !pTempBuffer )
         return false;
+
+    ZeroMemory( pTempBuffer, sizeof( WCHAR ) * nAllocateSize );
+
     if( m_pwszBuffer )
     {
-        CopyMemory( pTempBuffer, m_pwszBuffer, m_nBufferSize * sizeof(TCHAR) );
+        memcpy( pTempBuffer, m_pwszBuffer, m_nBufferSize * sizeof( WCHAR ) );
         delete[] m_pwszBuffer;
-    }
-    else
-    {
-        ZeroMemory( pTempBuffer, sizeof(TCHAR) * nAllocateSize );
     }
 
     m_pwszBuffer = pTempBuffer;
@@ -7373,19 +7558,20 @@ HRESULT CUniBuffer::Analyse()
     if( m_Analysis )
         _ScriptStringFree( &m_Analysis );
 
-    SCRIPT_CONTROL ScriptControl; // For uniscribe
-    SCRIPT_STATE   ScriptState;   // For uniscribe
-    ZeroMemory( &ScriptControl, sizeof(ScriptControl) );
-    ZeroMemory( &ScriptState, sizeof(ScriptState) );
-    _ScriptApplyDigitSubstitution ( NULL, &ScriptControl, &ScriptState );
+    SCRIPT_CONTROL ScriptControl = {}; // For uniscribe
+    SCRIPT_STATE   ScriptState = {};   // For uniscribe
+
+    HRESULT hr = _ScriptApplyDigitSubstitution ( NULL, &ScriptControl, &ScriptState );
+    if (FAILED(hr))
+        return hr;
 
     if( !m_pFontNode )
         return E_FAIL;
 
-    HRESULT hr = _ScriptStringAnalyse( m_pFontNode->pFont ? m_pFontNode->pFont->GetDC() : NULL,
+    hr = _ScriptStringAnalyse( m_pFontNode->pFont ? m_pFontNode->pFont->GetDC() : NULL,
                                        m_pwszBuffer,
-                                       lstrlenA( m_pwszBuffer ) + 1,  // NULL is also analyzed.
-                                       lstrlenA( m_pwszBuffer ) * 3 / 2 + 16,
+                                       (int)wcslen( m_pwszBuffer ) + 1,  // NULL is also analyzed.
+                                       (int)wcslen( m_pwszBuffer ) * 3 / 2 + 16,
                                        DEFAULT_CHARSET,
                                        SSA_BREAK | SSA_GLYPHS | SSA_FALLBACK | SSA_LINK,
                                        0,
@@ -7427,7 +7613,7 @@ CUniBuffer::~CUniBuffer()
 
 
 //--------------------------------------------------------------------------------------
-TCHAR& CUniBuffer::operator[]( int n )  // No param checking
+WCHAR& CUniBuffer::operator[]( int n )  // No param checking
 {
     // This version of operator[] is called only
     // if we are asking for write access, so
@@ -7449,18 +7635,18 @@ void CUniBuffer::Clear()
 // Inserts the char at specified index.
 // If nIndex == -1, insert to the end.
 //--------------------------------------------------------------------------------------
-bool CUniBuffer::InsertChar( int nIndex, TCHAR tchr )
+bool CUniBuffer::InsertChar( int nIndex, WCHAR wChar )
 {
     assert( nIndex >= 0 );
 
-    if( nIndex < 0 || nIndex > lstrlenA( m_pwszBuffer ) )
+    if( nIndex < 0 || nIndex > (int)wcslen( m_pwszBuffer ) )
         return false;  // invalid index
 
     // Check for maximum length allowed
     if( GetTextSize() + 1 >= DXUT_MAX_EDITBOXLENGTH )
         return false;
 
-    if( lstrlenA( m_pwszBuffer ) + 1 >= m_nBufferSize )
+    if( (int)wcslen( m_pwszBuffer ) + 1 >= m_nBufferSize )
     {
         if( !SetBufferSize( -1 ) )
             return false;  // out of memory
@@ -7469,9 +7655,9 @@ bool CUniBuffer::InsertChar( int nIndex, TCHAR tchr )
     assert( m_nBufferSize >= 2 );
 
     // Shift the characters after the index, start by copying the null terminator
-    TCHAR* dest = m_pwszBuffer + lstrlenA(m_pwszBuffer)+1;
-    TCHAR* stop = m_pwszBuffer + nIndex;
-    TCHAR* src = dest - 1;
+    WCHAR* dest = m_pwszBuffer + wcslen(m_pwszBuffer)+1;
+    WCHAR* stop = m_pwszBuffer + nIndex;
+    WCHAR* src = dest - 1;
 
     while( dest > stop )
     {
@@ -7479,10 +7665,40 @@ bool CUniBuffer::InsertChar( int nIndex, TCHAR tchr )
     }
 
     // Set new character
-    m_pwszBuffer[ nIndex ] = tchr;
+    m_pwszBuffer[ nIndex ] = wChar;
     m_bAnalyseRequired = true;
 
     return true;
+}
+
+
+//--------------------------------------------------------------------------------------
+bool CUniBuffer::InsertChar( int nIndex, TCHAR tchr )
+{
+    TCHAR tChar[3];
+    WCHAR wChar[2];
+
+    if( m_LeadChar )
+    {
+        tChar[0] = m_LeadChar;
+        tChar[1] = tchr;
+        tChar[2] = 0;
+        MultiByteToWideChar( CP_ACP, 0, tChar, 2, wChar, 1 );
+        InsertChar( nIndex, wChar[0] );
+        m_LeadChar = 0;
+        return 1;
+    }
+    else if( IsDBCSLeadByteEx( 0, tchr ) )
+    {
+        m_LeadChar = tchr;
+        return 0;
+    }
+    else
+    {
+        MultiByteToWideChar( CP_ACP, 0, &tchr, 1, wChar, 1 );
+        InsertChar( nIndex, wChar[0] );
+        return 1;
+    }
 }
 
 
@@ -7492,10 +7708,10 @@ bool CUniBuffer::InsertChar( int nIndex, TCHAR tchr )
 //--------------------------------------------------------------------------------------
 bool CUniBuffer::RemoveChar( int nIndex )
 {
-    if( !lstrlenA( m_pwszBuffer ) || nIndex < 0 || nIndex >= lstrlenA( m_pwszBuffer ) )
+    if( !wcslen( m_pwszBuffer ) || nIndex < 0 || nIndex >= (int)wcslen( m_pwszBuffer ) )
         return false;  // Invalid index
 
-    MoveMemory( m_pwszBuffer + nIndex, m_pwszBuffer + nIndex + 1, sizeof(TCHAR) * ( lstrlenA( m_pwszBuffer ) - nIndex ) );
+    MoveMemory( m_pwszBuffer + nIndex, m_pwszBuffer + nIndex + 1, sizeof(WCHAR) * ( wcslen( m_pwszBuffer ) - nIndex ) );
     m_bAnalyseRequired = true;
     return true;
 }
@@ -7506,28 +7722,30 @@ bool CUniBuffer::RemoveChar( int nIndex )
 // If nCount == -1, the entire string is inserted.
 // If nIndex == -1, insert to the end.
 //--------------------------------------------------------------------------------------
-bool CUniBuffer::InsertString( int nIndex, const TCHAR *pStr, int nCount )
+bool CUniBuffer::InsertString( int nIndex, const WCHAR* pStr, int nCount )
 {
     assert( nIndex >= 0 );
+    if( nIndex < 0 )
+        return false;
 
-    if( nIndex > lstrlenA( m_pwszBuffer ) )
+    if( nIndex > (int)wcslen( m_pwszBuffer ) )
         return false;  // invalid index
 
     if( -1 == nCount )
-        nCount = lstrlenA( pStr );
+        nCount = (int)wcslen( pStr );
 
     // Check for maximum length allowed
     if( GetTextSize() + nCount >= DXUT_MAX_EDITBOXLENGTH )
         return false;
 
-    if( lstrlenA( m_pwszBuffer ) + nCount >= m_nBufferSize )
+    if( (int)wcslen( m_pwszBuffer ) + nCount >= m_nBufferSize )
     {
-        if( !SetBufferSize( lstrlenA( m_pwszBuffer ) + nCount + 1 ) )
+        if( !SetBufferSize( (int)wcslen( m_pwszBuffer ) + nCount + 1 ) )
             return false;  // out of memory
     }
 
-    MoveMemory( m_pwszBuffer + nIndex + nCount, m_pwszBuffer + nIndex, sizeof(TCHAR) * ( lstrlenA( m_pwszBuffer ) - nIndex + 1 ) );
-    CopyMemory( m_pwszBuffer + nIndex, pStr, nCount * sizeof(TCHAR) );
+    MoveMemory( m_pwszBuffer + nIndex + nCount, m_pwszBuffer + nIndex, sizeof(WCHAR) * ( wcslen( m_pwszBuffer ) - nIndex + 1 ) );
+    memcpy( m_pwszBuffer + nIndex, pStr, nCount * sizeof(WCHAR) );
     m_bAnalyseRequired = true;
 
     return true;
@@ -7535,11 +7753,11 @@ bool CUniBuffer::InsertString( int nIndex, const TCHAR *pStr, int nCount )
 
 
 //--------------------------------------------------------------------------------------
-bool CUniBuffer::SetText( LPCTSTR wszText )
+bool CUniBuffer::SetText( LPCWSTR wszText )
 {
     assert( wszText != NULL );
 
-    int nRequired = int(strlen( wszText ) + 1);
+    int nRequired = int(wcslen( wszText ) + 1);
 
     // Check for maximum length allowed
     if( nRequired >= DXUT_MAX_EDITBOXLENGTH )
@@ -7551,12 +7769,41 @@ bool CUniBuffer::SetText( LPCTSTR wszText )
     // Check again in case out of memory occurred inside while loop.
     if( GetBufferSize() >= nRequired )
     {
-        StringCchCopy( m_pwszBuffer, GetBufferSize(), wszText );
+        wcscpy_s( m_pwszBuffer, GetBufferSize(), wszText );
         m_bAnalyseRequired = true;
         return true;
     }
     else
         return false;
+}
+
+
+//--------------------------------------------------------------------------------------
+void AnsiToWideString(TCHAR* pIn, WCHAR* pOut, int nLen)
+{
+    memset(pOut, 0, sizeof(WCHAR) * nLen);
+
+    int nCount = MultiByteToWideChar(CP_ACP, 0, pIn, strlen(pIn), NULL, 0);
+    if (nCount < nLen)
+    {
+        MultiByteToWideChar(CP_ACP, 0, pIn, strlen(pIn), pOut, nCount);
+    }
+}
+
+
+//--------------------------------------------------------------------------------------
+bool CUniBuffer::SetText( LPCTSTR wszText )
+{
+    assert( wszText != NULL );
+
+    if( strlen( wszText ) > 1024 )
+        return false;
+    
+    WCHAR pwszText[2048];
+    AnsiToWideString( (TCHAR*)wszText, pwszText, 2048 );
+    SetText( pwszText );
+
+    return true;
 }
 
 
@@ -7597,9 +7844,9 @@ HRESULT CUniBuffer::XtoCP( int nX, int *pCP, int *pnTrail )
     {
         *pCP = 0; *pnTrail = FALSE;
     } else
-    if( *pCP > lstrlenA( m_pwszBuffer ) && *pnTrail == FALSE )
+    if( *pCP > (int)wcslen( m_pwszBuffer ) && *pnTrail == FALSE )
     {
-        *pCP = lstrlenA( m_pwszBuffer ); *pnTrail = TRUE;
+        *pCP = (int)wcslen( m_pwszBuffer ); *pnTrail = TRUE;
     }
 
     return hr;
@@ -7657,7 +7904,9 @@ void CUniBuffer::GetNextItemPos( int nCP, int *pPrior )
     int nInitial = *_ScriptString_pcOutChars( m_Analysis );
     if( nCP + 1 < nInitial )
         nInitial = nCP + 1;
-    for( int i = nInitial; i < *_ScriptString_pcOutChars( m_Analysis ) - 1; ++i )
+    int i = nInitial;
+    int limit = *_ScriptString_pcOutChars( m_Analysis );
+    while( limit > 0 && i < limit - 1 )
     {
         if( pLogAttr[i].fWordStop )      // Either the fWordStop flag is set
         {
@@ -7671,6 +7920,9 @@ void CUniBuffer::GetNextItemPos( int nCP, int *pPrior )
             *pPrior = i+1;  // The next char is a word stop
             return;
         }
+
+        ++i;
+        limit = *_ScriptString_pcOutChars( m_Analysis );
     }
     // We have reached the end. It's always a word stop, so simply return it.
     *pPrior = *_ScriptString_pcOutChars( m_Analysis ) - 1;

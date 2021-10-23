@@ -143,6 +143,8 @@ CVehicle::CVehicle( int iType, float fPosX, float fPosY,
 		dwLastCreatedVehicleID = dwRetID;
 		//ScriptCommand(&set_train_flag, &dwRetID, 0);
 	}
+
+	SecureZeroMemory(m_szLicensePlate, sizeof(m_szLicensePlate));
 		
 	m_bIsInvulnerable = FALSE;
 	m_byteObjectiveVehicle = 0;
@@ -151,6 +153,7 @@ CVehicle::CVehicle( int iType, float fPosX, float fPosY,
 	m_bHasBeenDriven = FALSE;
 	m_dwTimeSinceLastDriven = GetTickCount();
 	m_bDoorsLocked = FALSE;
+	m_pLicensePlateTexture = NULL;
 }
 
 //-----------------------------------------------------------
@@ -397,29 +400,36 @@ void CVehicle::SetColor(int iColor1, int iColor2)
 UINT CVehicle::GetVehicleSubtype()
 {
 	if(m_pVehicle) {
-		if(m_pVehicle->entity.vtable == 0x871120) {
-			return VEHICLE_SUBTYPE_CAR;
-		}
-		else if(m_pVehicle->entity.vtable == 0x8721A0) {
-			return VEHICLE_SUBTYPE_BOAT;
-		}
-		else if(m_pVehicle->entity.vtable == 0x871360) {
-			return VEHICLE_SUBTYPE_BIKE;
-		}
-		else if(m_pVehicle->entity.vtable == 0x871948) {
-			return VEHICLE_SUBTYPE_PLANE;
-		}
-		else if(m_pVehicle->entity.vtable == 0x871680) {
-			return VEHICLE_SUBTYPE_HELI;
-		}
-		else if(m_pVehicle->entity.vtable == 0x871528) {
-			return VEHICLE_SUBTYPE_PUSHBIKE;
-		}
-		else if(m_pVehicle->entity.vtable == 0x872370) {
-			return VEHICLE_SUBTYPE_TRAIN;
+		switch(m_pVehicle->entity.vtable)
+		{
+		case 0x871120: return VEHICLE_SUBTYPE_CAR;
+		case 0x8721A0: return VEHICLE_SUBTYPE_BOAT;
+		case 0x871360: return VEHICLE_SUBTYPE_BIKE;
+		case 0x871948: return VEHICLE_SUBTYPE_PLANE;
+		case 0x871680: return VEHICLE_SUBTYPE_HELI;
+		case 0x871528: return VEHICLE_SUBTYPE_PUSHBIKE;
+		case 0x872370: return VEHICLE_SUBTYPE_TRAIN;
 		}
 	}
 	return 0;
+}
+
+//-----------------------------------------------------------
+
+CVehicle* CVehicle::sub_100B7D00()
+{
+	if (!m_pVehicle) return NULL;
+
+	UINT uiSubType = GetVehicleSubtype();
+	if (uiSubType != VEHICLE_SUBTYPE_BIKE &&
+		uiSubType != VEHICLE_SUBTYPE_BOAT &&
+		uiSubType != VEHICLE_SUBTYPE_TRAIN &&
+		uiSubType != VEHICLE_SUBTYPE_PUSHBIKE)
+	{
+		m_pVehicle->bNitroOn;
+		//if()
+	}
+	return NULL;
 }
 
 //-----------------------------------------------------------
@@ -535,7 +545,7 @@ eLandingGearState CVehicle::GetLandingGearState()
 
 //-----------------------------------------------------------
 
-bool CVehicle::IsLandingGearNotUp()
+bool CVehicle::IsLandingGearDown()
 {
 	return
 		m_pVehicle &&
@@ -1236,12 +1246,45 @@ void CVehicle::ToggleDoor(int iDoor, int iNodeIndex, float fAngle)
 	}
 }
 
+//-----------------------------------------------------------
+
+void CVehicle::SetAlarmState(WORD wState)
+{
+	m_pVehicle->wAlarmState = wState;
+}
+
+//-----------------------------------------------------------
+
 unsigned char CVehicle::GetNumOfPassengerSeats()
 {
 	if (!m_pVehicle) return 0;
 	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return 0;
 
 	return m_pVehicle->byteNumOfSeats;
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::SetLicensePlateText(char* szText)
+{
+	strncpy_s(m_szLicensePlate, szText, MAX_LICENSE_PLATE_TEXT);
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::CreateLicensePlateTexture()
+{
+	if(!m_pLicensePlateTexture && m_szLicensePlate[0] != '\0')
+	{
+		m_pLicensePlateTexture = pLicensePlate->Make(m_szLicensePlate);
+	}
+}
+
+//-----------------------------------------------------------
+
+void CVehicle::DestroyLicensePlateTexture()
+{
+	SAFE_RELEASE(m_pLicensePlateTexture);
 }
 
 //-----------------------------------------------------------

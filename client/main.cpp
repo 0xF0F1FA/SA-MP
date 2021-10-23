@@ -21,6 +21,7 @@ CDeathWindow			*pDeathWindow=0;
 CSpawnScreen			*pSpawnScreen=0;
 CNetGame				*pNetGame=0;
 CFontRender				*pDefaultFont=0;
+CLicensePlate			*pLicensePlate=0;
 CCursor					*pCursor = NULL;
 
 static bool				bGameInited=false;
@@ -34,7 +35,7 @@ IDirect3DDevice9		*pD3DDevice	= NULL;
 //D3DMATRIX				matView;
 
 HINSTANCE				hInstance=0;
-CPlayerTags				*pPlayerTags=NULL;
+CNewPlayerTags			*pNewPlayerTags=NULL;
 CScoreBoard				*pScoreBoard=NULL;
 CLabel					*pLabel=NULL;
 CNetStats				*pNetStats=NULL;
@@ -43,6 +44,8 @@ CNetStats				*pNetStats=NULL;
 CAudioStream			*pAudioStream=NULL;
 CConfigFile				*pConfigFile=NULL;
 CChatBubble				*pChatBubble=NULL;
+CTextDrawSelect			*pTextDrawSelect=NULL;
+CDialog					*pDialog=NULL;
 
 bool					bShowDebugLabels = false;
 bool					bWantHudScaling = true;
@@ -52,6 +55,7 @@ bool					bCursorRemoved = false;
 CGame					*pGame=0;
 //DWORD					dwGameLoop=0;
 DWORD					dwGraphicsLoop=0;
+WORD					wLastVehicleComponent=0;
 //DWORD					dwUIMode=0;				// 0 = old mode, 1 = new MMOG mode, 2 = DXUT perhaps?
 												// Have this settable from the server.. on Init.
 CFileSystem				*pFileSystem=NULL;
@@ -86,7 +90,6 @@ static char dbgstr[40];
 // polls the game until it's able to run.
 void LaunchMonitor(PVOID v)
 {
-	pGame = new CGame();
 	pGame->InitGame();
 
 	while(1) {
@@ -139,6 +142,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 			InstallFileSystemHooks();
 			InstallShowCursorHook();
+
+			pGame = new CGame();
 
 			_beginthread(LaunchMonitor,0,NULL);	
 			OutputDebugString("SA:MP Inited\n");			
@@ -235,15 +240,27 @@ void HookRwRenderStateSet()
 
 //----------------------------------------------------
 
-/*void CallRwRenderStateSet(int state, int option)
+void CallRwRenderStateSet(int state, int option)
 {
 	_asm push option
 	_asm push state
 	_asm mov ebx, 0xC97B24
 	_asm mov eax, [ebx]
-	_asm call dword ptr [eax+32]
+	_asm call dword ptr[eax+32]
 	_asm add esp, 8
-}*/
+}
+
+//----------------------------------------------------
+
+void InitDialogResourceManager()
+{
+	// DXUT GUI INITIALISATION
+	OutputDebugString("DXUTGUI creating..");
+
+	pDialogResourceManager = new CDXUTDialogResourceManager();
+	pDialogResourceManager->OnCreateDevice(pD3DDevice);
+	pDialogResourceManager->OnResetDevice();
+}
 
 //----------------------------------------------------
 
@@ -330,7 +347,7 @@ void SetupModUserFilesDirs()
 
 //extern void CheckDuplicateD3D9Dlls();
 
-// TODO: Add "nohudscalefix", "pagesize", "timestamp", "fpslimit", "multicore", "disableheadmove" config checks here
+// TODO: Add "fpslimit", "disableheadmove" config checks here
 void DoInitStuff()
 {
 	// GAME INIT
@@ -342,7 +359,7 @@ void DoInitStuff()
 
 		pConfigFile = new CConfigFile(szUserDocPath);
 
-		timeBeginPeriod(5); // increases the accuracy of Sleep()
+		timeBeginPeriod(1); // increases the accuracy of Sleep()
 		SubclassGameWindow();
 
 		//CheckDuplicateD3D9Dlls(); // Do this before any hooks are installed.
@@ -387,15 +404,17 @@ void DoInitStuff()
 			pChatWindow->SetPageSize(iPageSize);
 		}
 
+		InitDialogResourceManager();
+
 		if (pConfigFile->GetInt("nohudscalefix") == 1)
 			bWantHudScaling = false;
 
 		// DXUT GUI INITIALISATION
-		OutputDebugString("DXUTGUI creating..");
+		//OutputDebugString("DXUTGUI creating..");
 
-		pDialogResourceManager = new CDXUTDialogResourceManager();
-		pDialogResourceManager->OnCreateDevice(pD3DDevice);
-		pDialogResourceManager->OnResetDevice();
+		//pDialogResourceManager = new CDXUTDialogResourceManager();
+		//pDialogResourceManager->OnCreateDevice(pD3DDevice);
+		//pDialogResourceManager->OnResetDevice();
 		
 		OutputDebugString("SetupGameUI() creating..");
 
@@ -408,7 +427,7 @@ void DoInitStuff()
 			pDeathWindow = new CDeathWindow(pD3DDevice);
 			pSpawnScreen = new CSpawnScreen;
 			//pPlayerTags = new CPlayerTags(pD3DDevice);
-			pPlayerTags = new CPlayerTags(pD3DDevice);
+			pNewPlayerTags = new CNewPlayerTags(pD3DDevice);
 			pScoreBoard = new CScoreBoard(pD3DDevice);
 			pNetStats = new CNetStats(pD3DDevice);
 			//pSvrNetStats = new CSvrNetStats(pD3DDevice);
@@ -422,12 +441,18 @@ void DoInitStuff()
 		OutputDebugString("Labels creating..");
 		pLabel = new CLabel(pD3DDevice);
 
+		pLicensePlate = new CLicensePlate(pD3DDevice);
+		pTextDrawSelect = new CTextDrawSelect();
+
 		// Setting up the commands.
 		OutputDebugString("Setting up commands..");
 		SetupCommands();
 
 		OutputDebugString("Hooking RwSetState..");
 		HookRwRenderStateSet();
+
+		pGame->SetMaxStats();
+		pGame->ToggleThePassingOfTime(0);
 
 		if(tSettings.bDebug) {
 			CCamera *pGameCamera = pGame->GetCamera();
@@ -453,8 +478,8 @@ void DoInitStuff()
 
 	// NET GAME INIT
 	if(!bNetworkInited && tSettings.bPlayOnline) {
-
-		pNetGame = new CNetGame(tSettings.szConnectHost,atoi(tSettings.szConnectPort),
+		int iPort = (int)strtol(tSettings.szConnectPort, NULL, 0);
+		pNetGame = new CNetGame(tSettings.szConnectHost,iPort,
 				tSettings.szNickName,tSettings.szConnectPass);
 
 		bNetworkInited = true;
@@ -642,6 +667,12 @@ void InitSettings()
 
 void d3d9DestroyDeviceObjects()
 {
+	//if (pPlayerTags)
+	//	pPlayerTags->DeleteDeviceObjects();
+
+	if (pNewPlayerTags)
+		pNewPlayerTags->DeleteDeviceObjects();
+
 	if (pCmdWindow && pCmdWindow->isEnabled())
 		pCmdWindow->Disable();
 
@@ -654,11 +685,11 @@ void d3d9DestroyDeviceObjects()
 	if (pCursor)
 		pCursor->DeleteDeviceObjects();
 
-	if (pPlayerTags)
-		pPlayerTags->DeleteDeviceObjects();
-
 	if (pLabel)
 		pLabel->DeleteDeviceObjects();
+
+	if (pLicensePlate)
+		pLicensePlate->DeleteDeviceObjects();
 
 	if (pDefaultFont)
 		pDefaultFont->DeleteDeviceObjects();
@@ -671,25 +702,37 @@ void d3d9DestroyDeviceObjects()
 		pChatWindow->OnLostDevice();
 	}
 
+	/*if (pNetGame) {
+		if (pNetGame->GetVehiclePool()) {
+			pNetGame->GetVehiclePool()->m_bRebuildPlateTextures = false;
+			pNetGame->GetVehiclePool()->ReleasePlatesTextures();
+		}
+	}*/
+
 	bCursorRemoved = false;
 }
 
 void d3d9RestoreDeviceObjects()
 {
-	if (pDialogResourceManager)
-		pDialogResourceManager->OnResetDevice();
+	if (pDialogResourceManager) pDialogResourceManager->OnResetDevice();
+
+	//if (pPlayerTags)
+	//	pPlayerTags->RestoreDeviceObjects();
+
+	if (pNewPlayerTags)
+		pNewPlayerTags->RestoreDeviceObjects();
 
 	if (pCursor)
 		pCursor->RestoreDeviceObjects();
-
-	if (pPlayerTags)
-		pPlayerTags->RestoreDeviceObjects();
 
 	if (pLabel)
 		pLabel->RestoreDeviceObjects();
 
 	if (pDefaultFont)
 		pDefaultFont->RestoreDeviceObjects();
+
+	if (pLicensePlate)
+		pLicensePlate->RestoreDeviceObjects();
 
 	if (pDeathWindow)
 		pDeathWindow->OnResetDevice();
@@ -707,6 +750,11 @@ void d3d9RestoreDeviceObjects()
 		pGame->ToggleKeyInputsDisabled(2, true);
 		pGame->ToggleKeyInputsDisabled(0, true);
 		pGame->ProcessInputDisabling();
+	}
+
+	if (pNetGame) {
+		if (pNetGame->GetVehiclePool()) 
+			pNetGame->GetVehiclePool()->m_bRebuildPlateTextures = true;
 	}
 }
 

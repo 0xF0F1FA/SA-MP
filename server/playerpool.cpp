@@ -14,12 +14,13 @@
 CPlayerPool::CPlayerPool()
 {
 	// loop through and initialize all net players to null and slot states to false
-	for(BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
-		m_bPlayerSlotState[bytePlayerID] = false;
-		m_pPlayers[bytePlayerID] = NULL;
+	for(WORD wPlayerID = 0; wPlayerID < MAX_PLAYERS; wPlayerID++) {
+		m_bPlayerSlotState[wPlayerID] = false;
+		m_pPlayers[wPlayerID] = NULL;
+		m_bIsAnNPC[wPlayerID] = false;
 	}
 	m_iPlayerCount = 0;
-	m_iLastPlayerId = -1;
+	m_iPoolSize = -1; // = 0;
 	m_fLastTimerTime = 0.0f;
 }
 
@@ -27,51 +28,70 @@ CPlayerPool::CPlayerPool()
 
 CPlayerPool::~CPlayerPool()
 {	
-	for(BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
-		Delete(bytePlayerID,0);
+	for(WORD wPlayerID = 0; wPlayerID < MAX_PLAYERS; wPlayerID++) {
+		Delete(wPlayerID,0);
 	}
 	m_iPlayerCount = 0;
 }
 
 //----------------------------------------------------
 
-bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC)
+bool CPlayerPool::New(WORD wPlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC)
 {
-	if(bytePlayerID > MAX_PLAYERS) return false;
-	size_t len = strlen(szPlayerName);
-	if(len > MAX_PLAYER_NAME) return false;
+	if(wPlayerID >= MAX_PLAYERS) return false;
+	if(strlen(szPlayerName) >= MAX_PLAYER_NAME) return false;
 
-	m_pPlayers[bytePlayerID] = new CPlayer();
+	m_pPlayers[wPlayerID] = new CPlayer();
 
-	if(m_pPlayers[bytePlayerID])
+	if(m_pPlayers[wPlayerID])
 	{
-		m_pPlayers[bytePlayerID]->SetName(szPlayerName, (unsigned char)len);
-		//strcpy(m_szPlayerName[bytePlayerID],szPlayerName);
-		strcpy(m_pPlayers[bytePlayerID]->m_szClientVersion, szVersion);
+		strcpy(m_szPlayerName[wPlayerID], szPlayerName);
 
-		m_pPlayers[bytePlayerID]->SetID(bytePlayerID);
-		m_pPlayers[bytePlayerID]->m_bIsNPC = bIsNPC;
-		strcpy(m_pPlayers[bytePlayerID]->m_szSerial, szSerial);
-		m_bPlayerSlotState[bytePlayerID] = true;
-		//m_iPlayerScore[bytePlayerID] = 0;
-		//m_iPlayerMoney[bytePlayerID] = 0;
-		//m_bIsAnAdmin[bytePlayerID] = false;
-		//m_byteVirtualWorld[bytePlayerID] = 0;
+		memset(m_szPlayerSerial[wPlayerID], 0, MAX_PLAYER_SERIAL+1);
+		memset(m_szPlayerVersion[wPlayerID], 0, MAX_PLAYER_VERSION+1);
+		
+		if(szSerial) {
+			if (strlen(szSerial) >= MAX_PLAYER_SERIAL)
+				return false;
+			strcpy(m_szPlayerSerial[wPlayerID], szSerial);
+		}
+
+		if (szVersion) {
+			if (strlen(szVersion) >= MAX_PLAYER_VERSION)
+				return false;
+			strcpy(m_szPlayerVersion[wPlayerID], szVersion);
+		}
+
+		m_pPlayers[wPlayerID]->SetID(wPlayerID);
+		m_bPlayerSlotState[wPlayerID] = true;
+		m_iPlayerScore[wPlayerID] = 0;
+		m_iPlayerMoney[wPlayerID] = 0;
+		m_bIsAnAdmin[wPlayerID] = false;
+		m_iVirtualWorld[wPlayerID] = 0;
+		
+		BYTE byteIsNPC;
+		if (bIsNPC) {
+			m_bIsAnNPC[wPlayerID] = true;
+			byteIsNPC = 1;
+		} else {
+			m_bIsAnNPC[wPlayerID] = false;
+			byteIsNPC = 0;
+		}
 
 		// Notify all the other players of a newcommer with
 		// a 'ServerJoin' join RPC 
 		RakNet::BitStream bsSend;
-		bsSend.Write(bytePlayerID);
-		//size_t uiNameLen = strlen(szPlayerName);
-		bsSend.Write((unsigned char)len);
-		bsSend.Write(szPlayerName, len);
-		bsSend.Write(m_pPlayers[bytePlayerID]->m_iScore);
+		bsSend.Write(wPlayerID);
+		bsSend.Write((DWORD)0);
+		bsSend.Write(byteIsNPC);
+		BYTE namelen = (BYTE)strlen(szPlayerName);
+		bsSend.Write(namelen);
+		bsSend.Write(szPlayerName, namelen);
 
-		pNetGame->GetRakServer()->RPC(RPC_ServerJoin ,&bsSend,HIGH_PRIORITY,RELIABLE,0,
-			pNetGame->GetRakServer()->GetPlayerIDFromIndex(bytePlayerID),true,false);
+		pNetGame->BroadcastData(RPC_ServerJoin, &bsSend, wPlayerID, 2);
 
 		RakServerInterface* pRak = pNetGame->GetRakServer();
-		PlayerID Player = pRak->GetPlayerIDFromIndex(bytePlayerID);
+		PlayerID Player = pRak->GetPlayerIDFromIndex(wPlayerID);
 		in_addr in;
 		in.s_addr = Player.binaryAddress;
 
@@ -80,10 +100,10 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, cha
 
 		if (bIsNPC)
 			logprintf("[npc:join] %s has joined the server (%u:%s)",
-				szPlayerName, bytePlayerID, inet_ntoa(in));
+				szPlayerName, wPlayerID, inet_ntoa(in));
 		else
 			logprintf("[join] %s has joined the server (%u:%s)",
-				szPlayerName, bytePlayerID, inet_ntoa(in));
+				szPlayerName, wPlayerID, inet_ntoa(in));
 
 /*#ifdef RAKRCON
 		bsSend.Reset();
@@ -94,22 +114,18 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, cha
 			UNASSIGNED_PLAYER_ID, true, false );
 #endif*/
 
-		m_pPlayers[bytePlayerID]->UpdateTimer();
+		m_pPlayers[wPlayerID]->UpdateTimer();
 
-		pNetGame->GetFilterScripts()->OnPlayerConnect(bytePlayerID);
+		pNetGame->GetFilterScripts()->OnPlayerConnect(wPlayerID);
 		CGameMode *pGameMode = pNetGame->GetGameMode();
 		if(pGameMode) {
-			pGameMode->OnPlayerConnect(bytePlayerID);
+			pGameMode->OnPlayerConnect(wPlayerID);
 		}
 		
 		m_iPlayerCount++;
 
-		m_iLastPlayerId = -1;
-		for (int i = 0; i < MAX_PLAYERS; i++)
-		{
-			if (m_bPlayerSlotState[i])
-				m_iLastPlayerId = i;
-		}
+		UpdatePoolSize();
+
 		return true;
 	}
 	else
@@ -120,42 +136,46 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, cha
 
 //----------------------------------------------------
 
-bool CPlayerPool::Delete(BYTE bytePlayerID, BYTE byteReason)
+bool CPlayerPool::Delete(WORD wPlayerID, BYTE byteReason)
 {
-	if(!GetSlotState(bytePlayerID) || !m_pPlayers[bytePlayerID])
+	if(!GetSlotState(wPlayerID) || !m_pPlayers[wPlayerID])
 	{
 		return false; // Player already deleted or not used.
 	}
 
-	pNetGame->GetFilterScripts()->OnPlayerDisconnect(bytePlayerID, byteReason);
+	CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();
+	if(pFilterScripts) {
+		pFilterScripts->OnPlayerDisconnect(wPlayerID, byteReason);
+	}
 	CGameMode *pGameMode = pNetGame->GetGameMode();
 	if(pGameMode) {
-		pGameMode->OnPlayerDisconnect(bytePlayerID, byteReason);
+		pGameMode->OnPlayerDisconnect(wPlayerID, byteReason);
 	}
 
-	char szName[MAX_PLAYER_NAME];
-	strcpy_s(szName, m_pPlayers[bytePlayerID]->GetName());
-
-	m_bPlayerSlotState[bytePlayerID] = false;
-	delete m_pPlayers[bytePlayerID];
-	m_pPlayers[bytePlayerID] = NULL;
-	//m_bIsAnAdmin[bytePlayerID] = false;
+	m_bPlayerSlotState[wPlayerID] = false;
+	delete m_pPlayers[wPlayerID];
+	m_pPlayers[wPlayerID] = NULL;
+	m_bIsAnAdmin[wPlayerID] = false;
 	
 	// Notify all the other players that this client is quiting.
 	RakNet::BitStream bsSend;
-	bsSend.Write(bytePlayerID);
+	bsSend.Write(wPlayerID);
 	bsSend.Write(byteReason);
-	pNetGame->GetRakServer()->RPC(RPC_ServerQuit ,&bsSend,HIGH_PRIORITY,RELIABLE,0,
-		pNetGame->GetRakServer()->GetPlayerIDFromIndex(bytePlayerID),true,false);
+	pNetGame->BroadcastData(RPC_ServerQuit, &bsSend, wPlayerID, 2);
 		
 	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
-	for (BYTE i = 0; i < MAX_OBJECTS; i++)
+	for (WORD i = 0; i < MAX_OBJECTS; i++)
 	{
 		// Remove all personal objects (checking done by the function)
-		pObjectPool->DeleteForPlayer(bytePlayerID, i);
+		pObjectPool->DeleteForPlayer(wPlayerID, i);
 	}
 
-	logprintf("[part] %s has left the server (%u:%u)",szName,bytePlayerID,byteReason);
+	if (m_bIsAnNPC[wPlayerID]) {
+		logprintf("[npc:part] %s has left the server (%u:%u)",m_szPlayerName[wPlayerID],wPlayerID,byteReason);
+		m_bIsAnNPC[wPlayerID] = false;
+	} else {
+		logprintf("[part] %s has left the server (%u:%u)",m_szPlayerName[wPlayerID],wPlayerID,byteReason);
+	}
 
 /*#ifdef RAKRCON
 	pRcon->GetRakServer()->RPC( RPC_ServerQuit, &bsSend, HIGH_PRIORITY, RELIABLE, 0,
@@ -164,13 +184,24 @@ bool CPlayerPool::Delete(BYTE bytePlayerID, BYTE byteReason)
 
 	m_iPlayerCount--;
 
-	m_iLastPlayerId = -1;
+	UpdatePoolSize();
+
+	return true;
+}
+
+//----------------------------------------------------
+
+void CPlayerPool::UpdatePoolSize()
+{
+	int iNewSize = -1; // = 0;
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if (m_bPlayerSlotState[i])
-			m_iLastPlayerId = i;
+		{
+			iNewSize = i;
+		}
 	}
-	return true;
+	m_iPoolSize = iNewSize;
 }
 
 //----------------------------------------------------
@@ -199,10 +230,7 @@ bool CPlayerPool::Process(float fElapsedTime)
 
 void CPlayerPool::UpdateTimersForAll()
 {
-	if (m_iLastPlayerId == -1)
-		return;
-
-	for (WORD x = 0; x <= (WORD)m_iLastPlayerId; x++)
+	for (int x = 0; x <= m_iPoolSize; x++)
 	{
 		if (m_bPlayerSlotState[x] && m_pPlayers[x])
 		{
@@ -215,7 +243,7 @@ void CPlayerPool::UpdateTimersForAll()
 
 void CPlayerPool::InitPlayersForPlayer(BYTE bytePlayerID)
 {
-	BYTE lp=0;
+	WORD lp=0;
 	RakNet::BitStream bsExistingClient;
 	RakNet::BitStream bsPlayerVW;
 
@@ -227,19 +255,19 @@ void CPlayerPool::InitPlayersForPlayer(BYTE bytePlayerID)
 
 	while(lp!=MAX_PLAYERS) {
 		if((GetSlotState(lp) == true) && (lp != bytePlayerID)) {
-			unsigned char ucNameLen = m_pPlayers[lp]->GetNameLength();
+			BYTE namelen = strlen(GetPlayerName(lp));
 
 			bsExistingClient.Write(lp);
-			bsExistingClient.Write(ucNameLen);
-			bsExistingClient.Write(m_pPlayers[lp]->GetName(), ucNameLen);
-			bsExistingClient.Write(m_pPlayers[lp]->m_iScore);
+			bsExistingClient.Write(namelen);
+			bsExistingClient.Write(GetPlayerName(lp), namelen);
+			bsExistingClient.Write(GetPlayerScore(lp));
 
 			pNetGame->GetRakServer()->RPC(RPC_ServerJoin,&bsExistingClient,HIGH_PRIORITY,RELIABLE,0,Player,false,false);
 			bsExistingClient.Reset();
 			
 			// Send all the VW data in one lump
 			bsPlayerVW.Write(lp);
-			bsPlayerVW.Write(GetAt(lp)->GetVirtualWorld());
+			bsPlayerVW.Write(GetPlayerVirtualWorld(lp));
 			send = true;
 		}
 		lp++;
@@ -302,14 +330,14 @@ BYTE CPlayerPool::GetKillType(BYTE byteWhoKilled, BYTE byteWhoDied)
 
 //----------------------------------------------------
 
-float CPlayerPool::GetDistanceFromPlayerToPlayer(BYTE bytePlayer1, BYTE bytePlayer2)
+float CPlayerPool::GetDistanceFromPlayerToPlayer(WORD wPlayer1, WORD wPlayer2)
 {
 	VECTOR	*vecFromPlayer;
 	VECTOR	*vecThisPlayer;
 	float	fSX,fSY,fSZ;
 
-	CPlayer * pPlayer1 = GetAt(bytePlayer1);
-	CPlayer * pPlayer2 = GetAt(bytePlayer2);
+	CPlayer * pPlayer1 = GetAt(wPlayer1);
+	CPlayer * pPlayer2 = GetAt(wPlayer2);
 
 	vecFromPlayer = &pPlayer1->m_vecPos;
 	vecThisPlayer = &pPlayer2->m_vecPos;
@@ -348,9 +376,9 @@ bool CPlayerPool::IsNickInUse(PCHAR szNick)
 {
 	int x=0;
 	while(x!=MAX_PLAYERS) {
-		if(GetSlotState(x)) {
+		if(GetSlotState((WORD)x)) {
 			//if(!stricmp(GetPlayerName((BYTE)x),szNick)) {
-			if (!strcmp(m_pPlayers[x]->GetName(), szNick)) {
+			if (!strcmp(GetPlayerName((WORD)x), szNick)) {
 				return true;
 			}
 		}
@@ -365,40 +393,75 @@ void CPlayerPool::DeactivateAll()
 {
 	CGameMode* pGameMode = pNetGame->GetGameMode();
 	CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();
-	for(BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
-		if(true == m_bPlayerSlotState[bytePlayerID]) {
-			m_pPlayers[bytePlayerID]->Deactivate();
-			pGameMode->OnPlayerDisconnect(bytePlayerID, 1);
-			pFilterScripts->OnPlayerDisconnect(bytePlayerID, 1);
+	int x=0;
+	while(x<=m_iPoolSize) {
+		if(true == m_bPlayerSlotState[x]) {
+			pGameMode->OnPlayerDisconnect(x, 1);
+			pFilterScripts->OnPlayerDisconnect(x, 1);
+			m_pPlayers[x]->Deactivate();
 		}
-		//m_byteVirtualWorld[bytePlayerID] = 0;
+		//m_byteVirtualWorld[x] = 0;
+		x++;
 	}
 }
 
 //----------------------------------------------------
 
-/*void CPlayerPool::SetPlayerVirtualWorld(BYTE bytePlayerID, BYTE byteVirtualWorld)
+void CPlayerPool::SetPlayerVirtualWorld(WORD wPlayerID, int iVirtualWorld)
 {
-	if (bytePlayerID >= MAX_PLAYERS) return;
+	if (wPlayerID >= MAX_PLAYERS || !m_bPlayerSlotState[wPlayerID]) return;
 	
-	m_byteVirtualWorld[bytePlayerID] = byteVirtualWorld;
-	// Tell existing players it's changed
-	RakNet::BitStream bsData;
-	bsData.Write(bytePlayerID); // player id
-	bsData.Write(byteVirtualWorld); // vw id
-	RakServerInterface *pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScrSetPlayerVirtualWorld , &bsData, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
-}*/
+	if (pArtwork && iVirtualWorld)
+	{
+		if (m_iVirtualWorld[wPlayerID] == iVirtualWorld)
+			return;
+		//*(_BYTE *)(CPlayerPool::GetAt(this, a_playerid) + 12469) = 1; TODO: !
+	}
+	if (m_iVirtualWorld[wPlayerID] != iVirtualWorld)
+	{
+		m_iVirtualWorld[wPlayerID] = iVirtualWorld;
+		// Tell existing players it's changed
+		//RakNet::BitStream bsData;
+		//bsData.Write(bytePlayerID); // player id
+		//bsData.Write(byteVirtualWorld); // vw id
+		//RakServerInterface *pRak = pNetGame->GetRakServer();
+		//pRak->RPC(RPC_ScrSetPlayerVirtualWorld , &bsData, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+	}
+}
 	
 //----------------------------------------------------
 
 void CPlayerPool::DestroyActorForPlayers(unsigned short usActorID)
 {
-	for (int i = 0; i <= m_iLastPlayerId; i++)
+	for (int i = 0; i <= m_iPoolSize; i++)
 	{
 		if (m_bPlayerSlotState[i] && m_pPlayers[i]->IsActorStreamedIn(usActorID))
 		{
 			m_pPlayers[i]->StreamActorOut(usActorID);
 		}
 	}
+}
+
+int CPlayerPool::GetPlayerCount()
+{
+	int iPlayerCount=0;
+	int x=0;
+	while (x <= m_iPoolSize) {
+		if (GetSlotState(x) && IsValidID(x) && !m_bIsAnNPC[x]) {
+			iPlayerCount++;
+		}
+	}
+	return iPlayerCount;
+}
+
+int CPlayerPool::GetNPCCount()
+{
+	int iNPCCount=0;
+	int x=0;
+	while (x<=m_iPoolSize) {
+		if (GetSlotState(x) && m_bIsAnNPC[x]) {
+			iNPCCount++;
+		}
+	}
+	return iNPCCount;
 }

@@ -25,5 +25,6 @@ public:
 	void UpdateLastActorID();
 	bool New(ACTOR_TRANSMIT* pTransmit);
 	bool Delete(unsigned short usActorID);
+	void FindActorFromCamera(float fDist);
 	unsigned short FindIDFromGtaPtr(DWORD dwTargetPed);
 };

@@ -61,6 +61,7 @@ private:
 	DWORD			m_dwRaceCheckpointMarker;
 	DWORD			m_dwRaceCheckpointHandle;
 	bool			m_bMissionAudioLoaded;
+	DWORD			m_dwFPSLimit;
 	bool			m_bPassingOfTime;
 	int				m_iInputDisableWaitFrames;
 public:
@@ -69,6 +70,8 @@ public:
 	BYTE m_byteDisabledInputType;
 
 	CPlayerPed *NewPlayer(int iPlayerID, int iSkin,float fPosX,float fPosY,float fPosZ,float fRotation,BYTE byteCreateMarker = 1);
+	CPlayerPed *NewPlayer(int iSkin, float fPosX, float fPosY, float fPosZ, float fRotation);
+	bool DeletePlayer(CPlayerPed* pPlayerPed);
 	CVehicle *NewVehicle(int iType,float fPosX,float fPosY,float fPosZ,float fRotation, PCHAR szNumberPlate);
 	CObject *NewObject(int iModel, float fPosX, float fPosY,float fPosZ, VECTOR vecRot, float fDrawDist);
 	int		GetWeaponModelIDFromWeapon(int iWeaponID);
@@ -93,8 +96,8 @@ public:
 	void	ToggleThePassingOfTime(BYTE byteOnOff);
 	void	SetWorldWeather(int iWeatherID);
 	void	DisplayHud(bool bDisp);
-	BYTE	IsHudEnabled();
-	void	SetFrameLimiterOn(bool bLimiter);
+	//BYTE	IsHudEnabled();
+	void	SetFPSLimit(DWORD dwLimit);
 	void	SetMaxStats();
 	void	DisableTrainTraffic();
 	void	RefreshStreamingAt(float x, float y);
@@ -113,6 +116,7 @@ public:
 	void	SetGameTextCount(WORD wCount);
 	void	DrawGangZone(float fPos[], DWORD dwColor);
 	void    EnableStuntBonus(bool bEnable);
+	void	SetDrunkLevel(float fLevel);
 	void   UpdateCheckpoints();
 	void   ToggleCheckpoints(bool bEnabled){ m_bCheckpointsEnabled = bEnabled; };
 	void   SetCheckpointInformation(VECTOR *pos, VECTOR *extent);
@@ -123,7 +127,8 @@ public:
 	void   ToggleRaceCheckpoints(bool bEnabled){ m_bRaceCheckpointsEnabled = bEnabled; };
 	void   SetRaceCheckpointInformation(BYTE byteType, VECTOR *pos, VECTOR *next, float fSize);
 	
-	DWORD	CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor = 201, int iStyle = 0);
+	DWORD	CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor = 1005);
+	DWORD	CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor, int iStyle);
 	void	DisableMarker(DWORD dwMarkerID);
 
 	void   AddToLocalMoney(int iAmount);
@@ -186,6 +191,9 @@ public:
 	static float GetAspectRatio();
 
 	static void PlayCrimeReport(int iCrimeID, VECTOR* vecPos, int iVehicleType, int iVehicleCol1);
+
+	void Process();
+	void Wait(DWORD dwTime, DWORD dwFrameLimit);
 };
 
 //-----------------------------------------------------------

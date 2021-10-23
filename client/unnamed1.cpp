@@ -1,11 +1,88 @@
 
 #include "main.h"
 
+#define SLIDER_1_ID 30
+#define SLIDER_2_ID 32
+
+CUnk1::CUnk1(IDirect3DDevice9* pD3DDevice)
+{
+	m_pD3DDevice = pD3DDevice;
+	m_pDialog = NULL;
+	//dw36 = 0;
+	//dw12 = 280;
+	//dw16 = 150;
+	//dw20 = 210;
+	m_iSliderWidth = 30;
+	m_iSliderHeight = 38;
+}
+
+void CUnk1::ResetDialogControls(CDXUTDialog* pDialog)
+{
+	m_pDialog = pDialog;
+
+	if (pDialog)
+	{
+		m_pDialog->AddSlider(SLIDER_1_ID, 50, 10, m_iSliderWidth, m_iSliderHeight, -100, 100, 0);
+		CDXUTSlider* pSlider1 = m_pDialog->GetSlider(SLIDER_1_ID);
+		pSlider1->m_bUseCustomColor = true;
+		pSlider1->m_ButtonColor = D3DXCOLOR(0.6f,0.6f,0.8f,1.0f); // blue
+		
+		int xy = m_iSliderHeight + 10;
+		//m_pDialog->AddSlider(SLIDER_2_ID, 50, xy, );
+		CDXUTSlider* pSlider2 = m_pDialog->GetSlider(SLIDER_2_ID);
+		pSlider2->m_bUseCustomColor = true;
+		pSlider2->m_ButtonColor = D3DXCOLOR(0.8f, 0.6f, 0.6f, 1.0f); // red
+
+		//CDXUTSlider* pSlider3 = m_pDialog->GetSlider(SLIDER_3_ID);
+		//pSlider3->m_bUseCustomColor = true;
+		//pSlider3->m_ButtonColor = D3DXCOLOR(0.6f, 0.8f, 0.6f, 1.0f); // green
+
+
+
+
+	}
+}
+
+void CUnk1::Draw()
+{
+	{
+		if (m_pDialog)
+			m_pDialog->OnRender(10.0f);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // global variable CUnnamed1: dword_1026E9CC
 // global variable for CDXUTDialog: dword_1026EAAC
 
-#define SLIDER_1_ID 30
-#define SLIDER_2_ID 32
+//#define SLIDER_1_ID 30
+//#define SLIDER_2_ID 32
 #define SLIDER_3_ID 34
 
 CUnnamed1::CUnnamed1(IDirect3DDevice9* pDevice) // sub_10071690

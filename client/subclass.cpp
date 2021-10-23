@@ -218,7 +218,7 @@ bool SubclassGameWindow()
 	SetWindowText(hwndGameWnd,"GTA:SA:MP");
 
 	// Enable double click (especially for listboxes on dialogs)
-	SetClassLong(hwndGameWnd, GCL_STYLE, GetClassLong(hwndGameWnd, GCL_STYLE) | 8);
+	SetClassLong(hwndGameWnd, GCL_STYLE, GetClassLong(hwndGameWnd, GCL_STYLE) | CS_DBLCLKS);
 
 	/*
 	if(IsWindowUnicode(hwndGameWnd)) {
@@ -229,7 +229,8 @@ bool SubclassGameWindow()
 	
 	if(hwndGameWnd) {
 		hOldProc = (WNDPROC)GetWindowLong(hwndGameWnd,GWL_WNDPROC);
-		SetWindowLong(hwndGameWnd,GWL_WNDPROC,(LONG)NewWndProc);
+		if(hOldProc != NewWndProc)
+			SetWindowLong(hwndGameWnd,GWL_WNDPROC,(LONG)NewWndProc);
 		return true;
 	}
 	return false;
@@ -252,6 +253,10 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 
 	if(pCmdWindow) {
 		pCmdWindow->MsgProc(uMsg,wParam,lParam);
+	}
+
+	if(pDialog) {
+		pDialog->MsgProc(uMsg,wParam,lParam);
 	}
 
 	if (pGameUI && pCmdWindow && pCmdWindow->isEnabled())
@@ -283,6 +288,18 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 	if (pSpawnScreen)
 		pSpawnScreen->MsgProc(hwnd, uMsg, wParam, lParam);
 
+	if (pTextDrawSelect)
+	{
+		if (pTextDrawSelect->MsgProc(uMsg, wParam, lParam))
+			return 0;
+
+		if (pTextDrawSelect->m_bEnabled && uMsg == WM_CHAR && wParam == VK_ESCAPE)
+		{
+			pTextDrawSelect->Disable();
+			return 0;
+		}
+	}
+
 	switch(uMsg) {
 		case WM_SYSKEYUP:
 			if (wParam == VK_RETURN)
@@ -291,7 +308,8 @@ LRESULT APIENTRY NewWndProc( HWND hwnd,UINT uMsg,
 		case WM_KEYDOWN:
 			if(wParam == VK_ESCAPE) {
 				if(pCmdWindow && pCmdWindow->isEnabled() ||
-					pScoreBoard && pScoreBoard->IsVisible())
+					pScoreBoard && pScoreBoard->IsVisible() ||
+					pTextDrawSelect && pTextDrawSelect->m_bEnabled)
 				{
 					return 0;
 				}

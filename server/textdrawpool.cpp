@@ -74,8 +74,10 @@ WORD CTextDrawPool::New(float fX, float fY, char* szText)
 		TextDraw->byteLeft = 0;
 		TextDraw->byteRight = 0;
 		TextDraw->byteStyle = 1;
+		TextDraw->byteSelectable = 0;
 		TextDraw->fX = fX;
 		TextDraw->fY = fY;
+		TextDraw->byteSelectable = 0;
 		m_TextDraw[wText] = TextDraw;
 		m_szFontText[wText] = Text;
 		m_bSlotState[wText] = true;
@@ -204,4 +206,19 @@ void CTextDrawPool::SetBoxColor(WORD wText, DWORD dwColor)
 void CTextDrawPool::SetBackgroundColor(WORD wText, DWORD dwColor)
 {
 	m_TextDraw[wText]->dwBackgroundColor = RGBA_ABGR(dwColor);
+}
+
+bool CTextDrawPool::IsPlayerHasSelectableText(WORD wPlayerID)
+{
+	for (WORD wText = 0; wText < MAX_TEXT_DRAWS; wText++)
+	{
+		if (m_bHasText[wText][wPlayerID])
+		{
+			if (m_TextDraw[wText]->byteSelectable)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }

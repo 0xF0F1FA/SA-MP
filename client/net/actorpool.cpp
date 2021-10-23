@@ -34,26 +34,26 @@ void CActorPool::UpdateLastActorID()
 bool CActorPool::New(ACTOR_TRANSMIT* pTransmit)
 {
 	CActor* pActor;
-	unsigned short usID;
+	WORD wActorID;
 
-	usID = pTransmit->usActorID;
+	wActorID = pTransmit->wActorID;
 
-	if (usID < MAX_ACTORS && m_bSlotState[usID])
+	if (wActorID < MAX_ACTORS && m_bSlotState[wActorID])
 	{
-		pChatWindow->AddDebugMessage("Warning: actor %u was not deleted", usID);
-		Delete(usID);
+		pChatWindow->AddDebugMessage("Warning: actor %u was not deleted", wActorID);
+		Delete(wActorID);
 	}
 
-	pActor = new CActor(pTransmit->iModelID,
-		pTransmit->vecPosition, pTransmit->fFacingAngle);
-	if (pActor && usID < MAX_ACTORS)
+	pActor = new CActor(pTransmit->iSkin, pTransmit->vecPos.X, pTransmit->vecPos.Y,
+		pTransmit->vecPos.Z, pTransmit->fRotation);
+	if (pActor && wActorID < MAX_ACTORS)
 	{
-		m_pActor[usID] = pActor;
-		m_bSlotState[usID] = true;
+		m_pActor[wActorID] = pActor;
+		m_bSlotState[wActorID] = true;
 		//m_dwPed[usID] = pActor->GetPed();
 
 		pActor->SetHealth(pTransmit->fHealth);
-		pActor->SetImmunities(pTransmit->bInvurnable);
+		pActor->SetImmunities(pTransmit->byteInvurnable);
 
 		UpdateLastActorID();
 
@@ -76,6 +76,24 @@ bool CActorPool::Delete(unsigned short usActorID)
 		return true;
 	}
 	return false;
+}
+
+void CActorPool::FindActorFromCamera(float fDist)
+{
+	VECTOR vecCentre;
+
+	for (int i = 0; i < m_iLastActorID; i++)
+	{
+		if (m_bSlotState[i] && m_pActor[i])
+		{
+			if (m_pActor[i]->IsAdded() && m_pActor[i]->GetDistanceFromCamera() < fDist)
+			{
+				m_pActor[i]->GetBoundCentre(&vecCentre);
+
+				// TODO: (It's unfinished) Need couple functions that are not decompiled yet.
+			}
+		}
+	}
 }
 
 unsigned short CActorPool::FindIDFromGtaPtr(DWORD dwTargetPed)

@@ -33,21 +33,31 @@ unsigned int _uiRndSrvChallenge;
 unsigned int _uiRndCookieChallenge;
 RakNet::Time _timeCookieLastUpdated;
 
-float g_fStreamDistance = 200.f;
-int g_iStreamRate = 1000;
+float fStreamDistance = 200.0f;
+int iStreamRate = 1000;
 
-bool g_bDBLogging = true;
-bool g_bDBLogQueries = true;
+int iDBLogging = 0;
+int iDBLogQueries = 0;
 
 bool bQueryLogging = false;
 
 int iSleepTime = 5;
 int iMessageHoleLimit = 3000;
+int iMesssagesLimit = 500;
+int iAcksLimit = 3000;
 int iPlayerTimeOutTime = 10000;
 int iConnSeedTime = 300000;
 int iConnCookies = 1;
-int iCookieLogging = 1;
+int iCookieLogging = 0;
 bool bUseArtwork = false;
+int iLagCompMode = 1;
+int iMinConnectionTime = 0;
+int iWeaponRate = 30;
+int iMaxNPC = 0;
+int iMTUSize = 576;
+int iOnFootRate = 30;
+int iInCarRate = 30;
+int iChatLogging = 1;
 
 CServerVars ServerVars;
 
@@ -290,10 +300,7 @@ int main (int argc, char** argv)
 	bool bGameMod = false;
 	//bool bEnableAC = false;
 	bool bAllowQuery = true;
-	int iMTUSize = MAXIMUM_MTU_SIZE;
-	int iChatLogging = 1;
-	int iOnFootRate = 40;
-	int iInCarRate = 40;
+	bool bAllowRcon = true;
 	int iMaxPlayerPerIP = 3;
 
 	// Open the log file
@@ -361,6 +368,7 @@ int main (int argc, char** argv)
 	pConsole->AddVariable("lanmode",CON_VARTYPE_BOOL,0, &bLanModeEnable);
 	pConsole->AddVariable("query",CON_VARTYPE_BOOL, 0, &bAllowQuery);
 	pConsole->AddVariable("logqueries",CON_VARTYPE_BOOL, 0, &bQueryLogging);
+	pConsole->AddVariable("rcon", CON_VARTYPE_BOOL, 0, &bAllowRcon);
 
 /*#ifdef RAKRCON
 	pConsole->AddVariable("rcon_port", CON_VARTYPE_INT, 0, &iRconPort);
@@ -373,12 +381,13 @@ int main (int argc, char** argv)
 #endif
 
 	pConsole->AddVariable("mtu", CON_VARTYPE_INT, 0, &iMTUSize);
+	pConsole->AddVariable("maxnpc", CON_VARTYPE_INT, 0, &iMaxNPC);
 	pConsole->AddVariable("timestamp",CON_VARTYPE_BOOL,0,&bEnableTimestamp);
 	pConsole->AddStringVariable("logtimeformat", 0, "[%H:%M:%S]");
 	pConsole->AddStringVariable("password", 0, NULL, ServerPasswordChanged);
-	pConsole->AddStringVariable("hostname", 0, "SA:MP Server");
+	pConsole->AddStringVariable("hostname", 0, "SA-MP Server");
 	pConsole->AddStringVariable("mapname", CON_VARFLAG_RULE, "San Andreas");
-	pConsole->AddStringVariable("language", CON_VARFLAG_RULE, "");
+	pConsole->AddStringVariable("language", 0, NULL);
 	pConsole->AddStringVariable("weburl", CON_VARFLAG_RULE, "www.sa-mp.com");
 	pConsole->AddStringVariable("rcon_password", 0, DEFAULT_RCON_PASSWORD);
 	pConsole->AddStringVariable("gravity", CON_VARFLAG_RULE, "0.008", ServerGravityChanged);
@@ -387,20 +396,25 @@ int main (int argc, char** argv)
 	pConsole->AddStringVariable("gamemodetext", 0, "Unknown");
 	pConsole->AddStringVariable("filterscripts", 0, "");
 	pConsole->AddStringVariable("plugins", 0, "");
-	//pConsole->AddStringVariable("nosign", 0, "");
+	pConsole->AddStringVariable("nosign", 0, "");
 	//pConsole->AddVariable("anticheat",CON_VARTYPE_BOOL, /* CON_VARFLAG_RULE */ 0, &bEnableAC);
 	pConsole->AddVariable("instagib", CON_VARTYPE_BOOL, CON_VARFLAG_RULE, &bEnableInstagib, ServerInstagibChanged);
 	pConsole->AddVariable("myriad", CON_VARTYPE_BOOL, 0, &bGameMod);
+	pConsole->AddVariable("lagcompmode", CON_VARTYPE_INT, 0, &iLagCompMode);
 	pConsole->AddVariable("chatlogging", CON_VARTYPE_INT, 0, &iChatLogging);
 	pConsole->AddVariable("messageholelimit", CON_VARTYPE_INT, 0, &iMessageHoleLimit);
+	pConsole->AddVariable("messageslimit", CON_VARTYPE_INT, 0, &iMesssagesLimit);
+	pConsole->AddVariable("ackslimit", CON_VARTYPE_INT, 0, &iAcksLimit);
 	pConsole->AddVariable("playertimeout", CON_VARTYPE_INT, 0, &iPlayerTimeOutTime);
-	pConsole->AddVariable("db_logging", CON_VARTYPE_INT, 0, &g_bDBLogging);
-	pConsole->AddVariable("db_log_queries", CON_VARTYPE_INT, 0, &g_bDBLogQueries);
+	pConsole->AddVariable("minconnectiontime", CON_VARTYPE_INT, 0, &iMinConnectionTime);
+	pConsole->AddVariable("db_logging", CON_VARTYPE_INT, 0, &iDBLogging);
+	pConsole->AddVariable("db_log_queries", CON_VARTYPE_INT, 0, &iDBLogQueries);
 	pConsole->AddVariable("onfoot_rate", CON_VARTYPE_INT, 0, &iOnFootRate);
 	pConsole->AddVariable("incar_rate", CON_VARTYPE_INT, 0, &iInCarRate);
+	pConsole->AddVariable("weapon_rate", CON_VARTYPE_INT, 0, &iWeaponRate);
 	pConsole->AddVariable("maxplayerperip", CON_VARTYPE_INT, 0, &iMaxPlayerPerIP, ServerPlayerPerIPChanged);
-	pConsole->AddVariable("stream_rate", CON_VARTYPE_INT, 0, &g_iStreamRate, ServerStreamRateChanged);
-	pConsole->AddVariable("stream_distance", CON_VARTYPE_FLOAT, 0, &g_fStreamDistance, ServerStreamDistanceChanged);
+	pConsole->AddVariable("stream_rate", CON_VARTYPE_INT, 0, &iStreamRate, ServerStreamRateChanged);
+	pConsole->AddVariable("stream_distance", CON_VARTYPE_FLOAT, 0, &fStreamDistance, ServerStreamDistanceChanged);
 	pConsole->AddVariable("sleep", CON_VARTYPE_INT, 0, &iSleepTime);
 	pConsole->AddVariable("connseedtime", CON_VARTYPE_INT, 0, &iConnSeedTime);
 	pConsole->AddVariable("conncookies", CON_VARTYPE_INT, 0, &iConnCookies);
@@ -431,8 +445,8 @@ int main (int argc, char** argv)
 	}
 
 	// Change some var flags to read-only (can only be accessed from server.cfg).
-	//pConsole->ModifyVariableFlags("mtu", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("maxplayers", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("mtu", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("bind", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("port", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("rcon_bind", CON_VARFLAG_READONLY);
@@ -440,11 +454,19 @@ int main (int argc, char** argv)
 	pConsole->ModifyVariableFlags("filterscripts", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("plugins", CON_VARFLAG_READONLY);
 	//pConsole->ModifyVariableFlags("anticheat", CON_VARFLAG_READONLY /* | CON_VARFLAG_RULE */);
-	//pConsole->ModifyVariableFlags("nosign", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("nosign", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("onfoot_rate", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("incar_rate", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("weapon_rate", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("logtimeformat", CON_VARFLAG_READONLY);
+	pConsole->ModifyVariableFlags("lagcompmode", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("useartwork", CON_VARFLAG_READONLY);
 	pConsole->ModifyVariableFlags("artpath", CON_VARFLAG_READONLY);
+
+	if (pConsole->GetIntVariable("lagcompmode") <= 0)
+		pConsole->AddStringVariable("lagcomp", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, "Off");
+	else
+		pConsole->AddStringVariable("lagcomp", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, "On");
 
 	if (bUseArtwork)
 		pConsole->AddStringVariable("artwork", CON_VARFLAG_RULE | CON_VARFLAG_READONLY, "Yes");
@@ -464,6 +486,8 @@ int main (int argc, char** argv)
 	
 	// Setup the exception handler on windows
 	SetUnhandledExceptionFilter(exc_handler);
+
+	timeBeginPeriod(1);
 #endif
 
 	// Load up the plugins
@@ -472,8 +496,7 @@ int main (int argc, char** argv)
 
 	if (bUseArtwork) {
 		pArtwork = new CArtwork(pConsole->GetStringVariable("artpath"));
-		if (pArtwork)
-			pArtwork->ReadConfig("artconfig.txt");
+		pArtwork->ReadConfig("artconfig.txt");
 	}
 
 	// Create the NetGame.
@@ -560,6 +583,8 @@ void logprintf(char* format, ...)
 	va_end(ap);
 
 #ifdef WIN32
+	CharToOem(buffer, buffer);
+
 	puts(buffer);
 #else
 	if (pConsole && pConsole->GetBoolVariable("output"))
@@ -590,7 +615,7 @@ void logprintf(char* format, ...)
 
 	if (wRconUser != INVALID_ID)
 	{
-		pNetGame->SendClientMessage(pNetGame->GetRakServer()->GetPlayerIDFromIndex(wRconUser), 0xFFFFFFFF, buffer);
+		pNetGame->SendClientMessage(wRconUser, 0xFFFFFFFF, buffer);
 	} else if (bRconSocketReply) {
 		RconSocketReply(buffer);
 	}

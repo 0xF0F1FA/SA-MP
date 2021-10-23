@@ -69,6 +69,23 @@ CVehicle::CVehicle( int iModel, VECTOR *vecPos, float fRotation, int iColor1,
 	m_CabID = 0;
 	m_bDead = false;
 	bOldSirenState = false; // disabled
+
+	m_Params.byteAlarm = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBonnet = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBoot = VEHICLE_PARAMS_UNSET;
+	m_Params.byteDoors = VEHICLE_PARAMS_UNSET;
+	m_Params.byteEngine = VEHICLE_PARAMS_UNSET;
+	m_Params.byteLights = VEHICLE_PARAMS_UNSET;
+	m_Params.byteObjective = VEHICLE_PARAMS_UNSET;
+	m_Params.byteSiren = VEHICLE_PARAMS_UNSET;
+	m_Params.byteDriverDoor = VEHICLE_PARAMS_UNSET;
+	m_Params.bytePassengerDoor = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBackLeftDoor = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBackRightDoor = VEHICLE_PARAMS_UNSET;
+	m_Params.byteDriverWindow = VEHICLE_PARAMS_UNSET;
+	m_Params.bytePassengerWindow = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBackLeftWindow = VEHICLE_PARAMS_UNSET;
+	m_Params.byteBackRightWindow = VEHICLE_PARAMS_UNSET;
 }
 
 //----------------------------------------------------
@@ -336,6 +353,19 @@ float CVehicle::GetDistanceFromPoint(float fX, float fY, float fZ)
 	return sqrtf(z * z + y * y + x * x);
 }
 
+//----------------------------------------------------------
+
+float CVehicle::GetSquaredDistanceFrom2DPoint(float fX, float fY)
+{
+	float
+		fDX = m_matWorld.pos.X - fX,
+		fDY = m_matWorld.pos.Y - fY;
+
+	return fDY * fDY + fDX * fDX;
+}
+
+//----------------------------------------------------------
+
 void CVehicle::SetVirtualWorld(int iVirtualWorld)
 {
 	m_iVirtualWorld = iVirtualWorld;
@@ -346,6 +376,34 @@ void CVehicle::SetVirtualWorld(int iVirtualWorld)
 	pNetGame->SendToAll(RPC_ScrSetVehicleVirtualWorld, &bsData);
 
 }
+
+//----------------------------------------------------------
+
+bool CVehicle::HasParamsSet()
+{
+	if (m_Params.byteAlarm != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBonnet != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBoot != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteDoors != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteEngine != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteLights != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteObjective != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteSiren != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteDriverDoor != VEHICLE_PARAMS_UNSET ||
+		m_Params.bytePassengerDoor != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBackLeftDoor != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBackRightDoor != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteDriverWindow != VEHICLE_PARAMS_UNSET ||
+		m_Params.bytePassengerWindow != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBackLeftWindow != VEHICLE_PARAMS_UNSET ||
+		m_Params.byteBackRightWindow != VEHICLE_PARAMS_UNSET)
+	{
+		return true;
+	}
+	return false;
+}
+
+//----------------------------------------------------------
 
 bool CVehicle::HandleSiren(unsigned char ucPlayerId, bool bSirenState)
 {
@@ -364,4 +422,56 @@ bool CVehicle::HandleSiren(unsigned char ucPlayerId, bool bSirenState)
 		return true;
 	}
 	return false;
+}
+
+//----------------------------------------------------------
+
+void CVehicle::SetColor(WORD wPlayerID, int iColor1, int iColor2)
+{
+	// Additional/Fix: Setting the colors here, otherwise client will generate different
+	// color for every clients, making it looked like it's "desyncronized".
+	int _iColor1 = (iColor1 != -1 && (DWORD)iColor1 < 256) ? iColor1 : RANDOM_VEHICLE_COLOR;
+	int _iColor2 = (iColor2 != -1 && (DWORD)iColor2 < 256) ? iColor2 : RANDOM_VEHICLE_COLOR;
+
+	if (wPlayerID == INVALID_PLAYER_ID ||
+		pNetGame->GetGameMode() &&
+		pNetGame->GetFilterScripts() &&
+		pNetGame->GetGameMode()->OnVehicleRespray(wPlayerID, m_VehicleID, _iColor1, _iColor2) &&
+		pNetGame->GetFilterScripts()->OnVehicleRespray(wPlayerID, m_VehicleID, _iColor1, _iColor2))
+	{
+		m_CarModInfo.iColor0 = _iColor1;
+		m_CarModInfo.iColor1 = _iColor2;
+
+		RakNet::BitStream bsData;
+		bsData.Write(wPlayerID);
+		bsData.Write((int)EVENT_TYPE_CARCOLOR);
+		bsData.Write((DWORD)m_VehicleID);
+		bsData.Write(_iColor1);
+		bsData.Write(_iColor2);
+
+		// TODO: Change it to vehicle broadcast rpc function from CNetGame
+		pNetGame->SendToAll(RPC_ScmEvent, &bsData);
+	}
+}
+
+void CVehicle::SetPaintjob(WORD wPlayerID, int iPaintjob)
+{
+	if (wPlayerID == INVALID_PLAYER_ID ||
+		pNetGame->GetGameMode() &&
+		pNetGame->GetFilterScripts() &&
+		pNetGame->GetGameMode()->OnVehiclePaintjob(wPlayerID, m_VehicleID, iPaintjob) &&
+		pNetGame->GetFilterScripts()->OnVehiclePaintjob(wPlayerID, m_VehicleID, iPaintjob))
+	{
+		m_CarModInfo.bytePaintJob = iPaintjob + 1;
+		
+		RakNet::BitStream bsData;
+		bsData.Write(wPlayerID);
+		bsData.Write((int)EVENT_TYPE_PAINTJOB);
+		bsData.Write((DWORD)m_VehicleID);
+		bsData.Write((DWORD)iPaintjob);
+		bsData.Write((DWORD)0);
+
+		// TODO: Change it to vehicle broadcast rpc function from CNetGame
+		pNetGame->SendToAll(RPC_ScmEvent, &bsData);
+	}
 }

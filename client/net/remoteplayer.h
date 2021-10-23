@@ -15,8 +15,8 @@ class CRemotePlayer
 {
 private:
 	CPlayerPed			*m_pPlayerPed;
-	char				m_szName[MAX_PLAYER_NAME];
 	BYTE				m_bytePlayerID;
+	WORD				m_wPlayerID;
 	BYTE				m_byteUpdateFromNetwork;
 
 	ONFOOT_SYNC_DATA	m_ofSync;
@@ -53,16 +53,11 @@ public:
 	
 	int					m_iIsInAModShop;
 	int					m_iVirtualWorld;
-	int					m_iScore;
-	unsigned short		m_usPing;
 
 public:
 
 	CRemotePlayer();
 	~CRemotePlayer();
-
-	void SetName(const char* szName);
-	const char* GetName();
 
 	BYTE GetState() { return m_byteState; };
 

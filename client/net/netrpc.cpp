@@ -16,7 +16,6 @@ using namespace RakNet;
 //#define UNREGISTER_STATIC_RPC UNREGISTER_AS_REMOTE_PROCEDURE_CALL
 
 void ProcessIncommingEvent(BYTE bytePlayerID, int iEventType, DWORD dwParam1, DWORD dwParam2, DWORD dwParam3);
-void ApplyManualVehicleLightsPatch();
 
 //----------------------------------------------------
 // Sent when a client joins the server we're
@@ -115,11 +114,8 @@ void InitGame(RPCParameters *rpcParams)
 	pGame->EnableStuntBonus(bStuntBonus);
 	if (bLanMode) pNetGame->SetLanMode(true);
 
-	//pNetGame->InitGameLogic();
+	pNetGame->InitGameLogic();
 	
-	if (pNetGame->m_bManualEngineAndLights)
-		ApplyManualVehicleLightsPatch();
-
 	// Set the gravity now
 	pGame->SetGravity(pNetGame->m_fGravity);
 
@@ -165,7 +161,7 @@ void Chat(RPCParameters *rpcParams)
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	if (bytePlayerID == pPlayerPool->GetLocalPlayerID()) {
 		CLocalPlayer* pPlayer = pPlayerPool->GetLocalPlayer();
-		pChatWindow->AddChatMessage((CHAR*)pPlayer->GetName(),
+		pChatWindow->AddChatMessage(pPlayerPool->GetLocalPlayerName(),
 			pPlayer->GetPlayerColorAsARGB(), (char*)szText);
 	} else {
 		CRemotePlayer *pRemotePlayer = pPlayerPool->GetAt(bytePlayerID);
@@ -301,7 +297,8 @@ void EnterVehicle(RPCParameters *rpcParams)
 	CRemotePlayer *pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(bytePlayerID);
 	CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
 
-	if(pRemotePlayer) {
+	if(pRemotePlayer &&
+		pRemotePlayer->GetDistanceFromLocalPlayer() < 200.0f) {
 		pRemotePlayer->EnterVehicle(VehicleID,bPassenger);
 	}
 
@@ -323,7 +320,8 @@ void ExitVehicle(RPCParameters *rpcParams)
 	CRemotePlayer *pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(bytePlayerID);
 	CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
 
-	if(pRemotePlayer) {
+	if(pRemotePlayer &&
+		pRemotePlayer->GetDistanceFromLocalPlayer() < 200.0f) {
 		pRemotePlayer->ExitVehicle();
 	}
 
@@ -415,6 +413,7 @@ void VehicleSpawn(RPCParameters *rpcParams)
 					continue;
 				}
 				//pChatWindow->AddDebugMessage("CarComponent: %u,%u,%u",VehicleID,data,iVehicleType);
+				wLastVehicleComponent = (WORD)data;
 				ScriptCommand(&add_car_component, iVehicle, data, &v);
 			}
 		}
@@ -560,19 +559,8 @@ static void UpdateScoresPingsIPs(RPCParameters* rpcParams)
 		bsData.Read(iPlayerScore);
 		bsData.Read(dwPlayerPing);
 
-		if (wPlayerID == pPlayerPool->GetLocalPlayerID())
-		{
-			pPlayerPool->GetLocalPlayer()->m_iScore = iPlayerScore;
-			pPlayerPool->GetLocalPlayer()->m_usPing = (WORD)dwPlayerPing;
-		}
-		else
-		{
-			CRemotePlayer* pRemotePlayer = pPlayerPool->GetAt(wPlayerID);
-			if (pRemotePlayer) {
-				pRemotePlayer->m_iScore = iPlayerScore;
-				pRemotePlayer->m_usPing = (WORD)dwPlayerPing;
-			}
-		}
+		pPlayerPool->UpdateScore(wPlayerID, iPlayerScore);
+		pPlayerPool->UpdatePing(wPlayerID, dwPlayerPing);
 	}
 
 	if (pScoreBoard)
@@ -621,9 +609,6 @@ void ConnectionRejected(RPCParameters *rpcParams)
 	case REJECT_REASON_BAD_PLAYERID:
 		pChatWindow->AddInfoMessage("CONNECTION REJECTED: Unable to allocate a player slot.");
 		break;
-	case REJECT_REASON_IP_LIMIT_REACHED:
-		pChatWindow->AddInfoMessage("CONNECTION REJECTED: IP limit reached.");
-		break;
 	}
 
 	pNetGame->GetRakClient()->Disconnect(500);
@@ -631,23 +616,26 @@ void ConnectionRejected(RPCParameters *rpcParams)
 
 //----------------------------------------------------
 
-void ClientMessage(RPCParameters *rpcParams)
+void ClientMessage(RPCParameters* rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
-	DWORD dwStrLen;
-	DWORD dwColor;
+	DWORD dwStrLen=-1;
+	DWORD dwColor=-1;
 
+	char szMsg[256];
+	memset(szMsg, 0, sizeof(szMsg));
+	
 	bsData.Read(dwColor);
 	bsData.Read(dwStrLen);
-	char* szMsg = (char*)malloc(dwStrLen+1);
-	bsData.Read(szMsg, dwStrLen);
-	szMsg[dwStrLen] = 0;
+	
+	if (dwStrLen <= 255)
+	{
+		bsData.Read(szMsg, dwStrLen);
+		szMsg[dwStrLen] = 0;
 
-	pChatWindow->AddClientMessage(dwColor,szMsg);
-
-	free(szMsg);
+		pChatWindow->AddClientMessage(dwColor, szMsg);
+	}
 }
-
 //----------------------------------------------------
 
 void WorldTime(RPCParameters *rpcParams)
@@ -726,8 +714,10 @@ void Weather(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
 	BYTE byteWeather;
-	bsData.Read(byteWeather);
-	pNetGame->m_byteWeather = byteWeather;	
+	if (bsData.Read(byteWeather)) {
+		pNetGame->m_byteWeather = byteWeather;
+		pGame->SetWorldWeather(byteWeather);
+	}
 }
 
 //----------------------------------------------------
@@ -737,12 +727,12 @@ void SetTimeEx(RPCParameters *rpcParams)
 	RakNet::BitStream bsData(rpcParams);
 	BYTE byteHour;
 	BYTE byteMinute;
-	bsData.Read(byteHour);
-	bsData.Read(byteMinute);
-	//pNetGame->m_byteHoldTime = 0;
-	pGame->SetWorldTime(byteHour, byteMinute);
-	pNetGame->m_byteWorldTime = byteHour;
-	pNetGame->m_byteWorldMinute = byteMinute;
+	if (bsData.Read(byteHour) && bsData.Read(byteMinute)) {
+		//pNetGame->m_byteHoldTime = 0;
+		pGame->SetWorldTime(byteHour, byteMinute);
+		pNetGame->m_byteWorldTime = byteHour;
+		pNetGame->m_byteWorldMinute = byteMinute;
+	}
 }
 
 //----------------------------------------------------
@@ -751,16 +741,18 @@ void ToggleClock(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
 	BYTE byteClock;
-	bsData.Read(byteClock);
-	pGame->EnableClock(byteClock);	
-	if (byteClock)
+	if (bsData.Read(byteClock))
 	{
-		pNetGame->m_byteHoldTime = 0;
-	}
-	else
-	{
-		pNetGame->m_byteHoldTime = 1;
-		pGame->GetWorldTime((int*)&pNetGame->m_byteWorldTime, (int*)&pNetGame->m_byteWorldMinute);
+		pGame->EnableClock(byteClock);
+		if (byteClock)
+		{
+			pNetGame->m_byteHoldTime = 0;
+		}
+		else
+		{
+			pNetGame->m_byteHoldTime = 1;
+			pGame->GetWorldTime((int*)&pNetGame->m_byteWorldTime, (int*)&pNetGame->m_byteWorldMinute);
+		}
 	}
 }
 
@@ -1106,6 +1098,115 @@ static void DestroyLabel(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+static void VehicleParams(RPCParameters* rpcParams)
+{
+	VEHICLEID VehicleID = INVALID_VEHICLE_ID;
+	VEHICLE_PARAMS Params;
+	CVehicle* pVehicle;
+
+	if (pNetGame->GetVehiclePool() &&
+		rpcParams->numberOfBitsOfData == 144)
+	{
+		RakNet::BitStream bsData(rpcParams);
+		
+		bsData.Read(VehicleID);
+		
+		pVehicle = pNetGame->GetVehiclePool()->GetAt(VehicleID);
+		if (pVehicle)
+		{
+			bsData.Read((PCHAR)&Params, sizeof(VEHICLE_PARAMS));
+
+			if (Params.byteEngine == VEHICLE_PARAMS_ON)
+				pVehicle->SetEngine(true);
+			else if (Params.byteEngine == VEHICLE_PARAMS_OFF)
+				pVehicle->SetEngine(false);
+
+			if (Params.byteLights == VEHICLE_PARAMS_ON)
+				pVehicle->SetLights(true);
+			else if (Params.byteLights == VEHICLE_PARAMS_OFF)
+				pVehicle->SetLights(false);
+
+			if (Params.byteDoors == VEHICLE_PARAMS_ON)
+				pVehicle->SetDoorState(1);
+			else if (Params.byteDoors == VEHICLE_PARAMS_OFF)
+				pVehicle->SetDoorState(0);
+
+			if (Params.byteObjective == VEHICLE_PARAMS_ON)
+				pVehicle->SetObjective(true);
+			else if (Params.byteObjective == VEHICLE_PARAMS_OFF)
+				pVehicle->SetObjective(false);
+
+			if (Params.byteBoot == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(1, 17, 1.0f);
+			else if (Params.byteBoot == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(1, 17, 0.0f);
+
+			if (Params.byteBonnet == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(1, 16, 1.0f);
+			else if (Params.byteBonnet == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(1, 16, 0.0f);
+
+			if (Params.byteAlarm == VEHICLE_PARAMS_ON)
+			{
+				pVehicle->SetSirenOn(TRUE);
+				pVehicle->SetAlarmState(20000);
+			}
+			else if (Params.byteAlarm == VEHICLE_PARAMS_OFF)
+			{
+				pVehicle->SetSirenOn(FALSE);
+				pVehicle->SetAlarmState(0);
+			}
+
+			if (Params.byteSiren == VEHICLE_PARAMS_ON)
+				pVehicle->SetSirenOn(TRUE);
+			else if (Params.byteSiren == VEHICLE_PARAMS_OFF)
+				pVehicle->SetSirenOn(FALSE);
+
+			if (Params.byteDriverDoor == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(2, 10, 1.0f);
+			else if (Params.byteDriverDoor == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(2, 10, 0.0f);
+
+			if (Params.bytePassengerDoor == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(3, 8, 1.0f);
+			else if (Params.bytePassengerDoor == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(3, 8, 0.0f);
+
+			if (Params.byteBackLeftDoor == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(4, 11, 1.0f);
+			else if (Params.byteBackLeftDoor == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(4, 11, 0.0f);
+
+			if (Params.byteBackRightDoor == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleDoor(5, 9, 1.0f);
+			else if (Params.byteBackRightDoor == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleDoor(5, 9, 0.0f);
+
+			if (Params.byteDriverWindow == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleWindow(10, true);
+			else if (Params.byteDriverWindow == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleWindow(10, false);
+
+			if (Params.bytePassengerWindow == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleWindow(8, true);
+			else if (Params.bytePassengerWindow == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleWindow(8, false);
+
+			if (Params.byteBackLeftWindow == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleWindow(11, true);
+			else if (Params.byteBackLeftWindow == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleWindow(11, false);
+
+			if (Params.byteBackRightWindow == VEHICLE_PARAMS_ON)
+				pVehicle->ToggleWindow(9, true);
+			else if (Params.byteBackRightWindow == VEHICLE_PARAMS_OFF)
+				pVehicle->ToggleWindow(9, false);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void SetTimer(RPCParameters* rpcParams)
 {
 	if (rpcParams->numberOfBitsOfData != 32)
@@ -1161,6 +1262,7 @@ void RegisterRPCs(RakClientInterface * pRakClient)
 	REGISTER_STATIC_RPC(pRakClient,ChatBubble);
 	REGISTER_STATIC_RPC(pRakClient,CreateLabel);
 	REGISTER_STATIC_RPC(pRakClient,DestroyLabel);
+	REGISTER_STATIC_RPC(pRakClient,VehicleParams);
 	REGISTER_STATIC_RPC(pRakClient,SetTimer);
 }
 

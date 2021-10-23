@@ -54,6 +54,40 @@ void cmdDefaultCmdProc(PCHAR szCmd)
 
 //----------------------------------------------------
 
+void cmdSetFontSize(PCHAR szCmd)
+{
+	DWORD dwSize;
+
+	if (strlen(szCmd) && (dwSize = atol(szCmd), dwSize >= -3) && dwSize <= 5)
+	{
+		if (pConfigFile)
+			pConfigFile->SetInt("fontsize", dwSize);
+
+		if (pDefaultFont)
+			pDefaultFont->CreateFonts();
+
+		if (pChatWindow) {
+			pChatWindow->RestoreDeviceObjects();
+			pChatWindow->UpdateScrollBar();
+		}
+
+		if (pDeathWindow)
+			pDeathWindow->CreateFonts();
+
+		if (pGameUI)
+			pGameUI->SetFonts();
+
+		// TODO: Add font change for scoreboard, spawn, gui, etc here...
+	}
+	else
+	{
+		if (pChatWindow)
+			pChatWindow->AddDebugMessage("Valid fontsize: -3 to 5");
+	}
+}
+
+//----------------------------------------------------
+
 // Note: Check for pChatWindow before AddInfoMessage call has been removed here
 void cmdAudioMessages(PCHAR szCmd)
 {
@@ -1551,6 +1585,7 @@ void SetupCommands()
 	pCmdWindow->AddCmdProc("mem", cmdShowMem);
 
 	pCmdWindow->AddCmdProc("pagesize", cmdSetChatPageSize);
+	pCmdWindow->AddCmdProc("fontsize", cmdSetFontSize);
 	pCmdWindow->AddCmdProc("timestamp", cmdToggleChatTimeStamp);
 	pCmdWindow->AddCmdProc("hudscalefix", cmdHudScaleFix);
 	pCmdWindow->AddCmdProc("headmove", cmdHeadMove);

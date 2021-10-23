@@ -26,7 +26,8 @@ typedef struct _VEHICLE_SPAWN_INFO
 class CVehiclePool
 {
 public:
-	
+	int m_iPoolSize;
+
 	bool				m_bVehicleSlotState[MAX_VEHICLES];
 	CVehicle			*m_pVehicles[MAX_VEHICLES];
 
@@ -41,15 +42,19 @@ public:
 	CHAR				m_charNumberPlate[MAX_VEHICLES][9];
 	bool				m_bHasSiren[MAX_VEHICLES];
 
+	bool m_bRebuildPlateTextures;
+
 	CVehiclePool();
 	~CVehiclePool();
+
+	void UpdatePoolSize();
 
 	bool New(VEHICLEID VehicleID, int iVehicleType,
 			 VECTOR * vecPos, float fRotation,
 			 int iColor1, int iColor2,
 			 VECTOR * vecSpawnPos, float fSpawnRotation,
 			 int iInterior, PCHAR szNumberPlate);
-
+	bool New(VEHICLE_TRANSMIT* pTransmit);
 	bool Delete(VEHICLEID VehicleID);	
 	
 	// Retrieve a vehicle
@@ -70,6 +75,10 @@ public:
 				int iObjective = 0, int iDoorsLocked = 0 );
 
 	void ProcessForVirtualWorld(VEHICLEID vehicleId, int iPlayerWorld);
+	
+	void ProcessLicensePlateTextures();
+	void DestroyLicensePlateTextures();
+
 	void Process();
 	
 	void NotifyVehicleDeath(VEHICLEID VehicleID);

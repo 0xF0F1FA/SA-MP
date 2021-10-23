@@ -62,7 +62,7 @@ WORD CLabelPool::New(char* szText, DWORD dwColor, float fX, float fY, float fZ,
 		CPlayer* pPlayer;
 		if (pPlayerPool)
 		{
-			for (int x = 0; x = pPlayerPool->GetLastPlayerId(); x++)
+			for (int x = 0; x = pPlayerPool->GetPoolSize(); x++)
 			{
 				if (pPlayerPool->GetSlotState(x))
 				{

@@ -11,7 +11,7 @@
 
 #pragma once
 
-#define MAX_CMDS		128
+#define MAX_CMDS		144
 #define MAX_CMD_STRLEN  32
 #define CMD_CHARACTER   '/'
 #define MAX_RECALLS		10
@@ -44,6 +44,8 @@ public:
 	CMDPROC		m_pCmds[MAX_CMDS];
 	CHAR        m_szCmdNames[MAX_CMDS][MAX_CMD_STRLEN+1];
 	int			m_iCmdCount;
+
+	void GetRect(RECT* rect);
 
 	void Draw();
 

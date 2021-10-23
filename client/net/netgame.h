@@ -84,7 +84,7 @@ public:
 	bool		m_bLanMode;
 	bool		m_bNameTagLOS;
 	bool		m_bManualEngineAndLights;
-	bool		m_bDisableVehicleCollision;
+	bool		m_bRemoteVehicleCollisions;
 
 	char		m_szHostName[256];
 	char		m_szHostOrIp[256];
@@ -112,7 +112,7 @@ public:
 	bool GetWalkStyle() { return m_bUseCJWalk; };
 	void SetLanMode(bool bMode) { m_bLanMode = bMode; };
 
-	//void InitGameLogic();
+	void InitGameLogic();
 	void Process();
 
 	void UpdatePlayerPings();

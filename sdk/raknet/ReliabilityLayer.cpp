@@ -44,6 +44,8 @@ static const RakNet::Time64 MAX_TIME_TO_SAMPLE=250000; // How many ns to sample 
 #ifdef SAMPSRV
 extern int iPlayerTimeOutTime;
 extern int iMessageHoleLimit;
+extern int iMesssagesLimit;
+extern int iAcksLimit;
 
 void logprintf(char* format, ...);
 #endif
@@ -340,6 +342,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer( const char *buffe
 	MessageNumberType holeCount;
 	unsigned i;
 	unsigned ackedHistogramCounter;
+	unsigned acksSize;
 	bool hasAcks=false;
 
 //	bool duplicatePacket;
@@ -382,6 +385,19 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer( const char *buffe
 				RakAssert(incomingAcks.ranges[i].minIndex<=incomingAcks.ranges[i].maxIndex);
 				return false;
 			}
+
+			acksSize = (incomingAcks.ranges[i].maxIndex - incomingAcks.ranges[i].minIndex);
+			statistics.acknowlegementsReceived += acksSize;
+
+#ifdef SAMPSRV
+			if (acksSize > (unsigned)iMessageHoleLimit)
+			{
+				logprintf("[warning] client exceeded 'messageholelimit' (1) %s (%d) Limit: %d",
+					playerId.ToString(true), acksSize, iMessageHoleLimit);
+
+				return true;
+			}
+#endif
 
 			for (messageNumber=incomingAcks.ranges[i].minIndex; messageNumber >= incomingAcks.ranges[i].minIndex && messageNumber <= incomingAcks.ranges[i].maxIndex; messageNumber++)
 			{

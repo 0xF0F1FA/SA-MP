@@ -26,18 +26,19 @@ public:
 	CObjectPool();
 	~CObjectPool();
 
-	BYTE New(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist);
-	BYTE New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot, float fDrawDist);
+	WORD New(int iModel, VECTOR * vecPos, VECTOR * vecRot, float fDrawDist);
+	WORD New(int iPlayer, int iModel, VECTOR* vecPos, VECTOR* vecRot, float fDrawDist);
 	
-	bool Delete(BYTE byteObjectID);	
+	bool Delete(WORD wObjectID);	
 	bool DeleteForPlayer(BYTE bytePlayerID, BYTE byteObjectID);
 	
 	void Process(float fElapsedTime);
 
 	// Retrieve an object by id
-	CObject* GetAt(int iObjectID)
+	CObject* GetAt(WORD wObjectID)
 	{
-		return (iObjectID >= 0 && iObjectID < MAX_OBJECTS) ? m_pObjects[iObjectID] : nullptr;
+		if(wObjectID >= MAX_OBJECTS) { return NULL; }
+		return m_pObjects[wObjectID];
 	};
 	
 	CObject* GetAtIndividual(int iPlayerID, int iObjectID)
@@ -47,9 +48,10 @@ public:
 	};
 
 	// Find out if the slot is inuse.
-	bool GetSlotState(int iObjectID)
+	bool GetSlotState(WORD wObjectID)
 	{
-		return (iObjectID >= 0 && iObjectID < MAX_PLAYERS) ? m_bObjectSlotState[iObjectID] : false;
+		if(wObjectID >= MAX_OBJECTS) { return false; }
+		return m_bObjectSlotState[wObjectID];
 	};
 	
 	// Find out if the slot is inuse by an individual (and not global).

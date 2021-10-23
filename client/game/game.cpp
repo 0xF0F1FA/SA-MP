@@ -23,6 +23,8 @@ static DWORD dwDummy;
 
 PED_TYPE CrimeReportPed;
 
+bool bPlayerPedSlotState[MAX_CLIENT_PLAYERS];
+
 typedef void (*DrawZone_t)(float *fPos, DWORD *dwColor, BYTE byteMenu);
 
 //-----------------------------------------------------------
@@ -45,9 +47,11 @@ CGame::CGame()
 	m_bDisableVehMapIcons = false;
 	m_bMissionAudioLoaded = false;
 	m_bDisableInteriorAmbient = false;
+	m_dwFPSLimit = 90;
 	m_bPassingOfTime = false;
 	m_iInputDisableWaitFrames = 0;
 	m_byteDisabledInputType = 0;
+	memset(bPlayerPedSlotState, 0, sizeof(bPlayerPedSlotState));
 }
 
 //-----------------------------------------------------------
@@ -57,6 +61,50 @@ CPlayerPed *CGame::NewPlayer(int iPlayerID, int iSkin, float fPosX, float fPosY,
 {
 	CPlayerPed *pPlayerNew = new CPlayerPed(iPlayerID,iSkin,fPosX,fPosY,fPosZ,fRotation,byteCreateMarker);
 	return pPlayerNew;
+}
+
+//-----------------------------------------------------------
+
+// 6th parameter is unused, higly possible it's BOOL bCreateMarker
+// 7th parameter is used for setting up something, but that array in sub_100B40C0() is unused
+CPlayerPed* NewPlayer(int iSkin, float fPosX, float fPosY, float fPosZ, float fRotation)
+{
+	BYTE bytePlayerID;
+	for (bytePlayerID = 2; bytePlayerID != MAX_CLIENT_PLAYERS; bytePlayerID++)
+	{
+		if (bPlayerPedSlotState[bytePlayerID] == true) break;
+	}
+
+	if (bytePlayerID == MAX_CLIENT_PLAYERS) return NULL;
+
+	if (bytePlayerID)
+	{
+		CPlayerPed* pPlayerNew = new CPlayerPed(bytePlayerID, iSkin, fPosX, fPosY, fPosZ, fRotation);
+		if (pPlayerNew && pPlayerNew->m_pPed)
+		{
+			bPlayerPedSlotState[bytePlayerID] = true;
+			/*if (a7)
+				sub_100B40C0(bytePlayerID, 1);
+			else
+				sub_100B40C0(bytePlayerID, 0);*/
+			return pPlayerNew;
+		}
+	}
+	return NULL;
+}
+
+//-----------------------------------------------------------
+
+bool CGame::DeletePlayer(CPlayerPed* pPlayerPed)
+{
+	if (pPlayerPed)
+	{
+		BYTE bytePlayerID = pPlayerPed->m_bytePlayerNumber;
+		delete pPlayerPed;
+		bPlayerPedSlotState[bytePlayerID] = false;
+		return true;
+	}
+	return false;
 }
 
 //-----------------------------------------------------------
@@ -373,7 +421,8 @@ void CGame::LoadRequestedModels()
 // [0x8E4CC0 + 0x10] g_struModelInfo.iState (0=not loaded, 1=loaded, 2=requested)
 bool CGame::IsModelLoaded(int iModelID)
 {
-	if (iModelID < 0)
+	// Originally SA-MP returns 1 (TRUE) when the model id is out of range
+	if (iModelID > 20000 || iModelID < 0)
 		return false;
 
 	DWORD dwFunc = 0x4044C0;
@@ -408,6 +457,8 @@ void CGame::SetWorldTime(int iHour, int iMinute)
 {
 	*(PBYTE)0xB70152 = (BYTE)iMinute;
 	*(PBYTE)0xB70153 = (BYTE)iHour;
+
+	ScriptCommand(&set_current_time, iHour, iMinute);
 }
 
 //-----------------------------------------------------------
@@ -438,8 +489,13 @@ void CGame::ToggleThePassingOfTime(BYTE byteOnOff)
 
 void CGame::SetWorldWeather(int iWeatherID)
 {
-	*(DWORD*)(0xC81320) = iWeatherID;
-	*(DWORD*)(0xC8131C) = iWeatherID;
+	*(DWORD*)0xC81318 = iWeatherID;
+
+	if (!m_bPassingOfTime)
+	{
+		*(DWORD*)(0xC81320) = iWeatherID;
+		*(DWORD*)(0xC8131C) = iWeatherID;
+	}
 }
 
 //-----------------------------------------------------------
@@ -456,16 +512,18 @@ void CGame::DisplayHud(bool bDisp)
 }
 //-----------------------------------------------------------
 
-BYTE CGame::IsHudEnabled()
+/*BYTE CGame::IsHudEnabled()
 {
 	return *(BYTE*)ADDR_ENABLE_HUD;
-}
+}*/
 
 //-----------------------------------------------------------
 
-void CGame::SetFrameLimiterOn(bool bLimiter)
+void CGame::SetFPSLimit(DWORD dwLimit)
 {
+	m_dwFPSLimit = dwLimit;
 
+	*(DWORD*)0xC1704C = 200;
 }
 
 //-----------------------------------------------------------
@@ -479,6 +537,10 @@ void CGame::SetMaxStats()
 	// weapon stats
 	_asm mov eax, 0x439940
 	_asm call eax
+
+	// disable stat value update function
+	//UnFuck(0x55A070, 1);
+	*(BYTE*)0x55A070 = 0xC3;
 }
 
 //-----------------------------------------------------------
@@ -767,6 +829,16 @@ void CGame::UpdateCheckpoints()
 	}
 }
 
+//-----------------------------------------------------------
+
+DWORD CGame::CreateRadarMarkerIcon(int iMarkerType, float fX, float fY, float fZ, int iColor)
+{
+	DWORD dwMarkerID;
+	ScriptCommand(&create_radar_marker_without_sphere, fX, fY, fZ, iMarkerType, &dwMarkerID);
+	ScriptCommand(&set_marker_color, dwMarkerID, iColor);
+	ScriptCommand(&show_on_radar, dwMarkerID, 3);
+	return dwMarkerID;
+}
 
 //-----------------------------------------------------------
 
@@ -1021,6 +1093,10 @@ void CGame::EnableStuntBonus(bool bEnable)
 	*(DWORD*)0xA4A474 = (int)bEnable;
 }
 
+void CGame::SetDrunkLevel(float fLevel)
+{
+	((void(__cdecl*)(float))0x71D730)(fLevel);
+}
 //-----------------------------------------------------------
 
 void CGame::DisableEnterExits(bool bDisable)
@@ -1172,4 +1248,41 @@ void CGame::PlayCrimeReport(int iCrimeID, VECTOR* vecPos, /*bool bNeedVehicle,*/
 
 	if (pVehicle)
 		delete pVehicle;
+}
+
+//-----------------------------------------------------------
+
+float fTimerTimeStep = 2.0f;
+
+void CGame::Process()
+{
+	{
+		*(float*)0xB7CB5C = 1.0f;
+		*(float*)0xB7CB58 = 1.0f;
+		fTimerTimeStep = 3.0f;
+	}
+
+}
+
+//-----------------------------------------------------------
+
+void CGame::Wait(DWORD dwTime, DWORD dwFrameLimit)
+{
+	if (dwTime && dwFrameLimit && dwTime < 1000 / dwFrameLimit)
+		Sleep(1000 / dwFrameLimit - dwTime - 1);
+}
+
+//-----------------------------------------------------------
+
+DWORD GetLoadedVehicleModelCount()
+{
+	DWORD dwCount = 0;
+	DWORD* pdwFlag = (DWORD*)0x8E6C10;
+	
+	do {
+		if (*pdwFlag)
+			dwCount++;
+	} while (pdwFlag != (DWORD*)0x8E7C8C);
+
+	return dwCount;
 }

@@ -20,7 +20,7 @@ CVehiclePool::CVehiclePool()
 		if (VehicleID < 212)
 			m_usVehicleModelsUsed[VehicleID] = 0;
 	}
-	m_iLastVehicleId = -1;
+	m_iPoolSize = 0;
 }
 
 //----------------------------------------------------
@@ -57,14 +57,7 @@ VEHICLEID CVehiclePool::New(int iVehicleType, VECTOR * vecPos, float fRotation,
 		m_bVehicleSlotState[VehicleID] = true;
 		//m_byteVirtualWorld[VehicleID] = 0;
 
-		m_iLastVehicleId = -1;
-		for (int i = 0; i < MAX_VEHICLES; i++)
-		{
-			if (m_bVehicleSlotState[i])
-			{
-				m_iLastVehicleId = i;
-			}
-		}
+		UpdatePoolSize();
 
 		m_usVehicleModelsUsed[iVehicleType - 400]++;
 
@@ -91,15 +84,24 @@ bool CVehiclePool::Delete(VEHICLEID VehicleID)
 	delete m_pVehicles[VehicleID];
 	m_pVehicles[VehicleID] = NULL;
 
-	m_iLastVehicleId = -1;
-	for (int i = 0; i < MAX_VEHICLES; i++)
+	UpdatePoolSize();
+
+	return true;
+}
+
+//----------------------------------------------------
+
+void CVehiclePool::UpdatePoolSize()
+{
+	int iNewSize = 0;
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if (m_bVehicleSlotState[i])
 		{
-			m_iLastVehicleId = i;
+			iNewSize = i;
 		}
 	}
-	return true;
+	m_iPoolSize = iNewSize;
 }
 
 //----------------------------------------------------
@@ -131,6 +133,91 @@ void CVehiclePool::InitForPlayer(BYTE bytePlayerID)
 		x++;
 	}
 }
+
+//----------------------------------------------------
+
+void CVehiclePool::InitVehicleForPlayer(VEHICLEID VehicleID, WORD wPlayerID)
+{
+	CVehicle* pVehicle = m_pVehicles[VehicleID];
+
+	if (!m_bVehicleSlotState[VehicleID] || !pVehicle) return;
+
+	RakNet::BitStream bsVehicle;
+	VEHICLE_TRANSMIT Vehicle;
+
+	if (pVehicle->m_matWorld.up.X == 0.0f &&
+		pVehicle->m_matWorld.up.Y == 0.0f ||
+		pVehicle->m_SpawnInfo.iVehicleType == 537 || // VEHICLE_FREIGHT
+		pVehicle->m_SpawnInfo.iVehicleType == 538) // VEHICLE_STREAK
+	{
+		Vehicle.fRotation = pVehicle->m_SpawnInfo.fRotation;
+	}
+	else
+	{
+		Vehicle.fRotation = atan2f(pVehicle->m_matWorld.up.Y, -(pVehicle->m_matWorld.up.X));
+		Vehicle.fRotation *= (180.0f / PI);
+
+		if (Vehicle.fRotation <= 0.0f)
+			Vehicle.fRotation += 360.0f;
+		else if (Vehicle.fRotation >= 360.0f)
+			Vehicle.fRotation -= 360.0f;
+	}
+
+	Vehicle.VehicleID = VehicleID;
+	Vehicle.iModelID = pVehicle->m_SpawnInfo.iVehicleType;
+	Vehicle.vecPos.X = pVehicle->m_matWorld.pos.X;
+	Vehicle.vecPos.Y = pVehicle->m_matWorld.pos.Y;
+	Vehicle.vecPos.Z = pVehicle->m_matWorld.pos.Z;
+	Vehicle.byteColor1 = (BYTE)pVehicle->m_SpawnInfo.iColor1;
+	Vehicle.byteColor2 = (BYTE)pVehicle->m_SpawnInfo.iColor2;
+	Vehicle.fHealth = pVehicle->m_fHealth;
+	Vehicle.byteInterior = (BYTE)pVehicle->m_SpawnInfo.iInterior;
+	Vehicle.dwDoorsState = pVehicle->m_iDoorDamageStatus;
+	Vehicle.dwPanelsState = pVehicle->m_iPanelDamageStatus;
+	Vehicle.byteLightsState = pVehicle->m_ucLightDamageStatus;
+	Vehicle.byteTyresState = pVehicle->m_ucTireDamageStatus;
+	Vehicle.byteHasSiren = pVehicle->m_bHasSiren;
+
+	bsVehicle.Write((PCHAR)&Vehicle, sizeof(VEHICLE_TRANSMIT));
+	bsVehicle.Write((PCHAR)&pVehicle->m_CarModInfo, sizeof(CAR_MOD_INFO));
+
+	pNetGame->SendToPlayer(wPlayerID, RPC_VehicleSpawn, &bsVehicle);
+
+	BYTE bytePlateLen = (BYTE)strlen(pVehicle->m_szNumberPlate);
+	if (bytePlateLen)
+	{
+		RakNet::BitStream bsPlate;
+
+		bsPlate.Write(VehicleID);
+		bsPlate.Write(bytePlateLen);
+		bsPlate.Write(pVehicle->m_szNumberPlate, bytePlateLen);
+
+		pNetGame->SendToPlayer(wPlayerID, RPC_ScrNumberPlate, &bsPlate);
+	}
+
+	if (pVehicle->HasParamsSet())
+	{
+		RakNet::BitStream bsParams;
+
+		bsParams.Write(VehicleID);
+		bsParams.Write((PCHAR)&pVehicle->m_Params, sizeof(VEHICLE_PARAMS));
+
+		pNetGame->SendToPlayer(wPlayerID, RPC_VehicleParams, &bsParams);
+	}
+}
+
+//----------------------------------------------------
+
+void CVehiclePool::DeleteVehicleForPlayer(VEHICLEID VehicleID, WORD wPlayerID)
+{
+	RakNet::BitStream bsData;
+
+	bsData.Write(VehicleID);
+
+	pNetGame->SendToPlayer(wPlayerID, RPC_VehicleDestroy, &bsData);
+}
+
+//----------------------------------------------------
 
 unsigned int CVehiclePool::GetNumberOfModels()
 {

@@ -56,6 +56,7 @@
       <PreprocessorDefinitions>WIN32;SAMPSRV;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>..\sdk\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -72,6 +73,7 @@
       <PreprocessorDefinitions>WIN32;SAMPSRV;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>..\sdk\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -111,6 +113,7 @@
     <ClCompile Include="..\sdk\raknet\rijndael.cpp" />
     <ClCompile Include="..\sdk\raknet\RPCMap.cpp" />
     <ClCompile Include="..\sdk\raknet\SAMPCipher.cpp" />
+    <ClCompile Include="..\sdk\raknet\SAMPRPC.cpp" />
     <ClCompile Include="..\sdk\raknet\SHA1.cpp" />
     <ClCompile Include="..\sdk\raknet\SimpleMutex.cpp" />
     <ClCompile Include="..\sdk\raknet\SocketLayer.cpp" />
@@ -232,7 +235,6 @@
     <ClInclude Include="..\sdk\sha2\sha256.h" />
     <ClInclude Include="..\sdk\shared.h" />
     <ClInclude Include="..\sdk\sqlite\sqlite3.h" />
-    <ClInclude Include="..\sdk\sqlite\sqlite3ext.h" />
     <ClInclude Include="actor.h" />
     <ClInclude Include="actorpool.h" />
     <ClInclude Include="artwork.h" />

@@ -17,11 +17,11 @@
 class CVehiclePool
 {
 private:
-	
+
 	bool m_bVehicleSlotState[MAX_VEHICLES];
-	CVehicle *m_pVehicles[MAX_VEHICLES];
+	CVehicle* m_pVehicles[MAX_VEHICLES];
 	//BYTE m_byteVirtualWorld[MAX_VEHICLES];
-	int m_iLastVehicleId;
+	int m_iPoolSize;
 	unsigned short m_usVehicleModelsUsed[212];
 public:
 	CVehiclePool();
@@ -31,6 +31,8 @@ public:
 
 	bool Delete(VEHICLEID VehicleID);	
 		
+	void UpdatePoolSize();
+
 	// Retrieve a vehicle by id
 	CVehicle* GetAt(int iVehicleID)
 	{
@@ -44,17 +46,18 @@ public:
 	};
 
 	void InitForPlayer(BYTE bytePlayerID);
-
+	void InitVehicleForPlayer(VEHICLEID VehicleID, WORD wPlayerID);
+	void DeleteVehicleForPlayer(VEHICLEID VehicleID, WORD wPlayerID);
 	void Process(float fElapsedTime);
 
 	/*void SetVehicleVirtualWorld(VEHICLEID VehicleID, BYTE byteVirtualWorld);
-	
+
 	BYTE GetVehicleVirtualWorld(VEHICLEID VehicleID) {
 		if (VehicleID >= MAX_VEHICLES) { return 0; }
-		return m_byteVirtualWorld[VehicleID];		
+		return m_byteVirtualWorld[VehicleID];
 	};*/
 
-	int GetVehicleLastId() const { return m_iLastVehicleId; }
+	int GetPoolSize() { return m_iPoolSize; }
 
 	unsigned short GetVehicleModelsUsed(int iId) const
 	{

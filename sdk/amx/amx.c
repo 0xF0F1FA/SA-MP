@@ -1527,7 +1527,7 @@ static AMX_NATIVE findfunction(const char *name, const AMX_NATIVE_INFO *list, in
   int i;
 
   assert(list!=NULL);
-  for (i=0; list[i].name!=NULL && (i<number || number==-1); i++)
+  for (i=0; (i<number || number==-1) && list[i].name!=NULL; i++)
     if (strcmp(name,list[i].name)==0)
       return list[i].func;
   return NULL;
@@ -3731,7 +3731,7 @@ int AMXAPI amx_SetString(cell *dest,const char *source,int pack,int use_wchar,si
 #if defined AMX_XXXSTRING
 int AMXAPI amx_GetString(char *dest,const cell *source,int use_wchar,size_t size)
 {
-  int len=0;
+  int len = 0;
   #if defined AMX_ANSIONLY
     (void)use_wchar;
   #endif
@@ -3769,6 +3769,32 @@ int AMXAPI amx_GetString(char *dest,const cell *source,int use_wchar,size_t size
       } /* if */
     #endif
   } /* if */
+  if ((size_t)len>=size)
+    len=size-1;
+  if (len>=0)
+    dest[len]='\0';   /* store terminator */
+  return AMX_ERR_NONE;
+}
+
+int AMXAPI amx_GetRawString(char* dest, const cell* source, int use_wchar, size_t size)
+{
+  int len = 0;
+#if defined AMX_ANSIONLY
+  (void)use_wchar;
+#endif
+  /* source string is unpacked */
+#if defined AMX_ANSIONLY
+  while (*source!=0 && (size_t)len < size)
+    dest[len++] = (char)*source++;
+#else
+  if (use_wchar) {
+    while (*source!=0 && (size_t)len<size)
+      ((wchar_t*)dest)[len++]=(wchar_t)*source++;
+  } else {
+    while (*source!=0 && (size_t)len<size)
+      dest[len++]=(char)*source++;
+  } /* if */
+#endif
   if ((size_t)len>=size)
     len=size-1;
   if (len>=0)

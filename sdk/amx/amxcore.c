@@ -451,7 +451,7 @@ static cell AMX_NATIVE_CALL core_random(AMX *amx,cell *params)
     result &= ~LONG_MIN;        /* remove sign bit */
     if (params[1]!=0)
         result %= params[1];
-    return (cell)result;
+    return (cell)result < 0 ? -((cell)result) : (cell)result;
 }
 #endif
 

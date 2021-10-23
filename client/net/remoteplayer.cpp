@@ -27,6 +27,7 @@ CRemotePlayer::CRemotePlayer()
 	m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
 	m_byteState = PLAYER_STATE_NONE;
 	m_bytePlayerID = INVALID_PLAYER_ID;
+	m_wPlayerID = INVALID_PLAYER_ID;
 	m_pPlayerPed = NULL;
 	m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
 	m_VehicleID = 0;
@@ -38,9 +39,6 @@ CRemotePlayer::CRemotePlayer()
 	m_iVirtualWorld = 0;
 	m_dwLastHeadUpdate = GetTickCount();
 	m_dwStreamUpdate = 0;
-	m_iScore = 0;
-	m_usPing = 0;
-	m_szName[0] = '\0';
 }
 
 //----------------------------------------------------
@@ -52,16 +50,6 @@ CRemotePlayer::~CRemotePlayer()
 		delete m_pPlayerPed;
 		m_pPlayerPed = NULL;
 	}
-}
-
-void CRemotePlayer::SetName(const char* szName)
-{
-	strncpy_s(m_szName, szName, MAX_PLAYER_NAME);
-}
-
-const char* CRemotePlayer::GetName()
-{
-	return m_szName;
 }
 
 //----------------------------------------------------
@@ -96,19 +84,23 @@ void CRemotePlayer::Process(int iLocalWorld)
 			}
 
 			// ---- ONFOOT NETWORK PROCESSING ----
-			if( GetState() == PLAYER_STATE_ONFOOT &&
-				m_byteUpdateFromNetwork == UPDATE_TYPE_ONFOOT )
-			{	
-				if ( !IsSurfingOrTurretMode() )
+			if (GetState() == PLAYER_STATE_ONFOOT &&
+				m_byteUpdateFromNetwork == UPDATE_TYPE_ONFOOT)
+			{
+				if (!IsSurfingOrTurretMode())
 				{
 					// If the user hasn't sent these, they're obviously not on the car, so we just sync
 					// their normal movement/speed/etc.
-					UpdateOnFootPositionAndSpeed(&m_ofSync.vecPos,&m_ofSync.vecMoveSpeed);
+					UpdateOnFootPositionAndSpeed(&m_ofSync.vecPos, &m_ofSync.vecMoveSpeed);
 					UpdateOnfootTargetPosition();
+				}
+				else
+				{
+					UpdateOnFootPositionAndSpeed(&m_ofSync.vecPos, &m_ofSync.vecMoveSpeed);
 				}
 
 				// UPDATE ROTATION
-				m_pPlayerPed->SetTargetRotation(m_ofSync.fRotation);
+				//m_pPlayerPed->SetTargetRotation(m_ofSync.fRotation);
 		
 				// UPDATE CURRENT WEAPON
 				if(m_pPlayerPed->IsAdded() && m_pPlayerPed->GetCurrentWeapon() != m_ofSync.byteCurrentWeapon) {
@@ -267,11 +259,11 @@ void CRemotePlayer::Process(int iLocalWorld)
 				//m_pPlayerPed->SetMoveSpeedVector(m_ofSync.vecMoveSpeed);
 				m_pPlayerPed->SetKeys(m_ofSync.wKeys,m_ofSync.lrAnalog,m_ofSync.udAnalog);
 
-				if(m_pPlayerPed->IsInJetpackMode()) {
+				/*if (m_pPlayerPed->IsInJetpackMode()) {
 					m_pPlayerPed->ForceTargetRotation(m_ofSync.fRotation);
 				} else {
 					m_pPlayerPed->SetTargetRotation(m_ofSync.fRotation);
-				}
+				}*/
 
 				if(IsSurfingOrTurretMode()) {
 					UpdateSurfing();
@@ -493,33 +485,6 @@ void CRemotePlayer::ProcessSpecialActions(BYTE byteSpecialAction)
 
 	if(m_pPlayerPed->IsDancing()) m_pPlayerPed->ProcessDancing();
 
-	if (byteSpecialAction == SPECIAL_ACTION_DRINK_BEER && m_pPlayerPed->GetBarAnim() != 1) {
-		m_pPlayerPed->SetBarAnim(1);
-	}
-	if (byteSpecialAction == SPECIAL_ACTION_DRINK_WINE && m_pPlayerPed->GetBarAnim() != 2) {
-		m_pPlayerPed->SetBarAnim(2);
-	}
-	if (byteSpecialAction == SPECIAL_ACTION_DRINK_SPRUNK && m_pPlayerPed->GetBarAnim() != 3) {
-		m_pPlayerPed->SetBarAnim(3);
-	}
-	if (byteSpecialAction == SPECIAL_ACTION_SMOKE_CIGGY && m_pPlayerPed->GetBarAnim() != 4) {
-		m_pPlayerPed->SetBarAnim(4);
-	}
-
-	if (m_pPlayerPed->GetBarAnim())
-	{
-		if (byteSpecialAction == SPECIAL_ACTION_DRINK_BEER ||
-			byteSpecialAction == SPECIAL_ACTION_SMOKE_CIGGY ||
-			byteSpecialAction == SPECIAL_ACTION_DRINK_WINE ||
-			byteSpecialAction == SPECIAL_ACTION_DRINK_SPRUNK)
-		{
-			m_pPlayerPed->ProcessBarAnim();
-		}
-		else {
-			m_pPlayerPed->StopBarAnim();
-		}
-	}
-
 	// pissing:start
 	if(!m_pPlayerPed->IsPissing() && byteSpecialAction == SPECIAL_ACTION_URINATE) {
 		m_pPlayerPed->StartPissing();
@@ -583,7 +548,7 @@ void CRemotePlayer::UpdateOnfootTargetPosition()
 	if(!m_pPlayerPed) return;
 	m_pPlayerPed->GetMatrix(&matEnt);
 
-	if(!m_pPlayerPed->IsAdded() || !m_pPlayerPed->IsOnGround()) {
+	if(!m_pPlayerPed->IsAdded() /*|| !m_pPlayerPed->IsOnGround()*/) {
         matEnt.pos = m_vecOnfootTargetPos;
 		m_pPlayerPed->SetMatrix(matEnt);
 	}
@@ -811,7 +776,7 @@ void CRemotePlayer::StoreOnFootFullSyncData(ONFOOT_SYNC_DATA *pofSync)
 	m_fReportedHealth = (float)pofSync->byteHealth;
 	m_fReportedArmour = (float)pofSync->byteArmour;
 	m_byteUpdateFromNetwork = UPDATE_TYPE_ONFOOT;
-	
+
 	SetState(PLAYER_STATE_ONFOOT);
 }
 
@@ -913,8 +878,8 @@ void CRemotePlayer::StoreTrailerFullSyncData(TRAILER_SYNC_DATA* trSync)
 		MATRIX4X4 matWorld;
 
 		memcpy(&matWorld.pos, &trSync->vecPos, sizeof(VECTOR));
-		DecompressNormalVector(&matWorld.up, &trSync->cvecDirection);
-		DecompressNormalVector(&matWorld.right, &trSync->cvecRoll);
+		//DecompressNormalVector(&matWorld.up, &trSync->cvecDirection);
+		//DecompressNormalVector(&matWorld.right, &trSync->cvecRoll);
 		
 		pVehicle->SetMatrix(matWorld);
 		pVehicle->SetMoveSpeedVector(trSync->vecMoveSpeed);
@@ -975,10 +940,10 @@ void CRemotePlayer::ResetAllSyncAttributes()
 
 void CRemotePlayer::HandleDeath()
 {
-	CLocalPlayer *pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
+	/*CLocalPlayer *pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
 	if (pLocalPlayer->IsSpectating() && pLocalPlayer->m_SpectateID == m_bytePlayerID) {
 			//pLocalPlayer->ToggleSpectating(FALSE);
-	}
+	}*/
 	if(m_pPlayerPed) {
 		m_pPlayerPed->SetKeys(0,0,0);
 		m_pPlayerPed->SetDead();
@@ -991,7 +956,8 @@ void CRemotePlayer::HandleDeath()
 
 void CRemotePlayer::Say(unsigned char *szText)
 {
-	pChatWindow->AddChatMessage(m_szName,GetPlayerColorAsARGB(),(char*)szText);
+	char* szPlayerName = pNetGame->GetPlayerPool()->GetPlayerName(m_bytePlayerID);
+	pChatWindow->AddChatMessage(szPlayerName,GetPlayerColorAsARGB(),(char*)szText);
 }
 
 //----------------------------------------------------
@@ -1032,7 +998,7 @@ float CRemotePlayer::GetDistanceFromLocalPlayer()
 
 void CRemotePlayer::SetPlayerColor(DWORD dwColor)
 {
-	SetRadarColor(m_bytePlayerID,dwColor);	
+	SetRadarColor(m_wPlayerID,dwColor);	
 }
 
 //----------------------------------------------------
@@ -1046,7 +1012,7 @@ DWORD CRemotePlayer::GetPlayerColorAsRGBA()
 
 DWORD CRemotePlayer::GetPlayerColorAsARGB()
 {
-	return (TranslateColorCodeToRGBA(m_bytePlayerID) >> 8) | 0xFF000000;	
+	return (TranslateColorCodeToRGBA(m_wPlayerID) >> 8) | 0xFF000000;	
 }
 
 //----------------------------------------------------

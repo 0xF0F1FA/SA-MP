@@ -2,55 +2,55 @@
 #ifndef SAMPSRV_ACTOR_H
 #define SAMPSRV_ACTOR_H
 
-typedef struct // size = 140
+typedef struct _ANIMATION_INFO // size = 142
 {
-	char szAnimLib[64];
-	char szAnimName[64];
+	char szAnimLib[65];
+	char szAnimName[65];
 	float fDelta;
 	bool bLoop;
 	bool bLockX;
 	bool bLockY;
 	bool bFreeze;
 	int iTime;
-} ACTOR_ANIMATION;
+} ANIMATION_INFO;
+
+typedef struct _ACTOR_SPAWN_INFO
+{
+	BYTE byteTeam;
+	int iSkin;
+	int iBaseSkin;
+	VECTOR vecPos;
+	float fRotation;
+} ACTOR_SPAWN_INFO;
 
 class CActor
 {
 private:
-	VECTOR m_vecSpawnPosition;
-	float m_fSpawnFacingAngle;
-	int m_iModelID;
-	unsigned short m_usActorID;
-	float m_fHealth;
-	VECTOR m_vecPosition;
-	float m_fFacingAngle;
-	bool m_bInvulnerable;
-	int m_iVirtualWorld;
-	bool m_bAnimLoopedOrFreezed;
-	ACTOR_ANIMATION m_Animation;
+	ACTOR_SPAWN_INFO		m_SpawnInfo;
 
 public:
-	CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle);
+	VECTOR					m_vecPos;
+	float					m_fRotation;
+	bool					bHasAnimation;
+	ANIMATION_INFO			m_Animation;
+	float					m_fHealth;
+	BYTE					m_byteInvulnerable;
+	WORD					m_wActorID;
+
+	CActor(int iModelID, VECTOR* vecPos, float fAngle);
 	~CActor();
 
-	void SetPosition(float fX, float fY, float fZ);
-	VECTOR* GetPosition();
-	void SetFacingAngle(float fAngle);
-	float GetFacingAngle();
+	void UpdatePosition(float x, float y, float z);
+	void UpdateRotation(float fRotation);
 	float GetSquaredDistanceFrom2DPoint(float fX, float fY);
 	void SetHealth(float fHealth);
-	float GetHealth();
+	void SendAnimation(WORD wPlayerID, ANIMATION_INFO* pAnim);
 	void ApplyAnimation(char* szAnimLib, char* szAnimName, float fDelta, bool bLoop, bool bLockX, bool bLockY, bool bFreeze, int iTime);
-	void SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim);
 	void ClearAnimations();
-	void SetInvulnerable(bool bInvulnerable);
-	bool IsInvulnerable();
-	void SetVirtualWorld(int iVirtualWorld);
-	int GetVirtualWorld();
 
-	inline int GetModel() { return m_iModelID; };
-	inline bool IsAnimationOnLoop() { return m_bAnimLoopedOrFreezed; };
-	inline ACTOR_ANIMATION* GetLoopedAnimationData() { return &m_Animation; };
+	ACTOR_SPAWN_INFO* GetSpawnInfo() { return &m_SpawnInfo; };
+
+	void SetID(WORD ActorID) { m_wActorID = ActorID; }
 };
 
 #endif // SAMPSRV_ACTOR_H

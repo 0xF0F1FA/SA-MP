@@ -65,6 +65,7 @@ void ProcessIncommingEvent(BYTE bytePlayerID, int iEventType, DWORD dwParam1, DW
 				//pChatWindow->AddDebugMessage("Timeout on car component.");
 				break;
 			}
+			wLastVehicleComponent = (WORD)iComponent;
 			ScriptCommand(&add_car_component,iVehicleID,iComponent,&v);
 			//pChatWindow->AddDebugMessage("Added car component: %d",iComponent);
 			break;

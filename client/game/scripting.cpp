@@ -16,7 +16,7 @@ static DWORD* pdwParamVars[18];
 
 DWORD dwScmOpcodeDebug=0;
 bool bScmLocalDebug=false;
-static bool bExceptionDisplayed=false;
+//static bool bExceptionDisplayed=false;
 
 int __declspec(naked) ExecuteScriptBuf()
 {
@@ -124,7 +124,7 @@ int ScriptCommand(const SCRIPT_COMMAND* pScriptCommand, ...)
 	// Execute script stub.
 	int result =0;
 	
-	try {
+	__try {
 
 		// Enable SCM
 		*(PBYTE)0x469EF5 = 0xFF;
@@ -143,11 +143,8 @@ int ScriptCommand(const SCRIPT_COMMAND* pScriptCommand, ...)
 		*(PBYTE)0x469EF5 = 0x8B;
 		*(PBYTE)0x469EF6 = 0xD0;
 
-	} catch(...) {
-		if(pChatWindow && !bExceptionDisplayed) {
-			pChatWindow->AddDebugMessage("Warning: error using opcode: 0x%X",pScriptCommand->OpCode);
-			bExceptionDisplayed = true;
-		}
+	} __except (exc_filter(GetExceptionCode(), GetExceptionInformation(), "opcode")) {
+		return 0;
 	}
 
 

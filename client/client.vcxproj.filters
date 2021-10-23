@@ -263,7 +263,6 @@
     <ClCompile Include="..\sdk\raknet\_findfirst.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
-    <ClCompile Include="playertags.cpp" />
     <ClCompile Include="d3dhook.cpp" />
     <ClCompile Include="cursor.cpp" />
     <ClCompile Include="..\sdk\dxut\DXUTgui.cpp">
@@ -284,6 +283,8 @@
     <ClCompile Include="game\txdstuff.cpp">
       <Filter>game</Filter>
     </ClCompile>
+    <ClCompile Include="unnamed1.cpp" />
+    <ClCompile Include="unnamed2.cpp" />
     <ClCompile Include="game\actor.cpp">
       <Filter>game</Filter>
     </ClCompile>
@@ -291,6 +292,9 @@
       <Filter>net</Filter>
     </ClCompile>
     <ClCompile Include="configfile.cpp" />
+    <ClCompile Include="game\rwstuff.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
     <ClCompile Include="net\labelpool.cpp">
       <Filter>net</Filter>
     </ClCompile>
@@ -315,6 +319,17 @@
     <ClCompile Include="..\sdk\raknet\SAMPCipher.cpp">
       <Filter>sdk\raknet</Filter>
     </ClCompile>
+    <ClCompile Include="textdrawselect.cpp" />
+    <ClCompile Include="game\animstuff.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
+    <ClCompile Include="game\modelinfo.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
+    <ClCompile Include="net\playerinfo.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
+    <ClCompile Include="newplayertags.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\gangzonepool.h">
@@ -652,7 +667,6 @@
     <ClInclude Include="..\sdk\raknet\BigTypes.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
-    <ClInclude Include="playertags.h" />
     <ClInclude Include="d3dhook.h" />
     <ClInclude Include="..\sdk\shared.h">
       <Filter>sdk</Filter>
@@ -679,6 +693,8 @@
     <ClInclude Include="game\txdstuff.h">
       <Filter>game</Filter>
     </ClInclude>
+    <ClInclude Include="unnamed1.h" />
+    <ClInclude Include="unnamed2.h" />
     <ClInclude Include="game\actor.h">
       <Filter>game</Filter>
     </ClInclude>
@@ -686,6 +702,9 @@
       <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="configfile.h" />
+    <ClInclude Include="game\rwstuff.h">
+      <Filter>game</Filter>
+    </ClInclude>
     <ClInclude Include="net\labelpool.h">
       <Filter>net</Filter>
     </ClInclude>
@@ -716,6 +735,17 @@
     <ClInclude Include="..\sdk\raknet\SAMPCipher.h">
       <Filter>sdk\raknet</Filter>
     </ClInclude>
+    <ClInclude Include="textdrawselect.h" />
+    <ClInclude Include="game\animstuff.h">
+      <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="game\modelinfo.h">
+      <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="net\playerinfo.h">
+      <Filter>net</Filter>
+    </ClInclude>
+    <ClInclude Include="newplayertags.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\detours\detours.lib">

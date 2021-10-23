@@ -75,7 +75,7 @@ void CGangZonePool::StopFlash(WORD wZone)
 
 void CGangZonePool::Delete(WORD wZone)
 {
-	if (m_pGangZone[wZone])
+	if (wZone < MAX_GANG_ZONES && m_pGangZone[wZone])
 	{
 		delete m_pGangZone[wZone];
 		m_pGangZone[wZone] = NULL;

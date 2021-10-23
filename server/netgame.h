@@ -86,15 +86,17 @@ public:
 	bool m_bZoneNames;
 	BYTE m_byteMod;
 	bool m_bLimitGlobalChatRadius; // limit global player chat to other players within a certain radius
-	bool m_bLimitGlobalMarkerRadius;
+	bool m_bLimitPlayerMarkerRadius;
 	bool m_bUseCJWalk;
 	float m_fGlobalChatRadius; // limit global chat radius
-	float m_fGlobalMarkerRadius;
+	float m_fPlayerMarkerRadius;
 	float m_fNameTagDrawDistance; // The distance which players will start rendering nametags
 	bool m_bDisableEnterExits; // Interior enter/exits disabled?
 	bool m_bDisableVehMapIcons;
 	unsigned int m_uiMaxRconAttempt;
 	bool m_bManualEngineAndLights;
+	bool m_bVehicleFriendlyFire;
+	bool m_bDefaultObjectCameraCol;
 
 	DWORD m_dwInitialTime;
 
@@ -135,9 +137,10 @@ public:
 
 	void ProcessClientJoin(BYTE bytePlayerID);
 
-	void SendClientMessage(PlayerID pidPlayer, DWORD dwColor, char* szMessage, ...);
+	void SendClientMessageF(WORD wPlayerID, DWORD dwColor, char* szMessage, ...);
+	void SendClientMessage(WORD wPlayerID, DWORD dwColor, char* szMessage);
 	void SendClientMessageToAll(DWORD dwColor, char* szMessage, ...);
-	void InitGameForPlayer(BYTE bytePlayerID);
+	void InitGameForPlayer(WORD wPlayerID);
 	void MasterServerAnnounce(float fElapsedTime);
 	char *GetNextScriptFile();
 	void LoadAllFilterscripts();
@@ -187,13 +190,13 @@ public:
 	void Packet_TrailerSync(Packet *p);
 
 
-	void KickPlayer(BYTE byteKickPlayer);
+	void KickPlayer(WORD wKickPlayer);
 	void BlockIpAddress(char* ip_mask, RakNet::Time time);
 	void UnBlockIpAddress(char* ip_mask);
 	void AddBan(char * nick, char * ip_mask, char * reason);
 	void RemoveBan(char * ip_mask);
 	void LoadBanList();
-		
+
 	bool IsLanMode() { return m_bLanMode; };
 
 	// CLASS SYSTEM

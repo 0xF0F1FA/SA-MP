@@ -32,8 +32,11 @@ public:
 	void SetFont(int iID, unsigned char ucFont);
 	void SetOutline(int iID, unsigned char ucOutline);
 	void SetProportional(int iID, int iProp);
+	void SetSelectable(WORD wText, BYTE byteSet) { m_pTextDraws[wText]->byteSelectable = byteSet; };
+	bool IsSelectable(WORD wText) { return m_pTextDraws[wText]->byteSelectable; };
 	void Show(int iID);
 	void Hide(int iID);
+	bool HasSelectableText();
 };
 
 #endif // _PLAYERTEXTDRAWPOOL_H

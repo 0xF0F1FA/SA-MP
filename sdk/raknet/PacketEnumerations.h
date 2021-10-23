@@ -41,7 +41,7 @@ enum
 	//
 	/// These types are never returned to the user.
 	/// 0: Ping from a connected system.  Update timestamps (internal use only)
-	ID_INTERNAL_PING,  
+	ID_INTERNAL_PING = 6,  
 	/// 1: Ping from an unconnected system.  Reply but do not update timestamps. (internal use only)
 	ID_PING,
 	/// 2: Ping from an unconnected system.  Only reply if we have open connections. Do not update timestamps. (internal use only)
@@ -49,12 +49,13 @@ enum
 	/// 3: Pong from a connected system.  Update timestamps (internal use only)
 	ID_CONNECTED_PONG,
 
-	ID_DUMMY_3,
+	//ID_DUMMY_3,
 
 	/// 4: Someone asked for our static data (internal use only)
 	ID_REQUEST_STATIC_DATA,
 	/// 5: Asking for a new connection (internal use only)
 	ID_CONNECTION_REQUEST,
+	ID_CLIENT_AUTH,
 
 	ID_DUMMY_4,
 	ID_DUMMY_5,
@@ -273,18 +274,6 @@ enum
 
 	ID_DUMMY_18,
 	ID_DUMMY_19,
-
-	// SAMPSRV (adding this just as a tag for next RakNet upgrade)
-	ID_PLAYER_SYNC,
-	ID_VEHICLE_SYNC,
-	ID_PASSENGER_SYNC,
-	ID_AIM_SYNC,
-	ID_RCON_COMMAND,
-	ID_RCON_RESPONCE,
-	ID_STATS_UPDATE,
-	ID_WEAPONS_UPDATE,
-	ID_SPECTATOR_SYNC,
-	ID_TRAILER_SYNC
 };
 
 #endif

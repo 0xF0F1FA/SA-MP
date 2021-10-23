@@ -281,6 +281,28 @@ const DWORD crc32_table[256] = {
 	0x5D681B02,0x2A6F2B94,0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D
 };
 
+// Driver seat not counted in!
+const BYTE byteMaxVehicleSeats[] = {
+	3, 1, 1, 1, 3, 3, 0, 1, 1, 3, 1, // 400-410
+	1, 1, 3, 1, 1, 3, 1, 3, 1, 3, 3,
+	1, 1, 1, 0, 3, 3, 3, 1, 0, 8, 0,
+	1, 1, 255, 1, 8, 3, 1, 3, 0, 1, 1,
+	1, 3, 0, 1, 0, 255, 255, 1, 0, 0, 0,
+	1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1,
+	3, 3, 1, 1, 3, 1, 0, 0, 1, 1, 0,
+	1, 1, 3, 1, 0, 3, 1, 0, 0, 0, 3,
+	1, 1, 3, 1, 3, 0, 1, 1, 1, 3, 3,
+	1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 0,
+	0, 1, 0, 0, 1, 1, 3, 1, 1, 0, 0,
+	1, 1, 1, 1, 1, 1, 1, 1, 3, 0, 0,
+	0, 1, 1, 1, 1, 255, 255, 0, 3, 1,
+	1, 1, 1, 1, 3, 3, 1, 1, 3, 3, 1, 0, 1, 1, 1, 1,
+	1, 1, 3, 3, 1, 1, 0, 1, 3, 3, 0, 255, 255, 0, 0,
+	1, 0, 1, 1, 1, 1, 3, 3, 1, 3, 0, 255, 3, 1, 1, 1,
+	1, 255, 255, 1, 1, 1, 0, 3, 3, 3, 1, 1, 1, 1, 1,
+	3, 1, 255, 255, 255, 3, 255, 255
+};
+
 int Utils::GetTypeByComponentId(short sModelId)
 {
 	switch (sModelId)
@@ -521,6 +543,22 @@ int Util_wildcmp(char *wild, char *string)
 
 //----------------------------------------------------
 
+int Util_stricmp(const char *s1, const char *s2)
+{
+	unsigned char c1, c2;
+	do
+	{
+		c1 = (unsigned char)Util_toupper(*s1++);
+		c2 = (unsigned char)Util_toupper(*s2++);
+		if (c1 == '\0')
+			return c1 - c2;
+	} while (c1 == c2);
+
+	return c1 - c2;
+}
+
+//----------------------------------------------------
+
 int Util_strnicmp(const char *s1, const char *s2, size_t n)
 {
 
@@ -750,6 +788,16 @@ int CanFileBeOpenedForReading(char * filename)
 
 //----------------------------------------------------
 
+bool IsValidMoveSpeed(VECTOR* pMoveSpeed)
+{
+	return
+		(pMoveSpeed->X < 100.0 && pMoveSpeed->X > -100.0) &&
+		(pMoveSpeed->Y < 100.0 && pMoveSpeed->Y > -100.0) &&
+		(pMoveSpeed->Z < 100.0 && pMoveSpeed->Z > -100.0);
+}
+
+//----------------------------------------------------
+
 bool IsWithinWorldRange(VECTOR* pPos)
 {
 	return
@@ -757,6 +805,14 @@ bool IsWithinWorldRange(VECTOR* pPos)
 		(pPos->Y < 20000.0 && pPos->Y > -20000.0) &&
 		(pPos->Z < 200000.0	&& pPos->Z > -1000.0);
 }
+
+//----------------------------------------------------
+
+// Used for VectorSize() native
+/*float Magnitude(VECTOR* vec)
+{
+	return sqrtf((vec->X * vec->X) + (vec->Y * vec->Y) + (vec->Z * vec->Z));
+}*/
 
 //----------------------------------------------------
 
@@ -790,6 +846,35 @@ void MatrixToQuaternion(MATRIX4X4* m, QUATERNION* q)
 	q->X = _copysignf(x, m->at.Y - m->up.Z);
 	q->Y = _copysignf(y, m->right.Z - m->at.X);
 	q->Z = _copysignf(z, m->up.X - m->right.Y);
+}
+
+//----------------------------------------------------
+
+void QuaternionToMatrix(QUATERNION* q, MATRIX4X4* m)
+{
+	float w = q->W * q->W;
+	float x = q->X * q->X;
+	float y = q->Y * q->Y;
+	float z = q->Z * q->Z;
+
+	m->right.X = x - y - z + w;
+	m->up.Y = y - x - z + w;
+	m->at.Z = z - (y + x) + w;
+
+	float t1 = q->X * q->Y;
+	float t2 = q->W * q->Z;
+	m->up.X	= t2 + t1 + t2 + t1;
+	m->right.Y = t1 - t2 + t1 - t2;
+
+	t1 = q->X * q->Z;
+	t2 = q->W * q->Y;
+	m->at.X = t1 - t2 + t1 - t2;
+	m->right.Z = t2 + t1 + t2 + t1;
+
+	t1 = q->X * q->Z;
+	t2 = q->W * q->X;
+	m->at.Y = t2 + t1 + t2 + t1;
+	m->up.Z = t1 - t2 + t1 - t2;
 }
 
 //----------------------------------------------------

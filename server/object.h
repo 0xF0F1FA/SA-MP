@@ -21,10 +21,12 @@ class CObject
 {
 public:
 
-	BYTE					m_byteObjectID;
+	WORD					m_wObjectID;
 	int						m_iModel;
 	bool					m_bIsActive;
 	MATRIX4X4				m_matWorld;
+	VECTOR					m_vecRot;
+	BYTE m_byteDefaultCameraCol;
 	MATRIX4X4				m_matTarget;
 	BYTE					m_byteMoving;
 	float					m_fMoveSpeed;
@@ -36,14 +38,17 @@ public:
 
 	bool IsActive() { return m_bIsActive; }
 
-	void SetID(BYTE byteObjectID) { m_byteObjectID = byteObjectID; };
+	void SetID(WORD wObjectID) { m_wObjectID = wObjectID; };
+
+	void SetRotation(VECTOR* vecRot);
+	VECTOR* GetRotation() { return &m_vecRot; };
 
 	void SpawnForPlayer(BYTE byteForPlayerID);
 	int Process(float fElapsedTime);
 	void Stop() { m_byteMoving &= ~1; };
 	float DistanceRemaining();
 	
-	float MoveTo(float X, float Y, float Z, float speed);
+	float MoveTo(float X, float Y, float Z, float speed, float RotX, float RotY, float RotZ);
 };
 
 #endif

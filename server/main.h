@@ -26,7 +26,7 @@
 
 #define MAX_FILTER_SCRIPTS		16
 
-#define DEFAULT_MAX_PLAYERS		32
+#define DEFAULT_MAX_PLAYERS		50
 #define DEFAULT_LISTEN_PORT		8192
 #define DEFAULT_RCON_PORT		8193
 #define DEFAULT_RCON_MAXUSERS	8
@@ -167,10 +167,15 @@ extern bool g_bDBLogQueries;
 extern bool bGameModeFinished;
 extern bool	bQuitApp;
 extern unsigned int _uiRndSrvChallenge;
-extern float g_fStreamDistance;
-extern int g_iStreamRate;
+extern float fStreamDistance;
+extern int iStreamRate;
 extern bool bQueryLogging;
 extern int iSleepTime;
+extern int iMTUSize;
+extern int iOnFootRate;
+extern int iInCarRate;
+extern int iWeaponRate;
+extern int iLagCompMode;
 extern CServerVars ServerVars;
 
 // -------------------

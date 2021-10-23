@@ -58,10 +58,12 @@ enum
 	RPC_Click,
 	RPC_WorldAddActor,
 	RPC_WorldRemoveActor,
+	RPC_PlayerDamage,
 	RPC_ActorDamage,
 	RPC_CreateLabel,
 	RPC_DestroyLabel,
 	RPC_ChatBubble,
+	RPC_VehicleParams,
 	RPC_SetTimer,
 	RPC_ModelRequest,
 
@@ -149,16 +151,32 @@ enum
 	RPC_ScrSetShopName,
 	RPC_ScrAudioStream,
 	RPC_ScrPlayCrimeReport,
+	RPC_ScrAttachObjectToCamera,
 	RPC_ScrSetActorPos,
 	RPC_ScrSetActorFacingAngle,
 	RPC_ScrSetActorHealth,
 	RPC_ScrApplyActorAnimation,
 	RPC_ScrClearActorAnimation,
-	RPC_ScrDisableVehicleCollision,
+	RPC_ScrVehicleCollision,
+	RPC_ScrClickTextDraw,
+	RPC_ObjectSelect,
 
 	MAX_RPC_UNIQUE_ID, // Don't use it, and leave it as last constant
 };
 
 static_assert((UniqueID)-1 >= MAX_RPC_UNIQUE_ID, "Unique ID limit reached. See the notes in SAMPRPC.h");
+
+#define ID_PLAYER_SYNC 207
+#define ID_VEHICLE_SYNC 200
+#define ID_PASSENGER_SYNC 211
+#define ID_AIM_SYNC 203
+#define ID_TRAILER_SYNC 210
+#define ID_SPECTATOR_SYNC 212
+#define ID_RCON_COMMAND 201
+#define ID_STATS_UPDATE 205
+#define ID_WEAPONS_UPDATE 204
+#define ID_MARKER_SYNC 208
+#define ID_WEAPON_SHOT 206
+#define ID_UNOCCUPIED_SYNC 209
 
 #endif // _SAMPRPC_H

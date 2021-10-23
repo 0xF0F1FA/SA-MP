@@ -2,7 +2,9 @@
 #ifndef SAMPSRV_ARTWORK_H
 #define SAMPSRV_ARTWORK_H
 
-#include <list>
+#define MODEL_TYPE_NONE 0
+#define MODEL_TYPE_CHAR 1
+#define MODEL_TYPE_SIMPLE 2
 
 typedef struct {
 	BYTE byteType;
@@ -34,11 +36,12 @@ public:
 	void ReadConfig(char* szArtConfig);
 	void AddCharModelEntry(char* szParams);
 	void AddSimpleModelEntry(char* szParams);
-	DWORD GetFileChecksum(char* szFileName);
+	DWORD GetStringChecksum(char* szStr);
 	DWORD GetFileChecksum(char* szFileName, DWORD* pdwCRC);
 	ARTWORK_DATA* FindDataFromModelCRC(DWORD dwDffCRC);
 	ARTWORK_DATA* FindDataFromTextureCRC(DWORD dwTxdCRC);
 	DWORD GetBaseID(int iNewID);
+	int GetBaseIDFromNewID(int iSkin);
 
 	int AddModelEntry(BYTE byteType, int iVW, int iBaseID, int iNewID,
 		char* szDffName, char* szTxtName, bool bTimeOn, bool bTimeOff);

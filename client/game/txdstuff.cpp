@@ -137,3 +137,25 @@ unsigned int GetNumRefs(int iIndex)
 
 	return iResult;
 }
+
+DWORD ReloadTexture(char* szTexture)
+{
+	DWORD dwResult = 0;
+
+	_asm push szTexture
+	_asm lea ecx, dwResult
+	_asm push szTexture
+	_asm mov edx, 0x727270
+	_asm call edx
+
+	return dwResult;
+}
+
+void DestroyTexture(DWORD dwThis)
+{
+	//_asm eax, dwThis
+	//_asm dwThis, eax
+	_asm lea ecx, dwThis
+	_asm mov edx, 0x7281E0
+	_asm call edx
+}

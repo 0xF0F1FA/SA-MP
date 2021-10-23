@@ -85,10 +85,16 @@ public:
 	void OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
 	void OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
 	void OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
+	void OnPlayerStreamIn(cell playerid, cell forplayerid);
+	void OnPlayerStreamOut(cell playerid, cell forplayerid);
+	void OnVehicleStreamIn(cell vehicleid, cell forplayerid);
+	void OnVehicleStreamOut(cell vehicleid, cell forplayerid);
 	void OnActorStreamIn(cell actorid, cell forplayerid);
 	void OnActorStreamOut(cell actorid, cell forplayerid);
 	void OnPlayerGiveDamageActor(cell playerid, cell actorid, float fDamage, cell weaponid, cell bodypart);
 	void OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell source);
+	void OnPlayerClickTextDraw(cell playerid, cell text);
+	void OnPlayerClickPlayerTextDraw(cell playerid, cell playertext);
 };
 
 //----------------------------------------------------------------------------------

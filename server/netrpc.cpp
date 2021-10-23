@@ -218,13 +218,12 @@ void Chat(RPCParameters *rpcParams)
 
 	ReplaceBadChars((char *)szText);
 
-	BYTE bytePlayerID = pRak->GetIndexFromPlayerID(sender);
-	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(bytePlayerID);
-
 	if(pConsole->GetIntVariable("chatlogging"))
 		logprintf("[chat] [%s]: %s",
-			pPlayer->GetName(),
+			pPool->GetPlayerName(pRak->GetIndexFromPlayerID(sender)),
 			szText);
+
+	BYTE bytePlayerID = pRak->GetIndexFromPlayerID(sender);
 
 /*#ifdef RAKRCON
 	RakNet::BitStream bsSend;
@@ -236,6 +235,7 @@ void Chat(RPCParameters *rpcParams)
 	pRcon->GetRakServer()->RPC( RPC_Chat, &bsSend, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false );
 #endif*/
 
+	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(bytePlayerID);
 	CGameMode *pGameMode = pNetGame->GetGameMode();
 	
 	if (pPlayer)
@@ -479,7 +479,7 @@ void ServerCommand(RPCParameters *rpcParams)
 		{
 			if (!pNetGame->GetGameMode()->OnPlayerCommandText(bytePlayerID, szCommand))
 			{
-				pNetGame->SendClientMessage(sender, 0xFFFFFFFF, "SERVER: Unknown command.");
+				pNetGame->SendClientMessage(bytePlayerID, 0xFFFFFFFF, "SERVER: Unknown command.");
 			}
 		}
 	}
@@ -501,22 +501,19 @@ static void UpdateScoresPingsIPs(RPCParameters* rpcParams)
 	
 	RakNet::BitStream bsParams;
 
-	int iLastID = pPlayerPool->GetLastPlayerId();
-	WORD i = 0;
+	int iLastID = pPlayerPool->GetPoolSize();
+	int i = 0;
 
-	if (iLastID != -1)
+	while (i <= iLastID)
 	{
-		while (i <= (WORD)iLastID)
-		{
-			pPlayer = pPlayerPool->GetAt(i);
-			if (!pPlayer) continue;
+		pPlayer = pPlayerPool->GetAt(i);
+		if (!pPlayer) continue;
 			
-			bsParams.Write(i);
-			bsParams.Write(pPlayer->m_iScore);
-			// GetLastPing could return -1 when fails, but its only overflow back to 65535
-			bsParams.Write(pRak->GetLastPing(pRak->GetPlayerIDFromIndex(i)));
-			i++;
-		}
+		bsParams.Write((WORD)i);
+		bsParams.Write(pPlayerPool->GetPlayerScore(i));
+		// GetLastPing could return -1 when fails, but its only overflow back to 65535
+		bsParams.Write(pRak->GetLastPing(pRak->GetPlayerIDFromIndex(i)));
+		i++;
 	}
 	
 	// Written, but unused last 2 bytes in client?
@@ -529,7 +526,7 @@ static void UpdateScoresPingsIPs(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
-/*void SvrStats(RPCParameters *rpcParams)
+/*void SvrStats(RPCParameters* rpcParams)
 {
 	PlayerID sender = rpcParams->sender;
 
@@ -750,7 +747,7 @@ void AdminMapTeleport(RPCParameters *rpcParams)
 				vecPos.X, vecPos.Y, vecPos.Z);
 		}
 
-		if (pPlayer->m_bCanTeleport || pNetGame->m_bAdminTeleport && pPlayer->m_bIsAdmin)
+		if (pPlayer->m_bCanTeleport || pNetGame->m_bAdminTeleport && pPlayerPool->IsAdmin(bytePlayerId))
 		{
 			RakNet::BitStream bsParams;
 			bsParams.Write(vecPos.X);	// X
@@ -1017,6 +1014,109 @@ static void Click(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
+#define GLOBAL_TEXT_DRAW 1
+#define PLAYER_TEXT_DRAW 2
+
+static void ScrClickTextDraw(RPCParameters* rpcParams)
+{
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+	CFilterScripts* pFilterScripts = pNetGame->GetFilterScripts();
+	CGameMode* pGameMode = pNetGame->GetGameMode();
+
+	if (pNetGame->GetGameState() != GAMESTATE_RUNNING) return;
+	if (!pPlayerPool || !pTextDrawPool) return;
+
+	WORD wPlayerID = (WORD)rpcParams->senderId;
+	
+	// Kindly add a patch for prevent receiving fake event, and triggering callbacks anytime
+	CPlayer* pPlayer = pPlayerPool->GetAt(wPlayerID);
+	if (pPlayer && pPlayer->m_bSelectingText)
+	{
+		RakNet::BitStream bsData(rpcParams);
+		WORD wText = INVALID_TEXT_DRAW;
+		WORD wPlayerText = INVALID_TEXT_DRAW;
+		BYTE byteType = 0;
+
+		// Check if the stream contains a 2 byte text id
+		if (bsData.Read(wText))
+		{
+			// Here it comes the complex-city.
+			// Basically determining the received ID is a global or a player text draw and checking it was visible and
+			// selectable for the player and call their respective callbacks. On paper, global and player text draw are
+			// different, but calling SelectTextDraw() function makes them act like, they are the same, so if there's
+			// a visible clickable global and player text draw, and clicking on a global text will trigger only the 
+			// OnPlayerClickTextDraw() callback, while OnPlayerClickPlayerTextDraw() gets no information what so ever.
+			// And also when player presses ESC button, only OnPlayerClickTextDraw() gets triggered, when maybe be only
+			// player text draws visible for the player, so this mess will isolates them both
+			if (wText < MAX_TEXT_DRAWS)
+			{
+				if (pTextDrawPool->IsSelectable(wText))
+				{
+					byteType |= GLOBAL_TEXT_DRAW;
+
+					if (pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->HasSelectableText())
+					{
+						byteType |= PLAYER_TEXT_DRAW;
+					}
+				}
+			}
+			else if (wText >= MAX_TEXT_DRAWS && wText < (MAX_TEXT_DRAWS + MAX_PLAYER_TEXT_DRAWS))
+			{
+				wPlayerText = wText - MAX_TEXT_DRAWS;
+
+				if (pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->IsSelectable(wPlayerText))
+				{
+					byteType |= PLAYER_TEXT_DRAW;
+
+					if (pTextDrawPool->IsPlayerHasSelectableText(wPlayerID))
+					{
+						byteType |= GLOBAL_TEXT_DRAW;
+						wText = INVALID_TEXT_DRAW;
+					}
+				}
+			}
+			else if (wText == INVALID_TEXT_DRAW)
+			{
+				if (pPlayer->m_pTextDraw && pPlayer->m_pTextDraw->HasSelectableText())
+					byteType |= PLAYER_TEXT_DRAW;
+
+				if(pTextDrawPool->IsPlayerHasSelectableText(wPlayerID))
+					byteType |= GLOBAL_TEXT_DRAW;
+			}
+
+			if (byteType & PLAYER_TEXT_DRAW)
+			{
+				if (!pFilterScripts || !pFilterScripts->OnPlayerClickPlayerTextDraw(wPlayerID, wPlayerText))
+				{
+					if (pGameMode)
+					{
+						pGameMode->OnPlayerClickPlayerTextDraw(wPlayerID, wPlayerText);
+					}
+				}
+			}
+
+			if (byteType & GLOBAL_TEXT_DRAW)
+			{
+				if (!pFilterScripts || !pFilterScripts->OnPlayerClickTextDraw(wPlayerID, wText))
+				{
+					if (pGameMode)
+					{
+						pGameMode->OnPlayerClickTextDraw(wPlayerID, wText);
+					}
+				}
+			}
+
+			// Done here, player no longer on text selection.
+			// This also fixes a bug when calling CancelSelectTextDraw() function in one of click text draw
+			// callbacks, which would caused being stuck in an infinite loop
+			pPlayer->m_bSelectingText = false;
+		}
+	}
+}
+
+//----------------------------------------------------
+
 void RegisterRPCs(RakServerInterface * pRakServer)
 {
 	pRak = pRakServer;
@@ -1045,6 +1145,7 @@ void RegisterRPCs(RakServerInterface * pRakServer)
 	REGISTER_STATIC_RPC(pRakServer, VehicleDamage);
 	REGISTER_STATIC_RPC(pRakServer, ActorDamage);
 	REGISTER_STATIC_RPC(pRakServer, Click);
+	REGISTER_STATIC_RPC(pRakServer, ScrClickTextDraw);
 }
 
 //----------------------------------------------------

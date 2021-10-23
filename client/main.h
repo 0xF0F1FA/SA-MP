@@ -30,7 +30,7 @@
 
 #define CONFIG_FILE "sa-mp.cfg"
 #define CHAT_LOG_FILE "chatlog.txt"
-#define APPLICATION_ID ""
+#define APPLICATION_ID "778679655666286612"
 
 // 3x 100000 bytes to alloc for string is little bit overkill, isn't it?
 #define MAX_STRING_LENGTH 33000 // 100000
@@ -57,6 +57,7 @@ typedef struct _GAME_SETTINGS {
 #include <dxut/dxstdafx.h>
 #include "game/game.h"
 #include "game/util.h"
+#include "game/animstuff.h"
 
 #include <raknet/RakClientInterface.h>
 #include <raknet/BitStream.h>
@@ -69,6 +70,7 @@ typedef struct _GAME_SETTINGS {
 
 #include "net/localplayer.h"
 #include "net/remoteplayer.h"
+#include "net/playerinfo.h"
 #include "net/netrpc.h"
 #include "net/playerpool.h"
 #include "net/vehiclepool.h"
@@ -82,6 +84,8 @@ typedef struct _GAME_SETTINGS {
 #include "net/netgame.h"
 #include "net/scriptrpc.h"
 
+#include "unnamed2.h"
+#include "unnamed1.h"
 #include "runutil.h"
 #include "colorembed.h"
 #include "licenseplate.h"
@@ -91,8 +95,8 @@ typedef struct _GAME_SETTINGS {
 #include "cmdwindow.h"
 #include "deathwindow.h"
 #include "spawnscreen.h"
-#include "playertags.h"
-//#include "newplayertags.h"
+//#include "playertags.h"
+#include "newplayertags.h"
 #include "dialog.h"
 #include "scoreboard.h"
 #include "label.h"
@@ -106,6 +110,7 @@ typedef struct _GAME_SETTINGS {
 #include "cursor.h"
 #include "audiostream.h"
 #include "configfile.h"
+#include "textdrawselect.h"
 #include "hash.h"
 
 void QuitGame();
@@ -114,6 +119,8 @@ void UpdateDiscordPresence(char* state, char* details);
 char* GetFontFace();
 int GetFontWeight();
 int GetDeathWindowFontSize();
+
+int exc_filter(unsigned int code, struct _EXCEPTION_POINTERS* ep, char* type);
 
 //void UnFuck(DWORD addr, int size);
 
@@ -124,7 +131,7 @@ extern CNetGame* pNetGame;
 extern CCmdWindow* pCmdWindow;
 extern CSpawnScreen* pSpawnScreen;
 extern CFontRender* pDefaultFont;
-extern CPlayerTags* pPlayerTags;
+extern CNewPlayerTags* pNewPlayerTags;
 extern CScoreBoard* pScoreBoard;
 extern CLabel* pLabel;
 extern CNetStats* pNetStats;
@@ -135,6 +142,9 @@ extern CCursor* pCursor;
 extern CAudioStream* pAudioStream;
 extern CConfigFile* pConfigFile;
 extern CChatBubble* pChatBubble;
+extern CLicensePlate* pLicensePlate;
+extern CTextDrawSelect* pTextDrawSelect;
+extern CDialog* pDialog;
 
 extern CDXUTDialogResourceManager* pDialogResourceManager;
 extern CDXUTDialog* pGameUI;
@@ -146,6 +156,7 @@ extern bool bWantHudScaling;
 extern bool bHeadMove;
 extern int iGtaVersion;
 extern char szUserDocPath[MAX_PATH];
+extern WORD wLastVehicleComponent;
 extern HINSTANCE hInstance;
 
 #include "outputdebugstring.h"

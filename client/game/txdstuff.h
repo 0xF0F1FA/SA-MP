@@ -11,3 +11,5 @@ void SetCurrentTxd(int iIndex);
 void RemoveTxd(int iIndex);
 void RemoveTxdSlot(int iIndex);
 unsigned int GetNumRefs(int iIndex);
+DWORD ReloadTexture(char* szTexture);
+void DestroyTexture(DWORD dwThis);

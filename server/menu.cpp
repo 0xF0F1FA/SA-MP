@@ -40,7 +40,7 @@ CMenu::CMenu(PCHAR pTitle, float fX, float fY, BYTE byteColumns, float fCol1Widt
 
 void CMenu::ResetForAll()
 {
-	for (BYTE i = 0; i < MAX_PLAYERS; i++)
+	for (WORD i = 0; i < MAX_PLAYERS; i++)
 	{
 		m_bInitedForPlayer[i] = false;
 	}
@@ -50,7 +50,7 @@ BYTE CMenu::AddMenuItem(BYTE byteColumn, PCHAR pText)
 {
 	if (byteColumn >= MAX_COLUMNS) return 0xFF;
 	BYTE byteCount = m_byteColCount[byteColumn];
-	if (byteCount >= MAX_MENU_LINE) return 0xFF;
+	if (byteCount >= MAX_MENU_ITEMS) return 0xFF;
 	if (strlen(pText) >= MAX_MENU_LINE) pText[MAX_MENU_LINE - 1] = '\0';
 	
 	ResetForAll();
@@ -68,18 +68,18 @@ void CMenu::SetColumnTitle(BYTE byteColumn, PCHAR pText)
 	strcpy(m_charHeader[byteColumn], pText);
 }
 
-void CMenu::InitForPlayer(BYTE bytePlayerID)
+void CMenu::InitForPlayer(WORD wPlayerID)
 {
-	if (bytePlayerID >= MAX_PLAYERS) return;
+	if (wPlayerID >= MAX_PLAYERS) return;
 	
-	m_bInitedForPlayer[bytePlayerID] = true;
+	m_bInitedForPlayer[wPlayerID] = true;
 	
 	// Send data here
 	RakServerInterface* pRak = pNetGame->GetRakServer();
 	RakNet::BitStream bsMenu;
 	
 	bsMenu.Write(m_byteMenuID);
-	bsMenu.Write(m_byteColumns == 2);
+	bsMenu.Write((BOOL)(m_byteColumns == 2));
 	bsMenu.Write(m_charTitle, MAX_MENU_LINE);
 	bsMenu.Write(m_fXPos);
 	bsMenu.Write(m_fYPos);
@@ -88,10 +88,10 @@ void CMenu::InitForPlayer(BYTE bytePlayerID)
 	{
 		bsMenu.Write(m_fCol2Width);
 	}
-	bsMenu.Write(m_MenuInteraction.bMenu);
+	bsMenu.Write((BOOL)m_MenuInteraction.bMenu);
 	for (BYTE i = 0; i < MAX_MENU_ITEMS; i++)
 	{
-		bsMenu.Write(m_MenuInteraction.bRow[i]);
+		bsMenu.Write((BOOL)m_MenuInteraction.bRow[i]);
 	}
 	bsMenu.Write(m_charHeader[0], MAX_MENU_LINE);
 	BYTE count = m_byteColCount[0];
@@ -111,32 +111,28 @@ void CMenu::InitForPlayer(BYTE bytePlayerID)
 		}
 	}
 
-	pRak->RPC(RPC_ScrInitMenu, &bsMenu, HIGH_PRIORITY, 
-		RELIABLE, 0, pRak->GetPlayerIDFromIndex(bytePlayerID), false, false);
+	pNetGame->RPC(RPC_ScrInitMenu, &bsMenu, wPlayerID, 2);
 }
 
-void CMenu::ShowForPlayer(BYTE bytePlayerID)
+void CMenu::ShowForPlayer(WORD wPlayerID)
 {
-	if (bytePlayerID >= MAX_PLAYERS) return;
+	if (wPlayerID >= MAX_PLAYERS) return;
 	
-	if (!m_bInitedForPlayer[bytePlayerID]) InitForPlayer(bytePlayerID);
+	if (!m_bInitedForPlayer[wPlayerID]) InitForPlayer(wPlayerID);
 	
 	// Send command to display it here
-	RakServerInterface* pRak = pNetGame->GetRakServer();
 	RakNet::BitStream bsMenu;
 	bsMenu.Write(m_byteMenuID);
-	pRak->RPC(RPC_ScrShowMenu, &bsMenu, HIGH_PRIORITY, 
-		RELIABLE, 0, pRak->GetPlayerIDFromIndex(bytePlayerID), false, false);
+	pNetGame->RPC(RPC_ScrShowMenu, &bsMenu, wPlayerID, 2);
 }
 
-void CMenu::HideForPlayer(BYTE bytePlayerID)
+void CMenu::HideForPlayer(WORD wPlayerID)
 {
-	if (bytePlayerID >= MAX_PLAYERS) return;
-	RakServerInterface* pRak = pNetGame->GetRakServer();
+	if (wPlayerID >= MAX_PLAYERS) return;
+
 	RakNet::BitStream bsMenu;
 	bsMenu.Write(m_byteMenuID);
-	pRak->RPC(RPC_ScrHideMenu, &bsMenu, HIGH_PRIORITY, 
-		RELIABLE, 0, pRak->GetPlayerIDFromIndex(bytePlayerID), false, false);
+	pNetGame->RPC(RPC_ScrHideMenu, &bsMenu, wPlayerID, 2);
 }
 
 bool CMenu::ValidRow(unsigned char ucRow)

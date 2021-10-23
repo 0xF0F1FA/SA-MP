@@ -18,6 +18,7 @@ extern GAME_SCRIPT_THREAD* gst;
 
 static PEXCEPTION_POINTERS pExceptionPtrs = NULL;
 static char szCrashInfoFile[50] = { 0 };
+static DWORD dwExcWarningCount = 0;
 
 static void DumpLoadedModules(FILE* f)
 {
@@ -264,5 +265,37 @@ LONG WINAPI exc_handler(_EXCEPTION_POINTERS* exc_inf)
 	} else {
 		DumpMain();
 	}
-	return EXCEPTION_CONTINUE_SEARCH;
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// https://docs.microsoft.com/en-us/cpp/cpp/try-except-statement?view=msvc-160
+int exc_filter(unsigned int code, struct _EXCEPTION_POINTERS* ep, char* type)
+{
+	if (pChatWindow)
+	{
+		if (!memcmp(type, "opcode", 7))
+		{
+			if (dwScmOpcodeDebug == 0x6E7)
+			{
+				pChatWindow->AddDebugMessage("Warning(add_car_component %u): Exception 0x%X at 0x%X",
+					wLastVehicleComponent, code, ep->ContextRecord->Eip);
+
+				return EXCEPTION_EXECUTE_HANDLER;
+			}
+
+			pChatWindow->AddDebugMessage("Warning(opcode 0x%X): Exception 0x%X at 0x%X",
+				dwScmOpcodeDebug, code, ep->ContextRecord->Eip);
+		}
+		else
+		{
+			pChatWindow->AddDebugMessage("Warning(%s): Exception 0x%X at 0x%X",
+				type, code, ep->ContextRecord->Eip);
+		}
+	}
+	if (dwExcWarningCount >= 10)
+	{
+		return EXCEPTION_CONTINUE_SEARCH;
+	}
+	dwExcWarningCount++;
+	return EXCEPTION_EXECUTE_HANDLER;
 }

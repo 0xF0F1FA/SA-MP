@@ -34,6 +34,21 @@ CCmdWindow::~CCmdWindow()
 
 //----------------------------------------------------
 
+void CCmdWindow::GetRect(RECT* rect)
+{
+	rect->left = 0;
+	rect->top = 0;
+	rect->right = 0;
+	rect->bottom = 0;
+
+	if(m_pGameUI) {
+		rect->right = m_pGameUI->GetWidth();
+		rect->bottom = m_pGameUI->GetHeight();
+	}
+}
+
+//----------------------------------------------------
+
 void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 {
 	m_pGameUI = pGameUI;
@@ -43,8 +58,8 @@ void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 
 		if (pConfigFile->GetInt("ime"))
 		{
-			m_pEditControl->EnableImeSystem(true);
-			m_pEditControl->StaticOnCreateDevice();
+			CDXUTIMEEditBox::EnableImeSystem(true);
+			CDXUTIMEEditBox::StaticOnCreateDevice();
 		}
 
 		m_pEditControl->GetElement(0)->TextureColor.Init(D3DCOLOR_ARGB(240, 5, 5, 5));
@@ -61,61 +76,58 @@ void CCmdWindow::ResetDialogControls(CDXUTDialog *pGameUI)
 
 void CCmdWindow::Enable()
 {
-	if (!m_bEnabled)
-	{
-		if (m_pEditControl) {
-			RECT rect;
-			LONG lWidth, lHeight;
-			GetClientRect(pGame->GetMainWindowHwnd(), &rect);
+	if(m_bEnabled) return;
 
-			lWidth = (LONG)(rect.right * 0.6f);
-			lHeight = (LONG)(m_pGameUI->GetFont(0)->nHeight * -1.5f);
+	if(m_pEditControl) {
+		RECT rect;
+		GetClientRect(pGame->GetMainWindowHwnd(), &rect);
 
-			if (lWidth > 800)
-				lWidth = 800;
+		LONG lWidth = rect.right * 0.6f;
+		if(lWidth > 800)
+			lWidth = 800;
 
-			m_pEditControl->SetEnabled(true);
-			m_pEditControl->SetVisible(true);
+		m_pEditControl->SetEnabled(true);
+		m_pEditControl->SetVisible(true);
 
-			m_pEditControl->SetLocation(40, pChatWindow->GetChatWindowBottom());
-			m_pEditControl->SetSize(lWidth, 14 - lHeight);
-			m_pGameUI->RequestFocus(m_pEditControl);
-			m_pEditControl->OnFocusIn();
+		m_pEditControl->SetLocation(40,pChatWindow->GetChatWindowBottom());
+		m_pEditControl->SetSize(lWidth,14-(m_pGameUI->GetFont(0)->nHeight*-1.5f));
 
-			m_pGameUI->SetSize(lWidth + 100, pChatWindow->GetChatWindowBottom() + 50);
-		}
+		m_pGameUI->RequestFocus(m_pEditControl);
+		m_pEditControl->OnFocusIn();
 
-		if (pNetGame) {
-			RakNet::BitStream out;
-			out.Write1();
-			pNetGame->Send(RPC_TypingEvent, &out);
-		}
-
-		m_bEnabled = TRUE;
+		m_pGameUI->SetSize(lWidth+100,pChatWindow->GetChatWindowBottom()+50);
 	}
+
+	if(pNetGame) {
+		RakNet::BitStream out;
+		out.Write1();
+		pNetGame->Send(RPC_TypingEvent, &out);
+	}
+
+	m_bEnabled = TRUE;
 }
 
 //----------------------------------------------------
 
 void CCmdWindow::Disable()
 {
-	if (m_bEnabled)
-	{
-		if (m_pEditControl) {
-			m_pEditControl->SetEnabled(false);
-			m_pEditControl->SetVisible(false);
-		}
+	if(!m_bEnabled) return;
 
-		pGame->ToggleKeyInputsDisabled(0, true);
+	if(m_pEditControl) {
+		m_pEditControl->OnFocusOut();
+		m_pEditControl->SetEnabled(false);
+		m_pEditControl->SetVisible(false);
+	}
 
-		if (pNetGame) {
-			RakNet::BitStream out;
-			out.Write0();
-			pNetGame->Send(RPC_TypingEvent, &out);
-		}
+	pGame->ToggleKeyInputsDisabled(0, true);
 
-		m_bEnabled = FALSE;
-	}	
+	if(pNetGame) {
+		RakNet::BitStream out;
+		out.Write0();
+		pNetGame->Send(RPC_TypingEvent, &out);
+	}
+
+	m_bEnabled = FALSE;
 }
 
 //----------------------------------------------------
@@ -173,8 +185,9 @@ void CCmdWindow::RecallDown()
 
 void CCmdWindow::Draw()
 {
-	if (m_bEnabled)
+	if(m_bEnabled) {
 		pGame->ToggleKeyInputsDisabled(2);
+	}
 }
 
 //----------------------------------------------------
@@ -251,10 +264,11 @@ void CCmdWindow::ProcessInput()
 	*m_szInputBuffer ='\0';	
 	m_pEditControl->SetText("",false);
 
-	if (m_bEnabled) {
+	if(m_bEnabled) {
 		// Rolls back to the beggining
-		if (pChatWindow)
+		if(pChatWindow) {
 			pChatWindow->ResetPage();
+		}
 		Disable();
 	}
 }
@@ -295,7 +309,12 @@ void CCmdWindow::AddCmdProc(PCHAR szCmdName, CMDPROC cmdHandler)
 
 int CCmdWindow::MsgProc(UINT uMsg, DWORD wParam, DWORD lParam)
 {
-	return (m_bEnabled && m_pEditControl && m_pEditControl->StaticMsgProc(uMsg, wParam, lParam));
+	if(m_bEnabled && m_pEditControl) {
+		if(CDXUTIMEEditBox::StaticMsgProc(uMsg,wParam,lParam)) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 //----------------------------------------------------

@@ -23,6 +23,8 @@ CVehiclePool::CVehiclePool()
 		m_Doors[VehicleID] = { 0,0,0,0 };
 		m_bHasSiren[VehicleID] = false;
 	}
+	m_bRebuildPlateTextures = true;
+	m_iPoolSize = -1;
 }
 
 //----------------------------------------------------
@@ -32,6 +34,19 @@ CVehiclePool::~CVehiclePool()
 	for(VEHICLEID VehicleID = 0; VehicleID < MAX_VEHICLES; VehicleID++) {
 		Delete(VehicleID);
 	}
+}
+
+//----------------------------------------------------
+
+void CVehiclePool::UpdatePoolSize()
+{
+	int iNewSize = -1;
+	for (int i = 0; i < MAX_VEHICLES; i++)
+	{
+		if (m_bVehicleSlotState[i])
+			iNewSize = i;
+	}
+	m_iPoolSize = iNewSize;
 }
 
 //----------------------------------------------------
@@ -65,6 +80,54 @@ bool CVehiclePool::New( VEHICLEID VehicleID, int iVehicleType,
 
 //----------------------------------------------------
 
+bool CVehiclePool::New(VEHICLE_TRANSMIT* pTransmit)
+{
+	if (m_pVehicles[pTransmit->VehicleID])
+	{
+		pChatWindow->AddDebugMessage("Warning: vehicle %u was not deleted", pTransmit->VehicleID);
+		Delete(pTransmit->VehicleID);
+	}
+
+	CVehicle* pVehicle = pGame->NewVehicle(
+		pTransmit->iModelID,
+		pTransmit->vecPos.X,
+		pTransmit->vecPos.Y,
+		pTransmit->vecPos.Z,
+		pTransmit->fRotation,
+		NULL); // TODO: Replace szNumberPlate to bWantSiren?
+
+	if (pVehicle)
+	{
+		if (pTransmit->byteColor1 != -1 || pTransmit->byteColor2 != -1)
+			pVehicle->SetColor(pTransmit->byteColor1, pTransmit->byteColor2);
+
+		pVehicle->SetHealth(pTransmit->fHealth);
+
+		if (pTransmit->byteInterior)
+		{
+			//if (m_bVehicleSlotState[pTransmit->VehicleID])
+			{
+				pVehicle->LinkToInterior(pTransmit->byteInterior);
+			}
+		}
+
+		if (pTransmit->dwPanelsState ||
+			pTransmit->dwDoorsState ||
+			pTransmit->byteLightsState)
+		{
+			pVehicle->UpdateDamage(pTransmit->dwPanelsState,
+				pTransmit->dwDoorsState, pTransmit->byteLightsState);
+		}
+
+		pVehicle->SetCarOrBikeWheelStatus(pTransmit->byteTyresState);
+
+		m_pVehicles[pTransmit->VehicleID] = pVehicle;
+	}
+	return false;
+}
+
+//----------------------------------------------------
+
 bool CVehiclePool::Delete(VEHICLEID VehicleID)
 {
 	if(!GetSlotState(VehicleID) || !m_pVehicles[VehicleID])
@@ -72,9 +135,13 @@ bool CVehiclePool::Delete(VEHICLEID VehicleID)
 		return false; // Vehicle already deleted or not used.
 	}
 
+	//m_pVehicles[VehicleID]->DestroyNumberPlateTexture();
+
 	m_bVehicleSlotState[VehicleID] = false;
 	delete m_pVehicles[VehicleID];
 	m_pVehicles[VehicleID] = NULL;
+
+	UpdatePoolSize();
 
 	return true;
 }
@@ -214,6 +281,34 @@ void CVehiclePool::ProcessForVirtualWorld(VEHICLEID vehicleId, int iPlayerWorld)
 		}
 	}
 }
+
+//-----------------------------------------------------------
+
+void CVehiclePool::ProcessLicensePlateTextures()
+{
+	if(m_bRebuildPlateTextures)
+	{
+		if (pLicensePlate && !pLicensePlate->m_pDefaultTexture)
+			pLicensePlate->m_pDefaultTexture = pLicensePlate->Make("XYZSR998");
+
+		for (VEHICLEID VehicleID = 0; VehicleID <= m_iPoolSize; VehicleID++) {
+			if (m_bVehicleSlotState[VehicleID]) {
+				//m_pVehicles[VehicleID]->UpdatePlateTexture();
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------
+
+/*void CVehiclePool::DestroyNumberPlateTextures()
+{
+	for (VEHICLEID VehicleID = 0; VehicleID <= m_PoolSize; VehicleID++) {
+		if (m_bVehicleSlotState[VehicleID]) {
+			m_pVehicles[VehicleID]->DestroyNumberPlateTexture();
+		}
+	}
+}*/
 
 //-----------------------------------------------------------
 

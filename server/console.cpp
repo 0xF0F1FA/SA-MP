@@ -103,7 +103,7 @@ void con_kick()
 			PlayerID Player = pRak->GetPlayerIDFromIndex(wPlayerId);
 			in_addr in;
 			in.s_addr = Player.binaryAddress;
-			logprintf("%s <#%d - %s> has been kicked.",pPlayerPool->GetAt(wPlayerId)->GetName(), wPlayerId, inet_ntoa(in));
+			logprintf("%s <#%d - %s> has been kicked.",pPlayerPool->GetPlayerName(wPlayerId), wPlayerId, inet_ntoa(in));
 			pNetGame->KickPlayer(wPlayerId);
 		}
 	}
@@ -123,8 +123,8 @@ void con_ban()
 			in_addr in;
 			in.s_addr = Player.binaryAddress;
 			CPlayer* pPlayer = pPlayerPool->GetAt(wPlayerId);
-			logprintf("%s <#%d - %s> has been banned.", pPlayer->GetName(), wPlayerId, inet_ntoa(in));
-			pNetGame->AddBan((char*)pPlayer->GetName(), inet_ntoa(in), "CONSOLE BAN");
+			logprintf("%s <#%d - %s> has been banned.",pPlayerPool->GetPlayerName(wPlayerId), wPlayerId, inet_ntoa(in));
+			pNetGame->AddBan(pPlayerPool->GetPlayerName(wPlayerId), inet_ntoa(in), "CONSOLE BAN");
 			pNetGame->KickPlayer(wPlayerId);
 		}
 	}
@@ -244,7 +244,7 @@ void con_players() {
 			in_addr in;
 			in.s_addr = Player.binaryAddress;
 
-			logprintf("%d\t%s\t%d\t%s", i, pPlayerPool->GetAt(i)->GetName(), pRak->GetLastPing( Player ), inet_ntoa(in));
+			logprintf("%d\t%s\t%d\t%s", i, pPlayerPool->GetPlayerName(i), pRak->GetLastPing( Player ), inet_ntoa(in));
 		}
 	}
 }

@@ -16,8 +16,7 @@ class CPlayer
 {
 private:
 	BYTE					m_bytePlayerID;
-	char					m_szName[MAX_PLAYER_NAME];
-	unsigned char			m_ucNameLength;
+	WORD					m_wPlayerID;
 
 	BYTE					m_byteUpdateFromNetwork;
 
@@ -70,19 +69,15 @@ public:
 	bool					m_bRaceCheckpointEnabled;
 	int						m_iInteriorId;
 	int						m_iDrunkLevel;
-	bool					m_bIsAdmin;
-	int						m_iMoney;
-	int						m_iScore;
 	bool					m_bTyping;
 	RakNet::Time			m_nLastPingUpdate;
 	unsigned char			m_ucTeam;
 	unsigned char			m_ucFightingStyle;
 	unsigned char			m_ucFightingMove;
-	bool					m_bIsNPC;
-	char					m_szSerial[100];
+	bool					m_bSelectingText;
 	WORD					m_wTargetedPlayer;
 	WORD					m_wTargetedActor;
-
+	BOOL					m_bSelectingObject;
 	// Weapon data
 	DWORD					m_dwSlotAmmo[13];
 	BYTE					m_byteSlotWeapon[13];
@@ -95,15 +90,8 @@ public:
 
 	RakNet::Time			m_tmLastStreamRateTick;
 
-	char m_szClientVersion[MAX_VERSION_NAME];
 	unsigned int m_uiRconAttempt;
 	unsigned int m_uiMsgRecv;
-
-	int m_iVirtualWorld;
-
-	void SetName(const char* szName, unsigned char ucLenght);
-	const char* GetName() const { return m_szName; }
-	unsigned char GetNameLength() const { return m_ucNameLength; }
 
 	ONFOOT_SYNC_DATA* GetOnFootSyncData() { return &m_ofSync; }
 	INCAR_SYNC_DATA* GetInCarSyncData() { return &m_icSync; }
@@ -127,6 +115,7 @@ public:
 	float	m_fRotation;
 	bool	m_bCanTeleport;
 	float m_fWorldBounds[4];
+	WORD m_wSkillLevel[11];
 
 	bool IsActive() { 
 		if( m_byteState != PLAYER_STATE_NONE && m_byteState != PLAYER_STATE_SPECTATING ) { return true; }
@@ -134,6 +123,12 @@ public:
 	};
 	
 	void Deactivate();
+
+	bool m_bPlayerStreamedIn[1000];
+	int m_iStreamedInPlayerCount;
+
+	void StreamPlayerIn(WORD wPlayerID);
+	void StreamPlayerOut(WORD wPlayerID);
 
 	bool IsPickupStreamedIn(int iPickupID);
 	void StreamPickupIn(int iPickupID);
@@ -148,15 +143,17 @@ public:
 	void StreamActorOut(int iActorID);
 
 	void UpdatePosition(float x, float y, float z);
+	void ProcessMarkers();
 	void ProcessStreaming();
 
 	// Process this player during the server loop.
 	void Process(float fElapsedTime);
 	void BroadcastSyncData();
 	void Say(unsigned char * szText, size_t byteTextLength);
-	void SetID(BYTE bytePlayerID)
+	void SetID(WORD wPlayerID)
 	{
-		m_bytePlayerID = bytePlayerID;
+		m_bytePlayerID = wPlayerID;
+		m_wPlayerID = wPlayerID;
 		if (m_pLabelPool)
 			m_pLabelPool->SetPlayerID(m_bytePlayerID);
 	};
@@ -171,7 +168,7 @@ public:
 
 	PLAYER_SPAWN_INFO * GetSpawnInfo() { return &m_SpawnInfo; };
 
-	void HandleDeath(BYTE byteReason, BYTE byteWhoWasResponsible);
+	void HandleDeath(BYTE byteReason, WORD wWhoWasResponsible);
 	void Spawn();
 	void SpawnForWorld(BYTE byteTeam, int iSkin, VECTOR * vecPos, float fRotation);
 	void SpawnForPlayer(BYTE byteForPlayerID);
@@ -225,10 +222,7 @@ public:
 		return SPECIAL_ACTION_NONE;
 	};
 
-	void SetVirtualWorld(int iVirtualWorld);
-	int GetVirtualWorld() const {
-		return m_iVirtualWorld;
-	}
+	void SetSkillLevel(int iSkill, int iLevel);
 
 	unsigned long GetCurrentWeaponAmmo();
 

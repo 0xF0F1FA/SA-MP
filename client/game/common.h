@@ -17,6 +17,12 @@
 
 //-----------------------------------------------------------
 
+typedef struct _RGBA {
+	unsigned char r,g,b,a;
+} RGBA, *PRGBA;
+
+//-----------------------------------------------------------
+
 #define PADDING(x,y) BYTE x[y]
 
 //-----------------------------------------------------------
@@ -24,7 +30,7 @@
 #define IN_VEHICLE(x) ((x->dwStateFlags & 256) >> 8)
 
 //-----------------------------------------------------------
-
+#pragma pack(1)
 typedef struct _WEAPON_SLOT_TYPE
 {
 	DWORD dwType;
@@ -35,7 +41,7 @@ typedef struct _WEAPON_SLOT_TYPE
 } WEAPON_SLOT_TYPE;  // MUST BE EXACTLY ALIGNED TO 28 bytes
 
 //-----------------------------------------------------------
-
+#pragma pack(1)
 typedef struct _PED_TASKS_TYPE
 {
 	DWORD * pdwPed; // 0-4
@@ -55,7 +61,7 @@ typedef struct _PED_TASKS_TYPE
 } PED_TASKS_TYPE;
 
 //-----------------------------------------------------------
-
+#pragma pack(1)
 typedef struct _ENTITY_TYPE
 {
 	// ENTITY STUFF
@@ -81,7 +87,7 @@ typedef struct _ENTITY_TYPE
 } ENTITY_TYPE;
 
 //-----------------------------------------------------------
-
+#pragma pack(1)
 typedef struct _PED_TYPE
 {
 	ENTITY_TYPE entity; // 0-184
@@ -135,7 +141,7 @@ typedef struct _PED_TYPE
 } PED_TYPE;
 
 //-----------------------------------------------------------
-
+#pragma pack(1)
 typedef struct _VEHICLE_TYPE
 {
 	ENTITY_TYPE entity; // 0-184
@@ -160,7 +166,9 @@ typedef struct _VEHICLE_TYPE
 	BYTE byteColor4;	// 1079-1080
 	PADDING(_pad1080_to_1082, 2); // 1080-1082
 	unsigned short sComponent[15]; // 1082-1112
-	PADDING(_pad1112_to_1120, 8); // 1112-1120
+	PADDING(_pad1112_1116, 4); // 1112-1116
+	WORD wAlarmState; // 1116-1118
+	PADDING(_pad1118_to_1120, 2); // 1118-1120
 	PED_TYPE * pDriver;   // 1120-1124
 	PED_TYPE * pPassengers[7]; // 1124-1152
 
@@ -178,11 +186,13 @@ typedef struct _VEHICLE_TYPE
 	PADDING(_pad275,28); // 1188-1216
 
 	float fHealth;			// 1216-1220
-	PADDING(_pad240,4);		// 1220-1224
+	DWORD dwTrailer2;		// 1220-1224
 	DWORD dwTrailer;		// 1224-1228
 	PADDING(_pad241,44);	// 1228-1272
 	DWORD dwDoorsLocked;	// 1272-1276
-	PADDING(_pad2423,24);	// 1276-1300
+	PADDING(_pad2420, 16);	// 1276-1292
+	PDWORD pdwDamageEntity; // 1292-1296
+	PADDING(_pad2423, 4);	// 1296-1300
 	BYTE byteHorn2;			// 1300-1301
 	PADDING(_pad2424,143);	// 1301-1444
 	union {

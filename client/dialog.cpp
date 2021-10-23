@@ -5,45 +5,46 @@
 #define IDC_DLGBUTTON1 20
 #define IDC_DLGBUTTON2 21
 
-VOID CALLBACK OnDialogEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
-
-char* TokensStringUntilNewLine(char* szSrc, char* szDest, int iMaxLen)
-{
-	int x = 0;
-	for (; x < iMaxLen && szSrc[x] != '\0'; x++)
-	{
-		if (szSrc[x] == '\n')
-			break;
-
-		szDest[x] = szSrc[x];
-	}
-	szDest[x] = '\0';
-
-	return szSrc[x] != '\0' ? &szSrc[x] : NULL;
-}
-
 CDialog::CDialog(IDirect3DDevice9* pDevice)
 {
 	m_pDevice = pDevice;
 	m_pDialog = NULL;
-	m_pListBox = NULL;
-	m_pEditBox = NULL;
+	m_bVisible = false;
+	m_szContent = NULL;
+	m_iID = 0;
+	m_iStyle = 0;
 	m_iWidth = 600;
 	m_iHeight = 300;
-	m_i20 = 100;
-	m_i24 = 30;
-	m_bVisible = false;
+	m_iBtnWidth = 100;
+	m_iBtnHeight = 30;
+	m_pListBox = NULL;
+	m_pEditBox = NULL;
+	m_bNotify = false;
+
+	//memset(m_137, 0, 516);
 }
 
-void CDialog::ResetDialogControls()
+CDialog::~CDialog()
 {
-	SAFE_DELETE(m_pDialog);
+}
 
+int FormatDialogStr1(char* szSrc, char* szDest, int iLen)
+{
+	return 0;
+}
+
+bool CDialog::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return CDXUTIMEEditBox::StaticMsgProc(uMsg, wParam, lParam) != false;
+}
+
+void CDialog::ResetDialogControls(CDXUTDialog* pDialogUI)
+{
 	m_pDialog = new CDXUTDialog();
 	if (!m_pDialog) return;
 
 	m_pDialog->Init(pDialogResourceManager);
-	m_pDialog->SetCallback(OnDialogEvent);
+	m_pDialog->SetCallback(CDialog::OnEvent);
 	m_pDialog->SetLocation(0, 0);
 	m_pDialog->SetSize(600, 300);
 	m_pDialog->EnableMouseInput(true);
@@ -61,9 +62,9 @@ void CDialog::ResetDialogControls()
 	m_pListBox->SetEnabled(false);
 	m_pListBox->SetVisible(false);
 
-	m_pDialog->AddButton(IDC_DLGBUTTON1, "BUTTON1", 10, 5, m_i20, m_i24);
-	m_pDialog->AddButton(IDC_DLGBUTTON2, "BUTTON2", 110, 5, m_i20, m_i24);
-
+	m_pDialog->AddButton(IDC_DLGBUTTON1, "BUTTON1", 10, 5, m_iBtnWidth, m_iBtnHeight);
+	m_pDialog->AddButton(IDC_DLGBUTTON2, "BUTTON2", 110, 5, m_iBtnWidth, m_iBtnHeight);
+	
 	m_pDialog->AddIMEEditBox(IDC_DLGEDITBOX, "", 10, 175, 570, 40, true, &m_pEditBox);
 	if (pConfigFile->GetInt("ime"))
 	{
@@ -80,81 +81,317 @@ void CDialog::ResetDialogControls()
 	m_pEditBox->SetVisible(false);
 }
 
-bool CDialog::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+void CDialog::sub_100700D0()
 {
-	return CDXUTIMEEditBox::StaticMsgProc(uMsg, wParam, lParam) != 0;
+
 }
 
-LONG CDialog::GetTextWidth(char* szText)
+void CDialog::Show(int iID, int iStyle, char* szCaption, char* szInfo,
+	char* szButton1, char* szButton2, bool bNotify)
+{
+	if(iID < 0) {
+		if(m_bVisible) {
+			Hide();
+		}
+		return;
+	}
+
+	if(pCmdWindow && pCmdWindow->isEnabled()) {
+		pCmdWindow->Disable();
+	}
+
+	m_iID = iID;
+	m_iStyle = iStyle;
+	m_bNotify = bNotify;
+
+	memset(m_szCaption, 0, sizeof(m_szCaption));
+	strncpy(m_szCaption, szCaption, MAX_CAPTION);
+
+	if (m_szContent) {
+		free(m_szContent);
+	}
+	m_szContent = (char*)calloc(1, strlen(szInfo) + 64);
+	strcpy(m_szContent, szInfo);
+
+
+	if(szCaption && szCaption[0] != 0) {
+		//pDefaultFont->MeasureSmallerText();
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	if (iID >= 0)
+	{
+		SIZE ContentSize;
+		pDefaultFont->MeasureSmallerText(&ContentSize, m_szContent, DT_EXPANDTABS);
+		m_iContentSizeX = ContentSize.cx;
+		m_iContentSizeY = ContentSize.cy;
+
+		if (szCaption[0] != '\0')
+		{
+			SIZE size;
+			pDefaultFont->MeasureText(&size, "Y", DT_LEFT);
+			strcpy(m_pDialog->GetCaptionText(), szCaption);
+			m_pDialog->EnableCaption(true);
+			m_pDialog->SetCaptionHeight(size.cy + 4);
+		}
+
+		switch (m_iStyle)
+		{
+		case DIALOG_STYLE_MSGBOX:
+		{
+			m_iWidth = m_iContentSizeX + 40;
+			m_iHeight = m_iContentSizeY + m_pDialog->GetCaptionHeight() + m_iBtnHeight + 25;
+
+			m_pEditBox->SetVisible(false);
+			m_pEditBox->SetEnabled(false);
+
+			m_pListBox->SetVisible(false);
+			m_pListBox->SetEnabled(false);
+			break;
+		}
+		case DIALOG_STYLE_INPUT:
+		{
+			m_iWidth = m_iContentSizeX + 40;
+			m_iHeight = m_iBtnHeight
+				+ m_iContentSizeY
+				+ (int)(m_pDialog->GetFont(1)->nHeight * 1.6f + 14.0f)
+				+ m_pDialog->GetCaptionHeight()
+				+ 25;
+
+			m_pEditBox->SetVisible(true);
+			m_pEditBox->SetEnabled(true);
+			m_pEditBox->SetCharactersHidden(false);
+			m_pEditBox->SetText("");
+
+			m_pListBox->SetVisible(false);
+			m_pListBox->SetEnabled(false);
+			break;
+		}
+		case DIALOG_STYLE_PASSWORD:
+		{
+			m_iWidth = m_iContentSizeX + 40;
+			m_iHeight = m_iBtnHeight
+				+ m_iContentSizeY
+				+ (int)(m_pDialog->GetFont(1)->nHeight * 1.6f + 14.0f)
+				+ m_pDialog->GetCaptionHeight()
+				+ 25;
+
+			m_pEditBox->SetVisible(true);
+			m_pEditBox->SetEnabled(true);
+			m_pEditBox->SetCharactersHidden(true);
+			m_pEditBox->SetText("");
+
+			m_pListBox->SetVisible(false);
+			m_pListBox->SetEnabled(false);
+			break;
+		}
+		case DIALOG_STYLE_LIST:
+		{
+			break;
+		}
+		case DIALOG_STYLE_TABLIST:
+		{
+			break;
+		}
+		case DIALOG_STYLE_TABLIST_HEADERS:
+		{
+			break;
+		}
+		default:
+			break;
+		}
+
+		if (szButton2[0] != 0)
+		{
+			m_pDialog->GetButton(IDC_DLGBUTTON1)->SetText(szButton1);
+			m_pDialog->GetButton(IDC_DLGBUTTON2)->SetText(szButton2);
+
+			m_pDialog->GetButton(IDC_DLGBUTTON2)->SetVisible(true);
+		}
+		else
+		{
+			m_pDialog->GetButton(IDC_DLGBUTTON1)->SetText(szButton1);
+			m_pDialog->GetButton(IDC_DLGBUTTON2)->SetText("");
+
+			m_pDialog->GetButton(IDC_DLGBUTTON2)->SetVisible(false);
+		}
+
+		m_pDialog->SetVisible(true);
+
+		if (m_iStyle == DIALOG_STYLE_INPUT || m_iStyle == DIALOG_STYLE_PASSWORD)
+		{
+			m_pDialog->RequestFocus(m_pEditBox);
+		}
+		if (m_iStyle == DIALOG_STYLE_LIST || m_iStyle == DIALOG_STYLE_TABLIST || m_iStyle == DIALOG_STYLE_TABLIST_HEADERS)
+		{
+			m_pDialog->RequestFocus(m_pListBox);
+			m_pListBox->SelectItem(0);
+		}
+
+		sub_1006EF40();
+		m_bVisible = true;
+	}
+	else if (m_bVisible)
+	{
+		Hide();
+	}
+}
+
+void CDialog::Hide()
+{
+	pGame->ToggleKeyInputsDisabled(0);
+	m_pDialog->SetVisible(false);
+	m_bVisible = false;
+}
+
+bool CDialog::IsCandidateActive()
+{
+	if (m_pEditBox)
+		return CDXUTIMEEditBox::IsCandidateActive();
+
+	return false;
+}
+
+int CDialog::GetTextWidth(char* szText)
 {
 	ID3DXFont* pFont = m_pDialog->GetFont(1)->pFont;
+	RECT rect = {0,0,0,0};
 
-	//if(szText && strlen(szText) != 0 && pFont)
 	if (szText && szText[0] != '\0' && pFont)
 	{
-		char szBuf[132];
-		strcpy_s(szBuf, szText);
-		RemoveColorEmbedsFromString(szBuf);
-
-		RECT rect;
-		pFont->DrawTextA(NULL, szBuf, -1, &rect, 1344, D3DCOLOR_ARGB(255,255,255,255));
-
+		char szBuffer[128];
+		strcpy_s(szBuffer, szText);
+		RemoveColorEmbedsFromString(szBuffer);
+		
+		pFont->DrawTextA(NULL, szBuffer, -1, &rect, DT_EXPANDTABS | DT_NOCLIP | DT_CALCRECT, -1);
+		
 		return rect.right - rect.left;
 	}
 	return -1;
 }
 
-LONG CDialog::GetFontHeight()
+int CDialog::GetFontHeight()
 {
 	return m_pDialog->GetFont(1)->nHeight;
 }
 
-void CDialog::UpdateLayout()
+void CDialog::Draw()
 {
-	int iSize = 2 * m_i20 + 30;
-	if (m_iWidth < iSize)
-		m_iWidth = iSize;
+	if (!m_bVisible) return;
+
+	if (!pCmdWindow->isEnabled())
+	{
+		pGame->ToggleKeyInputsDisabled(2);
+		if (m_pDialog)
+		{
+			m_pDialog->OnRender(10.0f);
+			
+			RECT rect;
+			GetRect(&rect);
+
+			if (!m_szContent || m_iStyle != DIALOG_STYLE_INPUT)
+			{
+				if (m_iStyle == DIALOG_STYLE_TABLIST_HEADERS)
+				{
+
+				}
+			}
+			else
+			{
+				rect.left += 20;
+				rect.top += m_pDialog->GetCaptionHeight() + 5;
+				pDefaultFont->RenderSmallerText(0,m_szContent,rect, 
+					DT_LEFT|DT_EXPANDTABS|DT_NOCLIP,D3DCOLOR_ARGB(255,169,196,230),true);
+			}
+		}
+	}
+}
+
+void CDialog::SendResponseNotification(BYTE byteResponse)
+{
+	if (!m_bVisible) return;
+
+	char szInputText[MAX_INPUTTEXT];
+	memset(szInputText,0,sizeof(szInputText));
+
+	BYTE byteInputTextLen = 0;
+	int iListItem = -1;
+	
+
+	if (m_iStyle == DIALOG_STYLE_LIST ||
+		m_iStyle == DIALOG_STYLE_TABLIST ||
+		m_iStyle == DIALOG_STYLE_TABLIST_HEADERS)
+	{
+
+	}
+	else if (m_iStyle== DIALOG_STYLE_INPUT ||
+		m_iStyle == DIALOG_STYLE_PASSWORD)
+	{
+
+	}
+
+	if (m_bNotify)
+	{
+		RakNet::BitStream bsSend;
+		bsSend.Write((WORD)m_iID);
+		bsSend.Write(byteResponse);
+		bsSend.Write(byteInputTextLen);
+		if (byteInputTextLen)
+			bsSend.Write(szInputText, byteInputTextLen);
+
+		//pNetGame->Send(RPC_DialogResponse, &bsSend);
+	}
+
+	Hide();
+}
+
+void CDialog::sub_1006EF40()
+{
+	int iNewWidth = 2 * m_iBtnWidth + 30;
+	if (m_iWidth < iNewWidth)
+		m_iWidth = iNewWidth;
 
 	m_pDialog->SetSize(m_iWidth, m_iHeight);
 
 	RECT rect;
 	GetClientRect(pGame->GetMainWindowHwnd(), &rect);
-	m_iScreenOffsetX = (rect.right / 2) - (m_iWidth / 2);
-	m_iScreenOffsetY = (rect.bottom / 2) - (m_iHeight / 2);
+
+	m_iScreenOffsetX = rect.right / 2 - m_iWidth / 2;
+	m_iScreenOffsetY = rect.bottom / 2 - m_iHeight / 2;
+
 	m_pDialog->SetLocation(m_iScreenOffsetX, m_iScreenOffsetY);
 
-	CDXUTControl* pButton1, *pButton2;
-	pButton2 = m_pDialog->GetControl(IDC_DLGBUTTON2);
-	int iFormHeight = m_iHeight - m_pDialog->GetCaptionHeight();
-	if (pButton2->GetVisible())
-	{
-		pButton1 = m_pDialog->GetControl(IDC_DLGBUTTON1);
-		pButton1->SetLocation(
-			(m_iWidth / 2) - (m_i20 - 10),
-			iFormHeight - m_i24 - 5);
+	int iHeight = m_iHeight - m_pDialog->GetCaptionHeight();
 
-		pButton2->SetLocation(
-			(m_iWidth / 2) + 10,
-			iFormHeight - m_i24 - 5);
+	if (m_pDialog->GetButton(IDC_DLGBUTTON2)->GetVisible())
+	{
+		CDXUTButton* pBtn1 = m_pDialog->GetButton(IDC_DLGBUTTON1);
+		pBtn1->SetLocation(m_iWidth / 2 - m_iBtnWidth - 10, iHeight - m_iBtnHeight - 5 );
+
+		CDXUTButton* pBtn2 = m_pDialog->GetButton(IDC_DLGBUTTON2);
+		pBtn2->SetLocation(m_iWidth / 2 + 10, iHeight - m_iBtnHeight - 5);
 	}
 	else
 	{
-		pButton1 = m_pDialog->GetControl(IDC_DLGBUTTON1);
-
-		pButton1->SetLocation(
-			(m_iWidth / 2) - (m_i20 / 2),
-			iFormHeight - m_i24 - 5);
+		CDXUTButton* pBtn1 = m_pDialog->GetButton(IDC_DLGBUTTON1);
+		pBtn1->SetLocation(m_iWidth / 2 - m_iBtnWidth / 2, iHeight - m_iBtnHeight - 5);
 	}
 
-	LONG lHeight = LONG(m_pDialog->GetFont(0)->nHeight * -1.5f);
-	m_pEditBox->SetSize(m_iWidth - 10, 14 - lHeight);
-	lHeight = LONG(m_pDialog->GetFont(0)->nHeight * 1.5f);
-	m_pEditBox->SetLocation(5, iFormHeight - lHeight - m_i24 - 24);
-}
+	//m_pDialog->GetFont(0)->nHeight * -1.5f;
+	//m_pEditBox->SetSize();
 
-bool CDialog::IsCandicateActive()
-{
-	return (m_pEditBox && CDXUTIMEEditBox::IsCandidateActive());
+	//m_pDialog->GetFont(0)->nHeight * 1.5f;
+	//m_pEditBox->SetLocation(5, - 24);
 }
 
 void CDialog::GetRect(RECT* rect)
@@ -165,107 +402,36 @@ void CDialog::GetRect(RECT* rect)
 	rect->bottom = m_iScreenOffsetY + m_iHeight;
 }
 
-void CDialog::Draw()
+void CDialog::sub_1006F630(char* szContent, SIZE* size)
 {
+	m_pListBox->RemoveAllItems();
+	m_pListBox->m_nColumns = 0;
 
-	pGame->ToggleKeyInputsDisabled(2);
+	char szListText[256];
+	while (true)
+	{
+		memset(szListText, 0, sizeof(szListText));
+	}
 
-	if (!m_pDialog) return;
+	if (size)
+	{
+		size->cx;
+		size->cy;
+	}
+}
 
-	m_pDialog->OnRender(10.0f);
-
-	/*if ()
+VOID CALLBACK CDialog::OnEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
+{
+	if (nControlID == IDC_DLGEDITBOX)
+	{
+		if (nEvent == EVENT_EDITBOX_STRING)
+		{
+			if (pDialog && !pCmdWindow->IsCandidateActive())
+				pDialog->SendResponseNotification(1);
+		}
+	}
+	else if (nControlID)
 	{
 
 	}
-	else
-	{
-
-	}*/
-}
-
-void CDialog::Show(int iID, int iStyle, char* szCaption, char* szText,
-	char* szButton1, char* szButton2, bool bSend)
-{
-	if (iID >= 0)
-	{
-		if (pCmdWindow && pCmdWindow->isEnabled())
-			pCmdWindow->Disable();
-
-		m_iID = iID;
-		m_iStyle = iStyle;
-		m_bSend = bSend;
-
-		SecureZeroMemory(m_szCaption, MAX_DIALOG_CAPTION);
-		strncpy_s(m_szCaption, szCaption, MAX_DIALOG_CAPTION);
-
-		if (m_szInfo)
-			free(m_szInfo);
-		size_t len = strlen(szText) + 64;
-		m_szInfo = (char*)calloc(1, len);
-		strcpy_s(m_szInfo, len, szText);
-
-		SIZE size;
-		pDefaultFont->MeasureSmallerText(&m_InfoSize, m_szInfo, 64);
-		//m_InfoSize.cx = size.cx;
-		//m_InfoSize.cy = size.cy;
-
-		//if(strlen(szCaption))
-		if (szCaption && szCaption[0] != '\0')
-		{
-			pDefaultFont->MeasureSmallerText(&size, "Y", 0);
-			strcpy_s(m_pDialog->GetCaptionText(), 256, szCaption);
-			m_pDialog->EnableCaption(true);
-			m_pDialog->SetCaptionHeight(size.cy + 4);
-		}
-
-		switch (m_iStyle)
-		{
-		case DIALOG_STYLE_MSGBOX:
-			m_iWidth = m_InfoSize.cx + 40;
-			m_iHeight = m_InfoSize.cy + m_pDialog->GetCaptionHeight() + m_i24 + 25;
-
-			m_pEditBox->SetVisible(false);
-			m_pEditBox->SetEnabled(false);
-			m_pListBox->SetVisible(false);
-			m_pListBox->SetEnabled(false);
-			break;
-		case DIALOG_STYLE_INPUT:
-			m_iWidth = m_InfoSize.cx + 40;
-			m_iHeight = 0;
-
-			m_pEditBox->SetVisible(true);
-			m_pEditBox->SetEnabled(true);
-			m_pEditBox->SetText("");
-			m_pListBox->SetVisible(false);
-			m_pListBox->SetEnabled(false);
-			break;
-		case DIALOG_STYLE_PASSWORD:
-			m_pEditBox->SetText("");
-			m_pListBox->SetVisible(false);
-			m_pListBox->SetEnabled(false);
-			break;
-		case DIALOG_STYLE_LIST:
-			break;
-		case DIALOG_STYLE_TABLIST:
-			break;
-		case DIALOG_STYLE_TABLIST_HEADERS:
-			break;
-		}
-	}
-	else
-		Hide();
-
-} 
-
-void CDialog::Hide()
-{
-	pGame->ToggleKeyInputsDisabled(0);
-	m_pDialog->SetVisible(false);
-	m_bVisible = false;
-}
-
-VOID CALLBACK OnDialogEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
-{
-
 }

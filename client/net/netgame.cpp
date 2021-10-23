@@ -27,6 +27,8 @@ int iObjectBench=0;
 static int iVehiclePoolProcessFlag=0;
 static int iPickupPoolProcessFlag=0;
 
+void ApplyManualVehicleLightsPatch();
+
 //----------------------------------------------------
 
 BYTE GetPacketID(Packet *p)
@@ -47,7 +49,7 @@ BYTE GetPacketID(Packet *p)
 CNetGame::CNetGame(PCHAR szHostOrIp, int iPort, 
 				   PCHAR szPlayerName, PCHAR szPass)
 {
-	strcpy_s(m_szHostName, "San Andreas Multiplayer");
+	strcpy_s(m_szHostName, "SA-MP");
 	strncpy_s(m_szHostOrIp, szHostOrIp, sizeof(m_szHostOrIp));
 	m_iPort = iPort;
 
@@ -55,7 +57,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 
 	// Setup player pool
 	m_pPlayerPool = new CPlayerPool();
-	m_pPlayerPool->GetLocalPlayer()->SetName(szPlayerName);
+	m_pPlayerPool->SetLocalPlayerName(szPlayerName);
 
 	m_pVehiclePool = new CVehiclePool();
 	m_pPickupPool  = new CPickupPool();
@@ -81,7 +83,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	m_iSpawnsAvailable = 0;
 	m_byteWorldTime = 12;
 	m_byteWorldMinute = 0;
-	m_byteWeather	= 10;
+	m_byteWeather	= 1;
 	m_fGravity = 0.008000000f;
 	m_iDeathDropMoney = 0;
 	m_bLanMode = false;
@@ -108,7 +110,7 @@ CNetGame::CNetGame(PCHAR szHostOrIp, int iPort,
 	m_byteFriendlyFire = 1;
 	pGame->EnableClock(0); // Hide the clock by default
 	pGame->EnableZoneNames(0);
-	m_bDisableVehicleCollision = false;
+	m_bRemoteVehicleCollisions = false;
 	m_bZoneNames = false;
 	m_bInstagib = false;
 	m_iCheckLoadedStuff = 0;
@@ -153,7 +155,6 @@ void CNetGame::ShutdownForGameModeRestart()
 	m_bDisableEnterExits = false;
 	m_bDisableVehMapIcons = false;
 	m_fNameTagDrawDistance = 70.0f;
-	m_bDisableVehicleCollision = false;
 
 	for (BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
 		CRemotePlayer* pPlayer = m_pPlayerPool->GetAt(bytePlayerID);
@@ -204,15 +205,19 @@ void CNetGame::ShutdownForGameModeRestart()
 
 //----------------------------------------------------
 
-/*void CNetGame::InitGameLogic()
+void CNetGame::InitGameLogic()
 {
 	//GameResetRadarColors();
+
+	if (m_bManualEngineAndLights) {
+		ApplyManualVehicleLightsPatch();
+	}
 
 	m_WorldBounds[0] = 20000.0f;
 	m_WorldBounds[1] = -20000.0f;
 	m_WorldBounds[2] = 20000.0f;
 	m_WorldBounds[3] = -20000.0f;
-}*/
+}
 
 //----------------------------------------------------
 
@@ -444,7 +449,7 @@ void CNetGame::Packet_PlayerSync(Packet *p)
 	bsPlayerSync.Read((char*)&ofSync.vecPos,sizeof(VECTOR));
 
 	// ROTATION
-	bsPlayerSync.Read(ofSync.fRotation);
+	//bsPlayerSync.Read(ofSync.fRotation);
 	
 	// HEALTH/ARMOUR (COMPRESSED INTO 1 BYTE)
 	BYTE byteHealthArmour;
@@ -463,7 +468,7 @@ void CNetGame::Packet_PlayerSync(Packet *p)
 	else ofSync.byteHealth = byteHlTemp * 7;
 
 	// CURRENT WEAPON
-	bsPlayerSync.Read(ofSync.byteCurrentWeapon);
+	bsPlayerSync.Read((char*)ofSync.byteCurrentWeapon, 6);
 
 	// Special Action
 	bsPlayerSync.Read(ofSync.byteSpecialAction);
@@ -576,7 +581,7 @@ void CNetGame::Packet_VehicleSync(Packet *p)
 	else icSync.bytePlayerHealth = byteHlTemp * 7;
 
 	// CURRENT WEAPON
-	bsSync.Read(icSync.byteCurrentWeapon);
+	bsSync.Read((char*)icSync.byteCurrentWeapon, 6);
 	
 	// SIREN
 	bsSync.Read(bSiren);
@@ -674,7 +679,7 @@ void CNetGame::Packet_RSAPublicKeyMismatch(Packet* packet)
 
 void CNetGame::Packet_ConnectionBanned(Packet* packet)
 {
-	pChatWindow->AddDebugMessage("You're banned from this server.");
+	pChatWindow->AddDebugMessage("You are banned from this server.");
 }
 
 //----------------------------------------------------
@@ -697,15 +702,22 @@ void CNetGame::Packet_NoFreeIncomingConnections(Packet* packet)
 void CNetGame::Packet_DisconnectionNotification(Packet* packet)
 {
 	pChatWindow->AddDebugMessage("Server closed the connection.");
-	m_pRakClient->Disconnect(0);
+	if (pAudioStream)
+		pAudioStream->Stop();
+	m_pRakClient->Disconnect(2000);
 }
 
 //----------------------------------------------------
 
 void CNetGame::Packet_ConnectionLost(Packet* packet)
 {
+	m_pRakClient->Disconnect(0);
 	pChatWindow->AddDebugMessage("Lost connection to the server. Reconnecting..");
 	ShutdownForGameModeRestart();
+	if (pAudioStream)
+		pAudioStream->Stop();
+	if (m_pPlayerPool)
+		m_pPlayerPool->DeleteAll();
     SetGameState(GAMESTATE_WAIT_CONNECT);	
 }
 
@@ -762,14 +774,14 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *p)
 
 	int iVersion = NETGAME_VERSION;
 	BYTE byteMod = MOD_VERSION;
-	BYTE byteNameLen = (BYTE)strlen(pPlayer->GetName());
+	BYTE byteNameLen = (BYTE)strlen(m_pPlayerPool->GetLocalPlayerName());
 	char szVersion[] = SAMP_VERSION;
 
 	RakNet::BitStream bsSend;
 	bsSend.Write(iVersion);
 	bsSend.Write(byteMod);
 	bsSend.Write(byteNameLen);
-	bsSend.Write(pPlayer->GetName(),byteNameLen);
+	bsSend.Write(m_pPlayerPool->GetLocalPlayerName(),byteNameLen);
 	bsSend.Write(uiChallenge);
 
 	CHAR szCID[100];

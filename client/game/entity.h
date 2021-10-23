@@ -25,6 +25,7 @@ public:
 
 	void  GetMatrix(PMATRIX4X4 Matrix);
 	void  SetMatrix(MATRIX4X4 Matrix);
+	void  UpdateRW();
 	void  GetMoveSpeedVector(PVECTOR Vector);
 	void  SetMoveSpeedVector(VECTOR Vector);
 	void  GetTurnSpeedVector(PVECTOR Vector);
@@ -42,9 +43,20 @@ public:
 	bool  EnforceWorldBoundries(float fPX, float fZX, float fPY, float fNY);
 	bool  HasExceededWorldBoundries(float fPX, float fZX, float fPY, float fNY);
 
-	bool UsesCollision();
+	bool GetCollisionChecking();
 	void SetCollisionChecking(bool bCheck);
 	void SetGravityProcessing(bool bState);
+	
+	void SetAlwaysRender();
+	void SetNotCollidable();
+	void MatrixToEulerAngles(float* X, float* Y, float* Z);
+
+	DWORD GetRenderWare();
+	void Render();
+	void DestroyRwObject();
+
+	void Teleport(MATRIX4X4 m);
+	void MoveStep();
 
 	ENTITY_TYPE *m_pEntity;
 	DWORD		m_dwGTAId;

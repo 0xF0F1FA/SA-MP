@@ -8,7 +8,7 @@ private:
 	bool m_bInvulnerable;
 
 public:
-	CActor(int iModelID, VECTOR vecPos, float fAngle);
+	CActor(int iSkin, float fX, float fY, float fZ, float fRotation);
 	virtual ~CActor();
 
 	void Destroy();

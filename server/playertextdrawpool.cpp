@@ -182,3 +182,15 @@ void CPlayerTextDrawPool::Hide(int iID)
 		pNetGame->SendToPlayer(m_ucPlayerID, RPC_ScrHideTextDraw, &bs);
 	m_bHasText[iID] = false;
 }
+
+bool CPlayerTextDrawPool::HasSelectableText()
+{
+	for (WORD wText = 0; wText < MAX_PLAYER_TEXT_DRAWS; wText++)
+	{
+		if (m_bHasText[wText] && m_pTextDraws[wText]->byteSelectable)
+		{
+			return true;
+		}
+	}
+	return false;
+}

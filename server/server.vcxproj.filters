@@ -161,6 +161,9 @@
     <ClCompile Include="sampmap.cpp" />
     <ClCompile Include="servervars.cpp" />
     <ClCompile Include="playervars.cpp" />
+    <ClCompile Include="..\sdk\raknet\SAMPRPC.cpp">
+      <Filter>sdk\raknet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h" />
@@ -188,9 +191,6 @@
     <ClInclude Include="vehiclepool.h" />
     <ClInclude Include="vehicle.h" />
     <ClInclude Include="..\sdk\sqlite\sqlite3.h">
-      <Filter>sdk\sqlite</Filter>
-    </ClInclude>
-    <ClInclude Include="..\sdk\sqlite\sqlite3ext.h">
       <Filter>sdk\sqlite</Filter>
     </ClInclude>
     <ClInclude Include="..\sdk\amx\amx.h">

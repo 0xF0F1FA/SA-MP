@@ -780,6 +780,35 @@ static cell AMX_NATIVE_CALL n_flength(AMX *amx, cell *params)
   return l;
 }
 
+/* bool: fcopy(const source[], const target[]) */
+static cell AMX_NATIVE_CALL n_fcopy(AMX *amx, const cell *params)
+{
+  int c;
+  TCHAR *name,oldname[_MAX_PATH],newname[_MAX_PATH];
+  FILE *fr,* fw;
+
+  UNUSED_PARAM(amx);
+  amx_StrParam(amx,params[1],name);
+  if (name!=NULL && completename(oldname,name,sizeof oldname)!=NULL) {
+    amx_StrParam(amx,params[2],name);
+    if (name!=NULL && completename(newname,name,sizeof newname)!=NULL) {
+      fr=fopen(oldname,"rb");
+      if (fr==NULL)
+        return 0;
+      fw=fopen(newname,"wb");
+      if (fw==NULL) {
+        fclose(fr);
+        return 0;
+      } /* if */
+      while ((c=fgetc(fr))!=EOF)
+        fputc(c,fw);
+      fclose(fr);
+      fclose(fw);
+    } /* if */
+  } /* if */
+  return 1;
+}
+
 #if defined __cplusplus
   extern "C"
 #endif
@@ -797,6 +826,7 @@ AMX_NATIVE_INFO file_Natives[] = {
   { "fexist",      n_fexist },
   { "flength",     n_flength },
   { "fremove",     n_fremove },
+  { "fcopy",       n_fcopy },
   { NULL, NULL }        /* terminator */
 };
 

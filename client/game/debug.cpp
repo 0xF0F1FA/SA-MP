@@ -28,7 +28,7 @@ static DWORD	dwDebugEntity2=0;
 #define PARAM_INT32(l,i,d) szToken=strtok_s(l,",",&szContext); i=(szToken)?((int)strtol(szToken,NULL,0)):(d)
 
 static VECTOR g_vecPos;
-static CObjectPool* g_pObjectPool = NULL;
+CObjectPool* pDebugObjectPool = NULL;
 static BYTE g_byteObjectCount = 0;
 
 #ifdef _DEBUG
@@ -1039,9 +1039,9 @@ void GameDebugProcessLine(char* szLine)
 			PARAM_FLOAT(NULL, f5, 0.0f); // ry
 			PARAM_FLOAT(NULL, f6, 0.0f); // rz
 			
-			if (g_pObjectPool)
+			if (pDebugObjectPool)
 			{
-				g_pObjectPool->New(g_byteObjectCount, i1, { f1, f2, f3 }, { f4, f5, f6 });
+				pDebugObjectPool->New(g_byteObjectCount, i1, { f1, f2, f3 }, { f4, f5, f6 });
 				g_byteObjectCount++;
 			}
 		}
@@ -1125,7 +1125,7 @@ void GameDebugLoadScript(char* szScript)
 	pGame->SetWorldTime(12, 0);
 	pChatWindow->AddDebugMessage("DEBUGSCRIPT: Loading %s", szScript);
 
-	g_pObjectPool = new CObjectPool();
+	pDebugObjectPool = new CObjectPool();
 
 	if (fopen_s(&pFile, szScript, "r") == 0 && pFile != NULL)
 	{

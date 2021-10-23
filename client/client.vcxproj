@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AEB48AD2-071D-49FD-A568-3CDC8EBAA7A3}</ProjectGuid>
     <RootNamespace>client</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -68,6 +69,8 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>28159;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -109,6 +112,8 @@
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>28159;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -121,7 +126,7 @@
       <DataExecutionPrevention />
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
-      <AdditionalDependencies>dxguid.lib;d3d9.lib;d3dx9.lib;wsock32.lib;comctl32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dxguid.lib;d3d9.lib;d3dx9.lib;wsock32.lib;comctl32.lib;Winmm.lib;Imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -251,6 +256,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="game\animstuff.cpp" />
     <ClCompile Include="game\camera.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -308,6 +314,7 @@
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
     <ClCompile Include="game\menu.cpp" />
+    <ClCompile Include="game\modelinfo.cpp" />
     <ClCompile Include="game\object.cpp" />
     <ClCompile Include="game\patches.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -327,6 +334,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="game\rwstuff.cpp" />
     <ClCompile Include="game\scripting.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -419,6 +427,7 @@
     </ClCompile>
     <ClCompile Include="net\objectpool.cpp" />
     <ClCompile Include="net\pickuppool.cpp" />
+    <ClCompile Include="net\playerinfo.cpp" />
     <ClCompile Include="net\playerpool.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -456,7 +465,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
-    <ClCompile Include="playertags.cpp" />
+    <ClCompile Include="newplayertags.cpp" />
     <ClCompile Include="runutil.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_WINDOWS</PreprocessorDefinitions>
@@ -485,6 +494,9 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_WINDOWS</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="textdrawselect.cpp" />
+    <ClCompile Include="unnamed1.cpp" />
+    <ClCompile Include="unnamed2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\sdk\bass\bass.h" />
@@ -596,6 +608,7 @@
     <ClInclude Include="game\actor.h" />
     <ClInclude Include="game\address.h" />
     <ClInclude Include="game\aimstuff.h" />
+    <ClInclude Include="game\animstuff.h" />
     <ClInclude Include="game\camera.h" />
     <ClInclude Include="game\common.h" />
     <ClInclude Include="game\debug.h" />
@@ -604,8 +617,10 @@
     <ClInclude Include="game\game.h" />
     <ClInclude Include="game\keystuff.h" />
     <ClInclude Include="game\menu.h" />
+    <ClInclude Include="game\modelinfo.h" />
     <ClInclude Include="game\object.h" />
     <ClInclude Include="game\playerped.h" />
+    <ClInclude Include="game\rwstuff.h" />
     <ClInclude Include="game\scripting.h" />
     <ClInclude Include="game\task.h" />
     <ClInclude Include="game\textdraw.h" />
@@ -627,17 +642,21 @@
     <ClInclude Include="net\netrpc.h" />
     <ClInclude Include="net\objectpool.h" />
     <ClInclude Include="net\pickuppool.h" />
+    <ClInclude Include="net\playerinfo.h" />
     <ClInclude Include="net\playerpool.h" />
     <ClInclude Include="net\remoteplayer.h" />
     <ClInclude Include="net\scriptrpc.h" />
     <ClInclude Include="net\textdrawpool.h" />
     <ClInclude Include="net\vehiclepool.h" />
+    <ClInclude Include="newplayertags.h" />
     <ClInclude Include="outputdebugstring.h" />
-    <ClInclude Include="playertags.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="runutil.h" />
     <ClInclude Include="scoreboard.h" />
     <ClInclude Include="spawnscreen.h" />
+    <ClInclude Include="textdrawselect.h" />
+    <ClInclude Include="unnamed1.h" />
+    <ClInclude Include="unnamed2.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\sdk\bass\bass.lib" />

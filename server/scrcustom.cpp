@@ -13,8 +13,9 @@
 */
 
 #include "main.h"
-
-#define CHECK_PARAMS(amx,fn,c) \
+#define CHECK_PARAMS(amx,fn,c)
+#define CHECK_PARAMS_BETWEEN(amx,fn,l,h)
+/*#define CHECK_PARAMS(amx,fn,c) \
 	{ \
 		if ((params[0]) != ((c) * (sizeof(cell)))) \
 		{ \
@@ -36,8 +37,7 @@
 			return 0; \
 		} \
 	}
-
-#define DEFINE_NATIVE(func) {#func, n_##func}
+	*/
 
 //----------------------------------------------------------------------------------
 
@@ -250,6 +250,7 @@ static cell n_AddPlayerClass(AMX *amx, cell *params)
 
 		Spawn.byteTeam = 255; // Auto team assignment for the old AddPlayerClass
 		Spawn.iSkin = (int)params[1];
+		Spawn.iBaseSkin = 0;
 		Spawn.vecPos.X = amx_ctof(params[2]);
 		Spawn.vecPos.Y = amx_ctof(params[3]);
 		Spawn.vecPos.Z = amx_ctof(params[4]);
@@ -280,6 +281,7 @@ static cell n_AddPlayerClassEx(AMX *amx, cell *params)
 		// BASE INFO
 		Spawn.byteTeam = (BYTE)params[1];
 		Spawn.iSkin = (int)params[2];
+		Spawn.iBaseSkin = 0;
 		Spawn.vecPos.X = amx_ctof(params[3]);
 		Spawn.vecPos.Y = amx_ctof(params[4]);
 		Spawn.vecPos.Z = amx_ctof(params[5]);
@@ -313,6 +315,28 @@ static cell n_AddStaticVehicle(AMX *amx, cell *params)
 	VEHICLEID ret = pNetGame->GetVehiclePool()->New((int)params[1], &vecPos, amx_ctof(params[5]),
 		(int)params[6], (int)params[7], 120000, false);
 
+	if (params[1] == TRAIN_FREIGHT_LOCO)
+	{
+		pNetGame->GetVehiclePool()->New(TRAIN_FREIGHT, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+
+		pNetGame->GetVehiclePool()->New(TRAIN_FREIGHT, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+
+		pNetGame->GetVehiclePool()->New(TRAIN_FREIGHT, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+	}
+	else if (params[1] == TRAIN_PASSENGER_LOCO)
+	{
+		pNetGame->GetVehiclePool()->New(TRAIN_PASSENGER, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+
+		pNetGame->GetVehiclePool()->New(TRAIN_PASSENGER, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+
+		pNetGame->GetVehiclePool()->New(TRAIN_PASSENGER, &vecPos, amx_ctof(params[5]),
+			(int)params[6], (int)params[7], -1, false);
+	}
 	return ret;
 }
 
@@ -439,59 +463,40 @@ static cell n_RemoveVehicleComponent(AMX *amx, cell *params)
 
 //----------------------------------------------------------------------------------
 // native ChangeVehicleColor(vehicleid, color1, color2);
+
 static cell n_ChangeVehicleColor(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "ChangeVehicleColor", 3);
 
-	CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
-	
-	if (!pVehicle)
-		return 0;
-
-	DWORD dwCol1 = (params[2] == -1) ? (rand() % 128) : (params[2]),
-		dwCol2 = (params[3] == -1) ? (rand() % 128) : (params[3]);
-
-	RakNet::BitStream bsData;
-	bsData.Write((BYTE)INVALID_PLAYER_ID);
-	bsData.Write((int)EVENT_TYPE_CARCOLOR);
-	bsData.Write((DWORD)params[1]);
-	bsData.Write(dwCol1);
-	bsData.Write(dwCol2);
-
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScmEvent , &bsData, HIGH_PRIORITY, 
-		RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
-
-	pVehicle->m_CarModInfo.iColor0 = (int)dwCol1;
-	pVehicle->m_CarModInfo.iColor1 = (int)dwCol2;
-
-	return 1;
+	if (pNetGame->GetVehiclePool())
+	{
+		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle)
+		{
+			pVehicle->SetColor(INVALID_PLAYER_ID, params[2], params[3]);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------------
 // native ChangeVehiclePaintjob(vehicleid, paintjobid);
+
 static cell n_ChangeVehiclePaintjob(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "ChangeVehiclePaintjob", 2);
 
-	CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
-	if (!pVehicle)
+	if (pNetGame->GetVehiclePool())
+	{
+		CVehicle* pVehicle = pNetGame->GetVehiclePool()->GetAt(params[1]);
+		if (pVehicle)
+		{
+			pVehicle->SetPaintjob(INVALID_PLAYER_ID, params[2]);
+		}
 		return 1;
-
-	RakNet::BitStream bsData;
-	bsData.Write((BYTE)INVALID_PLAYER_ID);
-	bsData.Write((int)EVENT_TYPE_PAINTJOB);
-	bsData.Write((DWORD)params[1]);
-	bsData.Write((DWORD)params[2]);
-	bsData.Write((DWORD)0);
-
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScmEvent , &bsData, HIGH_PRIORITY, 
-		RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
-
-	pVehicle->m_CarModInfo.bytePaintJob = (BYTE)params[2];
-
-	return 1;
+	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------------
@@ -604,9 +609,9 @@ static cell n_AddStaticPickup(AMX *amx, cell *params)
 	vecPos.X = amx_ctof(params[3]);
 	vecPos.Y = amx_ctof(params[4]);
 	vecPos.Z = amx_ctof(params[5]);
-
-	if (pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,1,params[6]) != -1) return 1;
-	return 0;
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	return pPickupPool->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,params[6]) != -1;
 }
 
 //----------------------------------------------------------------------------------
@@ -619,8 +624,9 @@ static cell n_CreatePickup(AMX *amx, cell *params)
 	vecPos.X = amx_ctof(params[3]);
 	vecPos.Y = amx_ctof(params[4]);
 	vecPos.Z = amx_ctof(params[5]);
-
-	return pNetGame->GetPickupPool()->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,0,params[6]);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	return pPickupPool->New(params[1],params[2],vecPos.X,vecPos.Y,vecPos.Z,params[6]);
 }
 
 //----------------------------------------------------------------------------------
@@ -629,15 +635,19 @@ static cell n_CreatePickup(AMX *amx, cell *params)
 static cell n_DestroyPickup(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "DestroyPickup", 1);
-	return pNetGame->GetPickupPool()->Destroy(params[1]);
+	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	return pPickupPool->Destroy(params[1]);
 }
 
 // native DestroyAllPickups();
 static cell n_DestroyAllPickups(AMX* amx, cell* params)
 {
-	for (unsigned int uiIndex = 0; uiIndex < MAX_PICKUPS; uiIndex++)
-	{
-		pNetGame->GetPickupPool()->Destroy(uiIndex);
+	//CHECK_PARAMS(amx,"DestroyAllPickups",0);
+	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	for (int i = 0; i < MAX_PICKUPS; i++) {
+		pPickupPool->Destroy(i);
 	}
 	return 1;
 }
@@ -646,82 +656,101 @@ static cell n_DestroyAllPickups(AMX* amx, cell* params)
 static cell n_IsValidPickup(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "IsValidPickup", 1);
-
-	return (cell)pNetGame->GetPickupPool()->IsValid(params[1]);
-}
-
-// native IsStaticPickup(pickupid);
-static cell n_IsStaticPickup(AMX* amx, cell* params)
-{
-	CHECK_PARAMS(amx, "IsStaticPickup", 1);
-
-	return (cell)pNetGame->GetPickupPool()->IsStatic(params[1]);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	if (pPickupPool->GetSlotState(params[1])) return 1;
+	return 0;
 }
 
 // native GetPickupPoolSize();
 static cell n_GetPickupPoolSize(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPickupPoolSize", 0);
-
-	return (cell)pNetGame->GetPickupPool()->GetLastID();
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return -1;
+	return pPickupPool->GetPoolSize();
 }
+
+//----------------------------------------------------------------------------------
 
 // native GetPickupPos(pickupid, &Float:x, &Float:y, &Float:z);
 static cell n_GetPickupPos(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "GetPickupPos", 4);
-	if (pNetGame->GetPickupPool()->IsValid(params[1]))
-	{
-		PICKUP pickup = pNetGame->GetPickupPool()->Get(params[1]);
+	CHECK_PARAMS(amx,"GetPickupPos",4);
+	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	if (!pPickupPool) return 0;
+	if (!pPickupPool->GetSlotState(params[1])) return 0;
 
-		cell* cptr;
-		amx_GetAddr(amx, params[2], &cptr);
-		*cptr = amx_ftoc(pickup.fX);
-		amx_GetAddr(amx, params[3], &cptr);
-		*cptr = amx_ftoc(pickup.fY);
-		amx_GetAddr(amx, params[4], &cptr);
-		*cptr = amx_ftoc(pickup.fZ);
-		return 1;
-	}
-	return 0;
+	PICKUP* pickup = pPickupPool->GetAt(params[1]);
+
+	cell *cptr;
+	if(amx_GetAddr(amx, params[2], &cptr) == AMX_ERR_NONE)
+		*cptr = amx_ftoc(pickup->fX);
+	if(amx_GetAddr(amx, params[3], &cptr) == AMX_ERR_NONE)
+		*cptr = amx_ftoc(pickup->fY);
+	if(amx_GetAddr(amx, params[4], &cptr) == AMX_ERR_NONE)
+		*cptr = amx_ftoc(pickup->fZ);
+
+	return 1;
 }
 
 // native GetPickupModel(pickupid);
 static cell n_GetPickupModel(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "GetPickupModel", 1);
-	if (pNetGame->GetPickupPool()->IsValid(params[1]))
-	{
-		return pNetGame->GetPickupPool()->Get(params[1]).iModel;
-	}
-	return -1;
+	CHECK_PARAMS(amx,"GetPickupModel",1);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if(!pPickupPool) return -1;
+	if(!pPickupPool->GetSlotState(params[1])) return -1;
+	return pPickupPool->GetAt(params[1])->iModel;
 }
 
+//----------------------------------------------------------------------------------
+ 
 // native GetPickupType(pickupid);
 static cell n_GetPickupType(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "GetPickupType", 1);
-	if (pNetGame->GetPickupPool()->IsValid(params[1]))
-	{
-		return pNetGame->GetPickupPool()->Get(params[1]).iType;
-	}
-	return -1;
+	CHECK_PARAMS(amx,"GetPickupType",1);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if(!pPickupPool) return -1;
+	if(!pPickupPool->GetSlotState(params[1])) return -1;
+	return pPickupPool->GetAt(params[1])->iType;
 }
+
+//----------------------------------------------------------------------------------
 
 // native GetPickupCount();
 static cell n_GetPickupCount(AMX* amx, cell* params)
 {
-	return pNetGame->GetPickupPool()->GetCount();
+	CHECK_PARAMS(amx,"GetPickupCount",1);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if(!pPickupPool) return 0;
+	return pPickupPool->GetCount();
 }
+
+//----------------------------------------------------------------------------------
 
 // native GetPickupVirtualWorld(pickupid)
 static cell n_GetPickupVirtualWorld(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "GetPickupVirtualWorld", 1);
-	if (pNetGame->GetPickupPool() && pNetGame->GetPickupPool()->IsValid(params[1])) {
-		return pNetGame->GetPickupPool()->GetVirtualWorld(params[1]);
-	}
-	return 0;
+	CHECK_PARAMS(amx,"GetPickupVirtualWorld",1);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if(!pPickupPool) return 0;
+	if(!pPickupPool->GetSlotState(params[1])) return 0;
+	return pPickupPool->GetVirtualWorld(params[1]);
+}
+
+//----------------------------------------------------------------------------------
+
+// native SetPickupVirtualWorld(pickupid, virtualworld)
+static cell n_SetPickupVirtualWorld(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx,"SetPickupVirtualWorld",2);
+	CPickupPool *pPickupPool = pNetGame->GetPickupPool();
+	if(!pPickupPool) return 0;
+	if(!pPickupPool->GetSlotState(params[1])) return 0;
+	// Virtual worlds are handled by the server, no need to stream out and stream back again
+	pPickupPool->SetVirtualWorld(params[1],params[2]);
+	return 1;
 }
 
 //----------------------------------------------------------------------------------
@@ -814,11 +843,8 @@ static cell n_Kick(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "Kick", 1);
 
-	if (pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
-		pNetGame->KickPlayer((BYTE)params[1]);
-		return 1;
-	}
-	return 0;
+	pNetGame->KickPlayer((WORD)params[1]);
+	return 1;
 }
 
 //----------------------------------------------------------------------------------
@@ -828,14 +854,14 @@ static cell n_Ban(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "Ban", 1);
 
-	if (pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
+	if (pNetGame->GetPlayerPool()->GetSlotState((WORD)params[1])) {
 		RakServerInterface* pRak = pNetGame->GetRakServer();
 		PlayerID Player = pRak->GetPlayerIDFromIndex(params[1]);
 
 		in_addr in;
 		in.s_addr = Player.binaryAddress;
-		pNetGame->AddBan((char*)pNetGame->GetPlayerPool()->GetAt(params[1])->GetName(), inet_ntoa(in), "INGAME BAN");
-		pNetGame->KickPlayer((BYTE)params[1]);
+		pNetGame->AddBan(pNetGame->GetPlayerPool()->GetPlayerName((WORD)params[1]), inet_ntoa(in), "INGAME BAN");
+		pNetGame->KickPlayer((WORD)params[1]);
 		return 1;
 	}
 	return 0;
@@ -848,7 +874,7 @@ static cell n_BanEx(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "BanEx", 2);
 
-	if (pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
+	if (pNetGame->GetPlayerPool()->GetSlotState((WORD)params[1])) {
 		RakServerInterface* pRak = pNetGame->GetRakServer();
 		PlayerID Player = pRak->GetPlayerIDFromIndex(params[1]);
 
@@ -858,8 +884,8 @@ static cell n_BanEx(AMX *amx, cell *params)
 		char *szReason;
 		amx_StrParam(amx, params[2], szReason);
 
-		pNetGame->AddBan((char*)pNetGame->GetPlayerPool()->GetAt(params[1])->GetName(), inet_ntoa(in), szReason);
-		pNetGame->KickPlayer((BYTE)params[1]);
+		pNetGame->AddBan(pNetGame->GetPlayerPool()->GetPlayerName((WORD)params[1]), inet_ntoa(in), szReason);
+		pNetGame->KickPlayer((WORD)params[1]);
 		return 1;
 	}
 	return 0;
@@ -871,12 +897,9 @@ static cell n_RemoveBan(AMX* amx, cell* params)
 
 	char* szIP;
 	amx_StrParam(amx, params[1], szIP);
-	if (szIP)
-	{
-		pNetGame->RemoveBan(szIP);
-		return 1;
-	}
-	return 0;
+	if (!szIP) return 0;
+	pNetGame->RemoveBan(szIP);
+	return 1;
 }
 
 static cell n_IsBanned(AMX* amx, cell* params)
@@ -938,11 +961,11 @@ static cell n_IsPlayerAdmin(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "IsPlayerAdmin", 1);
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			return pPlayer->m_bIsAdmin;
-		}
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+
+	if (pPlayerPool->GetSlotState((WORD)params[1]))
+	{
+		return pPlayerPool->IsAdmin((WORD)params[1]);
 	}
 	return 0;
 }
@@ -952,12 +975,12 @@ static cell n_SetPlayerAdmin(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SetPlayerAdmin", 2);
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			pPlayer->m_bIsAdmin = params[2] ? true : false;
-			return 1;
-		}
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+
+	if (pPlayerPool->GetSlotState((WORD)params[1]))
+	{
+		pPlayerPool->SetAdmin((WORD)params[1], params[2] != 0);
+		return 1;
 	}
 	return 0;
 }
@@ -965,11 +988,21 @@ static cell n_SetPlayerAdmin(AMX* amx, cell* params)
 // native IsPickupStreamedIn(pickupid, forplayerid)
 static cell n_IsPickupStreamedIn(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "IsPickupStreamedIn", 2);
-	if (pNetGame->GetPlayerPool() && pNetGame->GetPickupPool()) {
-		CPlayer* pForPlayer = pNetGame->GetPlayerPool()->GetAt(params[2]);
-		if (pForPlayer && pNetGame->GetPickupPool()->IsValid(params[1])) {
-			return pForPlayer->IsPickupStreamedIn(params[1]);
+	CHECK_PARAMS(amx,"IsPickupStreamedIn",2);
+	if (!pNetGame) return 0;
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	if (!pPlayerPool || !pPickupPool) return 0;
+
+	if (pPickupPool->GetSlotState(params[1]))
+	{
+		if (pPlayerPool->GetSlotState(params[2]))
+		{
+			CPlayer* pPlayer = pPlayerPool->GetAt(params[2]);
+			if (pPlayer && pPlayer->IsPickupStreamedIn(params[1]))
+			{
+				return 1;
+			}
 		}
 	}
 	return 0;
@@ -980,7 +1013,7 @@ static cell n_IsActorStreamedIn(AMX* amx, cell* params)
 {
 	CPlayer* pForPlayer;
 
-	CHECK_PARAMS(amx, "IsPickupStreamedIn", 2);
+	CHECK_PARAMS(amx, "IsActorStreamedIn", 2);
 
 	/*if (pNetGame->GetPlayerPool() && pNetGame->GetActorPool())
 	{
@@ -1008,22 +1041,23 @@ static cell n_IsActorStreamedIn(AMX* amx, cell* params)
 	return 0;
 }
 
+// TODO: finish this
 static cell n_GetPlayerIDFromName(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPlayerIDFromName", 1);
 
-	if (pNetGame->GetPlayerPool()) {
-		char* szSearchName = 0;
-		amx_StrParam(amx, params[1], szSearchName);
-		if (szSearchName) {
-			CPlayer* pPlayer;
-			for (size_t uiIndex = 0; uiIndex < MAX_PLAYERS; uiIndex++) {
-				pPlayer = pNetGame->GetPlayerPool()->GetAt(uiIndex);
-				if (pPlayer != NULL && Util_stristr(pPlayer->GetName(), szSearchName) != NULL)
-					return uiIndex;
-			}
-		}
-	}
+	/*CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool) return -1;
+
+	char* szSearchName = 0;
+	amx_StrParam(amx, params[1], szSearchName);
+	if (!szSearchName) return -1;
+
+	for (size_t uiIndex = 0; uiIndex < MAX_PLAYERS; uiIndex++) {
+		if (pPlayer != NULL && Util_stristr(pPlayer->GetName(), szSearchName) != NULL)
+			return uiIndex;
+	}*/
+
 	return -1;
 }
 
@@ -1037,23 +1071,19 @@ static cell n_GetPlayerCount(AMX* amx, cell* params)
 
 static cell n_GetPlayerPoolSize(AMX* amx, cell* params)
 {
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
-		return pPlayerPool->GetLastPlayerId();
-	return 0;
+	CHECK_PARAMS(amx, "GetPlayerPoolSize", 0);
+	if (!pNetGame || !pNetGame->GetPlayerPool()) return -1;
+	return pNetGame->GetPlayerPool()->GetPoolSize();
 }
 
 // native GetPlayerVersion(playerid, version[], len)
 static cell n_GetPlayerVersion(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPlayerVersion", 3);
-
-	CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-	if (pPlayer)
-	{
-		return set_amxstring(amx, params[2], pPlayer->m_szClientVersion, params[3]);
-	}
-	return 0;
+	WORD wPlayerID = (WORD)params[1];
+	if (wPlayerID >= MAX_PLAYERS || !pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) return 0;
+	return set_amxstring(amx, params[2], pNetGame->GetPlayerPool()->
+		GetPlayerVersion(wPlayerID), params[3]);
 }
 
 //----------------------------------------------------------------------------------
@@ -1142,49 +1172,51 @@ static cell n_GetPlayerTeam(AMX *amx, cell *params)
 //----------------------------------------------------------------------------------
 
 //native SetPlayerName(playerid, name[])
-static cell n_SetPlayerName(AMX *amx, cell *params)
+static cell n_SetPlayerName(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SetPlayerName", 2);
 
-	char* szNewNick, szOldNick[MAX_PLAYER_NAME];
-	unsigned char ucSuccess = 0;
-	size_t uiNickLen;
-	CPlayer* pPlayer;
+	if (pNetGame->GetPlayerPool()->GetSlotState(WORD(params[1])))
+	{
+		char* szNewNick;
+		char szOldNick[MAX_PLAYER_NAME + 1];
+		amx_StrParam(amx, params[2], szNewNick);
 
-	if (pNetGame->GetPlayerPool()) {
-		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			amx_StrParam(amx, params[2], szNewNick);
-			if (szNewNick) {
-				if (ContainsInvalidNickChars(szNewNick))
-					return -1;
+		if (!szNewNick || ContainsInvalidNickChars(szNewNick)) return -1;
 
-				uiNickLen = strlen(szNewNick);
-				if (uiNickLen > MAX_PLAYER_NAME)
-					return -1;
+		WORD wPlayerID = (WORD)params[1];
+		BYTE byteNickLen = (BYTE)strlen(szNewNick);
+		BYTE byteSuccess;
 
-				if (!pNetGame->GetPlayerPool()->IsNickInUse(szNewNick)) {
-					strcpy_s(szOldNick, pPlayer->GetName());
+		if (byteNickLen > MAX_PLAYER_NAME) return -1;
 
-					RakNet::BitStream bsData;
-					// TODO: Remove success stream, and change name length to 'unsigned char' type
-					bsData.Write((unsigned char)params[1]); // player id
-					bsData.Write(uiNickLen); // nick length
-					bsData.Write(szNewNick, uiNickLen); // name
-					bsData.Write<unsigned char>(1); // if the nickname was rejected
-					if (pNetGame->SendToAll(RPC_ScrSetPlayerName, &bsData)) {
-						pPlayer->SetName(szNewNick, (unsigned char)uiNickLen);
+		strncpy(szOldNick, pNetGame->GetPlayerPool()->GetPlayerName(wPlayerID), MAX_PLAYER_NAME);
 
-						if (pConsole->GetIntVariable("chatlogging"))
-							logprintf("[nick] %s nick changed to %s", szOldNick, szNewNick);
+		if (byteNickLen == 0 || pNetGame->GetPlayerPool()->IsNickInUse(szNewNick)) byteSuccess = 0;
+		else byteSuccess = 1;
 
-						return 1;
-					}
-				}
+		RakNet::BitStream bsData;
+		bsData.Write(wPlayerID); // player id
+		bsData.Write(byteNickLen); // nick length
+		bsData.Write(szNewNick, byteNickLen); // name
+		bsData.Write(byteSuccess); // if the nickname was rejected
+
+		if (byteSuccess != 0)
+		{
+			pNetGame->GetPlayerPool()->SetPlayerName(wPlayerID, szNewNick);
+			if (pConsole)
+			{
+				if (pConsole->GetIntVariable("chatlogging"))
+					logprintf("[nick] %s nick changed to %s", szOldNick, szNewNick);
 			}
+			pNetGame->BroadcastData(RPC_ScrSetPlayerName, &bsData, INVALID_PLAYER_ID, 2);
 		}
+		return byteSuccess;
 	}
-	return 0;
+	else
+	{
+		return 0;
+	}
 }
 
 //----------------------------------------------------------------------------------
@@ -1490,13 +1522,12 @@ static cell n_IsPlayerTyping(AMX* amx, cell* params)
 static cell n_SetPlayerVirtualWorld(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SetPlayerVirtualWorld", 2);
-
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			pPlayer->SetVirtualWorld(params[2]);
-			return 1;
-		}
+	//if (!pNetGame) return 0;
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool && pPlayerPool->GetSlotState((WORD)params[1]))
+	{
+		pPlayerPool->SetPlayerVirtualWorld((WORD)params[1], params[2]);
+		return 1;
 	}
 	return 0;
 }
@@ -1506,11 +1537,9 @@ static cell n_GetPlayerVirtualWorld(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetPlayerVirtualWorld", 1);
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			return pPlayer->GetVirtualWorld();
-		}
+	if (pNetGame->GetPlayerPool()->GetSlotState((WORD)params[1]))
+	{
+		return pNetGame->GetPlayerPool()->GetPlayerVirtualWorld((WORD)params[1]);
 	}
 	return 0;
 }
@@ -2159,12 +2188,10 @@ static cell n_IsPlayerInAnyVehicle(AMX *amx, cell *params)
 static cell n_GetPlayerName(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerName", 3);
-
-	CPlayer* pPlayer = nullptr;
-	if (pNetGame->GetPlayerPool()) {
-		pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-	}
-	return set_amxstring(amx, params[2], (pPlayer != nullptr) ? pPlayer->GetName() : "", params[3]);
+	WORD wPlayerID = (WORD)params[1];
+	if (wPlayerID > MAX_PLAYERS || !pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) return 0;
+	return set_amxstring(amx, params[2], pNetGame->GetPlayerPool()->
+		GetPlayerName(wPlayerID), params[3]);
 }
 
 //----------------------------------------------------------------------------------
@@ -2233,10 +2260,9 @@ static cell n_FindVehicleModel(AMX* amx, cell* params)
 
 static cell n_GetVehiclePoolSize(AMX* amx, cell* params)
 {
-	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
-	if (pVehiclePool)
-		return pVehiclePool->GetVehicleLastId();
-	return 0;
+	CHECK_PARAMS(amx, "IsValidVehicle", 1);
+	if (!pNetGame || !pNetGame->GetVehiclePool()) return -1;
+	return pNetGame->GetVehiclePool()->GetPoolSize();
 }
 
 // native IsValidVehicle(vehicleid);
@@ -2748,10 +2774,10 @@ static cell n_SendClientMessage(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "SendClientMessage", 3);
 	if (!pNetGame->GetPlayerPool()->GetSlotState(params[1])) return 0;
-	PlayerID pidPlayer = pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]);
+	//PlayerID pidPlayer = pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]);
 	char* szMessage;
 	amx_StrParam(amx, params[3], szMessage);
-	pNetGame->SendClientMessage(pidPlayer,params[2],szMessage);
+	pNetGame->SendClientMessage((WORD)params[1],params[2],szMessage);
 
 	return 1;
 }
@@ -2935,7 +2961,7 @@ static cell n_IsPlayerInCheckpoint(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "IsPlayerInCheckpoint", 1);
 
-	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt((WORD)params[1]);
 	if (pPlayer)
 	{
 		return pPlayer->IsInCheckpoint();
@@ -2986,7 +3012,7 @@ static cell n_IsPlayerInRaceCheckpoint(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "IsPlayerInRaceCheckpoint", 1);
 
-	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt((WORD)params[1]);
 	if (pPlayer)
 	{
 		return pPlayer->IsInRaceCheckpoint();
@@ -3099,8 +3125,7 @@ static cell n_SetPlayerInterior(AMX *amx, cell *params)
 	BYTE byteInteriorID = (BYTE)params[2];
 	bsParams.Write(byteInteriorID);
 
-	pNetGame->GetRakServer()->RPC(RPC_ScrSetInterior , &bsParams, HIGH_PRIORITY, 
-		RELIABLE, 0, pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]), false, false);
+	pNetGame->RPC(RPC_ScrSetInterior, &bsParams, (WORD)params[1], 2);
 
 	return 1;
 }
@@ -3112,7 +3137,7 @@ static cell n_GetPlayerInterior(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerInterior", 1);
 
-	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+	CPlayer *pPlayer = pNetGame->GetPlayerPool()->GetAt((WORD)params[1]);
 	if (pPlayer)
 	{
 		return pPlayer->m_iInteriorId;
@@ -3173,7 +3198,7 @@ static cell n_SetPlayerDrunkLevel(AMX* amx, cell* params)
 
 	RakNet::BitStream out;
 	out.Write<int>(1); // OP code
-	out.Write(params[2]);
+	out.Write((float)params[2]);
 	pNetGame->SendToPlayer(params[1], RPC_ScrSetPlayer, &out);
 
 	pPlayer->m_iDrunkLevel = params[2];
@@ -3366,7 +3391,8 @@ static cell n_DisableRemoteVehicleCollisions(AMX* amx, cell* params)
 		else
 			bsSend.Write0();
 
-		return pNetGame->SendToPlayer(params[1], RPC_ScrDisableVehicleCollision, &bsSend);
+		pNetGame->RPC(RPC_ScrVehicleCollision, &bsSend, (WORD)params[1], 2);
+		return 1;
 	}
 	return 0;
 }
@@ -3740,19 +3766,13 @@ static cell n_ManualVehicleEngineAndLights(AMX* amx, cell* params)
 static cell n_SetPlayerScore(AMX *amx, cell *params)
 {	
 	CHECK_PARAMS(amx, "SetPlayerScore", 2);
+	WORD wPlayerID = (WORD)params[1];
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			RakNet::BitStream bsSend;
-			bsSend.Write((unsigned short)params[1]);
-			bsSend.Write((int)params[2]);
-			if (pNetGame->SendToAll(RPC_ScrSetScore, &bsSend)) {
-				pPlayer->m_iScore = params[2];
-				return 1;
-			}
-		}
+	if (pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) {
+		pNetGame->GetPlayerPool()->SetPlayerScore(wPlayerID, params[2]);
+		return 1;
 	}
+
 	return 0;
 }
 
@@ -3760,32 +3780,28 @@ static cell n_SetPlayerScore(AMX *amx, cell *params)
 static cell n_GetPlayerScore(AMX *amx, cell *params)
 {	
 	CHECK_PARAMS(amx, "GetPlayerScore", 1);
+	WORD wPlayerID = (WORD)params[1];
+	if (!pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) return 0;
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			return pPlayer->m_iScore;
-		}
-	}
-	return 0;
+	return pNetGame->GetPlayerPool()->GetPlayerScore(wPlayerID);
 }
 
 // native GivePlayerMoney(playerid, money)
 static cell n_GivePlayerMoney(AMX* amx, cell* params)
 {	
 	CHECK_PARAMS(amx, "GivePlayerMoney", 2);
+	RakNet::BitStream bsMoney;
+	bsMoney.Write((int)params[2]);
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			RakNet::BitStream bsMoney;
-			bsMoney.Write(params[2]);
-			if (pNetGame->SendToPlayer(params[1], RPC_ScrHaveSomeMoney, &bsMoney)) {
-				pPlayer->m_iMoney = pPlayer->m_iMoney + params[2];
-				return 1;
-			}
-		}
+	CPlayerPool *pPool = pNetGame->GetPlayerPool();
+
+	if( pPool->GetSlotState((WORD)params[1]) ) {
+		pPool->SetPlayerMoney((WORD)params[1], pPool->GetPlayerMoney((WORD)params[1]) + params[2]);
+
+		pNetGame->RPC(RPC_ScrHaveSomeMoney, &bsMoney, (WORD)params[1], 2);
+		return 1;
 	}
+
 	return 0;
 }
 
@@ -3793,14 +3809,14 @@ static cell n_GivePlayerMoney(AMX* amx, cell* params)
 static cell n_SetPlayerMoney(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "SetPlayerMoney", 2);
+	WORD wPlayerID = (WORD)params[1];
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			pPlayer->m_iMoney = params[2];
-			return 1;
-		}
+	if (pPlayerPool->GetSlotState(wPlayerID)) {
+		 pPlayerPool->SetPlayerMoney(wPlayerID, params[2]);
+		 return 1;
 	}
+
 	return 0;
 }
 
@@ -3808,13 +3824,13 @@ static cell n_SetPlayerMoney(AMX* amx, cell* params)
 static cell n_GetPlayerMoney(AMX* amx, cell* params)
 {	
 	CHECK_PARAMS(amx, "GetPlayerMoney", 1);
-	
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			return pPlayer->m_iMoney;
-		}
+	WORD wPlayerID = (WORD)params[1];
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+
+	if (pPlayerPool->GetSlotState(wPlayerID)) {
+		return pPlayerPool->GetPlayerMoney(wPlayerID);
 	}
+
 	return 0;
 }
 
@@ -3822,16 +3838,17 @@ static cell n_GetPlayerMoney(AMX* amx, cell* params)
 static cell n_ResetPlayerMoney(AMX *amx, cell *params)
 {		
 	CHECK_PARAMS(amx, "ResetPlayerMoney", 1);
+	RakNet::BitStream bsMoney;
 
-	if (pNetGame->GetPlayerPool()) {
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer != nullptr) {
-			if (pNetGame->SendToPlayer(params[1], RPC_ScrResetMoney, NULL)) {
-				pPlayer->m_iMoney = 0;
-				return 1;
-			}
-		}
+	WORD wPlayerID = (WORD)params[1];
+	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
+
+	if(pPlayerPool->GetSlotState(wPlayerID)) {
+		pPlayerPool->SetPlayerMoney(wPlayerID,0);
+		pNetGame->RPC(RPC_ScrResetMoney, &bsMoney, wPlayerID, 2);
+		return 1;
 	}
+
 	return 0;
 }
 
@@ -4284,8 +4301,8 @@ static cell n_LimitPlayerMarkerRadius(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "LimitPlayerMarkerRadius", 1);
 
-	pNetGame->m_bLimitGlobalMarkerRadius = true;
-	pNetGame->m_fGlobalMarkerRadius = amx_ctof(params[1]);
+	pNetGame->m_bLimitPlayerMarkerRadius = true;
+	pNetGame->m_fPlayerMarkerRadius = amx_ctof(params[1]);
 	return 1;
 }
 
@@ -4468,9 +4485,10 @@ static cell n_GetPlayerIp(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerIp", 3);
 	
-	if (pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
+	WORD wPlayerID = (WORD)params[1];
+	if (pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) {
 		RakServerInterface* pRak = pNetGame->GetRakServer();
-		PlayerID Player = pRak->GetPlayerIDFromIndex(params[1]);
+		PlayerID Player = pRak->GetPlayerIDFromIndex(wPlayerID);
 
 		in_addr in;
 		in.s_addr = Player.binaryAddress;
@@ -4484,9 +4502,10 @@ static cell n_GetPlayerPing(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerPing", 1);
 	
-	if (pNetGame->GetPlayerPool()->GetSlotState(params[1])) {
+	WORD wPlayerID = (WORD)params[1];
+	if (pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) {
 		RakServerInterface* pRak = pNetGame->GetRakServer();
-		PlayerID Player = pRak->GetPlayerIDFromIndex(params[1]);
+		PlayerID Player = pRak->GetPlayerIDFromIndex(wPlayerID);
 
 		return pRak->GetLastPing(Player);
 	} else { return -1; }
@@ -4578,8 +4597,7 @@ static cell n_SetPlayerArmour(AMX *amx, cell *params)
 	RakNet::BitStream bsArmour;
 	bsArmour.Write(fArmour);
 
-	pNetGame->GetRakServer()->RPC(RPC_ScrSetPlayerArmour , &bsArmour, HIGH_PRIORITY, 
-		RELIABLE, 0, pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]), false, false);
+	pNetGame->RPC(RPC_ScrSetPlayerArmour, &bsArmour, (WORD)params[1], 2);
 
 	return 1;
 }
@@ -4595,12 +4613,10 @@ static cell n_SetPlayerMarkerForPlayer(AMX *amx, cell *params)
 		pNetGame->GetPlayerPool()->GetAt(params[2]))
 	{
 		RakNet::BitStream bsMarker;
-		bsMarker.Write((BYTE)params[2]);
+		bsMarker.Write((WORD)params[2]);
 		bsMarker.Write((DWORD)params[3]);
 
-		
-		pNetGame->GetRakServer()->RPC(RPC_ScrSetPlayerColor , &bsMarker, HIGH_PRIORITY, 
-			RELIABLE, 0, pNetGame->GetRakServer()->GetPlayerIDFromIndex(params[1]), false, false);
+		pNetGame->RPC(RPC_ScrSetPlayerColor, &bsMarker, (WORD)params[1], 2);
 
 		return 1;
 	}
@@ -4634,12 +4650,10 @@ static cell n_SetPlayerMapIcon(AMX *amx, cell *params)
 	bsIcon.Write(amx_ctof(params[4])); //fPos[1]);
 	bsIcon.Write(amx_ctof(params[5])); //fPos[2]);
 	bsIcon.Write((BYTE)params[6]);
-	bsIcon.Write((BYTE)params[7]);
-	bsIcon.Write((unsigned char)params[8]);
+	bsIcon.Write(params[7]);
+	bsIcon.Write((BYTE)params[8]);
 
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScrSetMapIcon , &bsIcon, HIGH_PRIORITY, 
-		RELIABLE, 0, pRak->GetPlayerIDFromIndex(params[1]), false, false);
+	pNetGame->RPC(RPC_ScrSetMapIcon, &bsIcon, (WORD)params[1], 2);
 
 	return 1;
 }
@@ -4651,15 +4665,15 @@ static cell n_RemovePlayerMapIcon(AMX *amx, cell *params)
 	CHECK_PARAMS(amx, "RemovePlayerMapIcon", 2); // Playerid, 
 	
 	//CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt((BYTE)params[1]);
-	if(!pNetGame->GetPlayerPool()->GetAt(params[1])) return 0;
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if(!pPlayerPool || !pPlayerPool->GetAt(params[1])) return 0;
 	// Not technically needed but adds checking incase they're not in the server (not actually sure if it'll matter)
-	
+	if ((BYTE)params[2] >= MAX_MAP_ICON) return 0;
+
 	RakNet::BitStream bsIcon;
 	bsIcon.Write((BYTE)params[2]);
 
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScrDisableMapIcon , &bsIcon, HIGH_PRIORITY, 
-		RELIABLE, 0, pRak->GetPlayerIDFromIndex(params[1]), false, false);
+	pNetGame->RPC(RPC_ScrDisableMapIcon, &bsIcon, (WORD)params[1], 2);
 
 	return 1;
 }
@@ -4722,11 +4736,22 @@ static cell n_GetPlayerKeys(AMX *amx, cell *params)
 static cell n_EnableTirePopping(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "EnableTirePopping", 1);
-	pNetGame->m_bTirePopping = (bool)params[1];
+	logprintf("EnableTirePopping() function is removed.");
+	//pNetGame->m_bTirePopping = (bool)params[1];
 	//char szPopping[128];
 	//sprintf(szPopping, "%s", (params[1] == 1) ? "True" : "False");
 	//pConsole->SetStringVariable("tirepopping", szPopping);
 	// Removed - 
+	return 1;
+}
+
+//----------------------------------------------------------------------------------
+
+// native EnableVehicleFriendlyFire()
+static cell n_EnableVehicleFriendlyFire(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "EnableVehicleFriendlyFire", 0);
+	pNetGame->m_bVehicleFriendlyFire = true;
 	return 1;
 }
 
@@ -4766,8 +4791,7 @@ static cell n_SetPlayerWeather(AMX *amx, cell *params)
 	if (!pNetGame->GetPlayerPool()->GetSlotState(params[1])) return 0;
 	RakNet::BitStream bsWeather;
 	bsWeather.Write((BYTE)params[2]);
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_Weather , &bsWeather, HIGH_PRIORITY, RELIABLE, 0, pRak->GetPlayerIDFromIndex(params[1]), false, false);
+	pNetGame->RPC(RPC_Weather, &bsWeather, (WORD)params[1], 2);
 	//pRak->RPC(RPC_ScrDisableMapIcon", &bsIcon, HIGH_PRIORITY, RELIABLE, 0, pRak->GetPlayerIDFromIndex(params[1]), false, false);
 
 	return 1;
@@ -4838,31 +4862,30 @@ static cell n_SetGravity(AMX *amx, cell *params)
 
 static cell n_ConnectNPC(AMX* amx, cell* params)
 {
-	PCHAR szName, szScript, szBindAddress, szPassword;
-	CHAR szCmd[256], szHost[256];
-	int iPort;
-
 	CHECK_PARAMS(amx, "ConnectNPC", 2);
 
+	char* szName;
+	char* szScript;
 	amx_StrParam(amx, params[1], szName);
 	amx_StrParam(amx, params[2], szScript);
 
-	if (szName == NULL || szScript == NULL)
+	if (!szName || szName[0] == 0 || !szScript || szScript[0] == 0)
 	{
 		logprintf("ConnectNPC: Bad parameters");
 		return 0;
-	}	
+	}
 
-	szBindAddress = pConsole->GetStringVariable("bind");
+	char szHost[256];
+	char* szBindAddress = pConsole->GetStringVariable("bind");
 	if (szBindAddress && szBindAddress[0] != '\0')
 		strcpy(szHost, szBindAddress);
 	else
 		strcpy(szHost, "127.0.0.1");
 
-	iPort = pConsole->GetIntVariable("port");
-	sprintf(szCmd, "-h %s -p %d -n %s -m %s", szHost, iPort, szName, szScript);
+	char szCmd[256];
+	sprintf(szCmd, "-h %s -p %d -n %s -m %s", szHost, pConsole->GetIntVariable("port"), szName, szScript);
 
-	szPassword = pConsole->GetStringVariable("password");
+	char* szPassword = pConsole->GetStringVariable("password");
 	if (szPassword && szPassword[0] != '\0')
 	{
 		strcat(szCmd, " -z ");
@@ -4887,14 +4910,14 @@ static cell n_IsPlayerNPC(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "IsPlayerNPC", 1);
 
-	if (pNetGame->GetPlayerPool())
-	{
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer && pPlayer->m_bIsNPC)
-		{
-			return 1;
-		}
+	WORD wPlayerID = (WORD)params[1];
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool || !pPlayerPool->GetSlotState(wPlayerID)) return 0;
+	
+	if (pPlayerPool->IsPlayerNPC(wPlayerID)) {
+		return 1;
 	}
+
 	return 0;
 }
 
@@ -5318,6 +5341,8 @@ static cell n_CreateObject(AMX *amx, cell *params)
 	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
 	VECTOR vecPos, vecRot;
 
+	if (!pObjectPool) return 0;
+
 	vecPos.X = amx_ctof(params[2]);
 	vecPos.Y = amx_ctof(params[3]);
 	vecPos.Z = amx_ctof(params[4]);
@@ -5325,70 +5350,74 @@ static cell n_CreateObject(AMX *amx, cell *params)
 	vecRot.X = amx_ctof(params[5]);
 	vecRot.Y = amx_ctof(params[6]);
 	vecRot.Z = amx_ctof(params[7]);
-
-	float fDrawDist = amx_ctof(params[8]);
 	
-	BYTE byteObjectID = pObjectPool->New((int)params[1], &vecPos, &vecRot, fDrawDist);
+	WORD wObjectID = pObjectPool->New((int)params[1], &vecPos, &vecRot, amx_ctof(params[8]));
 
-	if (byteObjectID != 0xFF)
+	if (wObjectID != INVALID_OBJECT_ID)
 	{
-		CObject* pObject = pNetGame->GetObjectPool()->GetAt(byteObjectID);
+		CObject* pObject = pNetGame->GetObjectPool()->GetAt(wObjectID);
 		CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-		for(int x = 0; x < MAX_PLAYERS;x++) 
-		{	
-			if (pPlayerPool->GetSlotState(x))
-			{
-				pObject->SpawnForPlayer(x); // Done 100 times, may as well speed up with pointers.
+		if (pObject && pPlayerPool)
+		{
+			for(int x = 0; x < pPlayerPool->GetPoolSize();x++) 
+			{	
+				if (pPlayerPool->GetSlotState(x))
+				{
+					pObject->SpawnForPlayer(x); // Done 100 times, may as well speed up with pointers.
+				}
 			}
 		}
 	}
-	return byteObjectID;
+	return wObjectID;
 }
 
 static cell n_SetObjectPos(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "SetObjectPos", 4);
 
-	if (pNetGame->GetObjectPool()) {
-		CObject* pObject = pNetGame->GetObjectPool()->GetAt(params[1]);
-		if (pObject != nullptr) {
-			RakNet::BitStream out;
-			float
-				fX = amx_ctof(params[2]),
-				fY = amx_ctof(params[3]),
-				fZ = amx_ctof(params[4]);
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
-			out.Write((BYTE)params[1]);
-			out.Write(fX);
-			out.Write(fY);
-			out.Write(fZ);
+	CObject* pObject = pObjectPool->GetAt((WORD)params[1]);
+	if (pObject)
+	{
+		VECTOR vecPos;
+		vecPos.X = amx_ctof(params[2]);
+		vecPos.Y = amx_ctof(params[3]);
+		vecPos.Z = amx_ctof(params[4]);
 
-			if (pNetGame->SendToAll(RPC_ScrSetObjectPos, &out)) {
-				pObject->m_matWorld.pos.X = fX;
-				pObject->m_matWorld.pos.Y = fY;
-				pObject->m_matWorld.pos.Z = fZ;
-				return 1;
-			}
-		}
+		pObject->m_matWorld.pos.X = vecPos.X;
+		pObject->m_matWorld.pos.Y = vecPos.Y;
+		pObject->m_matWorld.pos.Z = vecPos.Z;
+
+		RakNet::BitStream bsParams;
+		bsParams.Write((WORD)params[1]); // wObjectID
+		bsParams.Write(vecPos.X);	// X
+		bsParams.Write(vecPos.Y);	// Y
+		bsParams.Write(vecPos.Z);	// Z
+
+		pNetGame->BroadcastData(RPC_ScrSetObjectPos, &bsParams, INVALID_PLAYER_ID, 2);
 	}
-	return 0;
+	return 1;
 }
 
 static cell n_GetObjectPos(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetObjectPos", 4);
-	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
-	CObject*		pObject		= pObjectPool->GetAt(params[1]);
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
+	CObject* pObject = pObjectPool->GetAt((WORD)params[1]);
 	if (pObject)
 	{
 		cell* cptr;
-		amx_GetAddr(amx, params[2], &cptr);
-		*cptr = amx_ftoc(pObject->m_matWorld.pos.X);
-		amx_GetAddr(amx, params[3], &cptr);
-		*cptr = amx_ftoc(pObject->m_matWorld.pos.Y);
-		amx_GetAddr(amx, params[4], &cptr);
-		*cptr = amx_ftoc(pObject->m_matWorld.pos.Z);
+		VECTOR* vecRot = pObject->GetRotation();
+		if(!amx_GetAddr(amx, params[2], &cptr))
+			*cptr = amx_ftoc(vecRot->X);
+		if(!amx_GetAddr(amx, params[3], &cptr))
+			*cptr = amx_ftoc(vecRot->Y);
+		if(!amx_GetAddr(amx, params[4], &cptr))
+			*cptr = amx_ftoc(vecRot->Z);
 
 		return 1;
 	}
@@ -5400,29 +5429,30 @@ static cell n_SetObjectRot(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "SetObjectRot", 4);
 
-	if (pNetGame->GetObjectPool()) {
-		CObject* pObject = pNetGame->GetObjectPool()->GetAt(params[1]);
-		if (pObject != nullptr) {
-			RakNet::BitStream out;
-			float
-				fX = amx_ctof(params[2]),
-				fY = amx_ctof(params[3]),
-				fZ = amx_ctof(params[4]);
+	CObjectPool *pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
-			out.Write((BYTE)params[1]);
-			out.Write(fX);
-			out.Write(fY);
-			out.Write(fZ);
+	CObject* pObject = pObjectPool->GetAt((WORD)params[1]);
 
-			if (pNetGame->SendToAll(RPC_ScrSetObjectRotation, &out)) {
-				pObject->m_matWorld.up.X = fX;
-				pObject->m_matWorld.up.Y = fY;
-				pObject->m_matWorld.up.Z = fZ;
-				return 1;
-			}
-		}
+	VECTOR vecRot;
+	vecRot.X = amx_ctof(params[2]);
+	vecRot.Y = amx_ctof(params[3]);
+	vecRot.Z = amx_ctof(params[4]);
+
+	if (pObject)
+	{
+		pObject->SetRotation(&vecRot);
+
+		RakNet::BitStream bsParams;
+		bsParams.Write((WORD)params[1]); // wObjectID
+		bsParams.Write(vecRot.X);	// X
+		bsParams.Write(vecRot.Y);	// Y
+		bsParams.Write(vecRot.Z);	// Z
+
+		pNetGame->BroadcastData(RPC_ScrSetObjectRotation, &bsParams, INVALID_PLAYER_ID, 2);
 	}
-	return 0;
+
+	return 1;
 }
 
 static cell n_GetObjectRot(AMX *amx, cell *params)
@@ -5450,19 +5480,25 @@ static cell n_GetObjectModel(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "GetObjectModel", 1);
 
-	CObject* pObject = pNetGame->GetObjectPool()->GetAt(params[1]);
-	if (!pObject)
-		return -1;
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return -1;
 
-	return pObject->m_iModel;
+	CObject* pObject = pObjectPool->GetAt((WORD)params[1]);
+	if (pObject)
+	{
+		return pObject->m_iModel;
+	}
+
+	return -1;
 }
 
 static cell n_IsValidObject(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "IsValidObject", 1);
 	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
-	if (pObjectPool->GetAt(params[1]))
+	if (pObjectPool->GetAt((WORD)params[1]))
 	{
 		return 1;
 	}
@@ -5474,15 +5510,16 @@ static cell n_DestroyObject(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "DestroyObject", 1);
 	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
 	if (pObjectPool->GetAt(params[1]))
 	{
-		pObjectPool->Delete((BYTE)params[1]);
+		pObjectPool->Delete((WORD)params[1]);
 		RakNet::BitStream bsParams;
 
-		bsParams.Write((BYTE)params[1]);
+		bsParams.Write((WORD)params[1]);
 
-		pNetGame->GetRakServer()->RPC(RPC_ScrDestroyObject , &bsParams, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+		pNetGame->BroadcastData(RPC_ScrDestroyObject, &bsParams, INVALID_PLAYER_ID, 2);
 	}
 
 	return 1;
@@ -5493,30 +5530,53 @@ static cell n_IsObjectMoving(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "IsObjectMoving", 1);
 
-	CObject* pObject = pNetGame->GetObjectPool()->GetAt(params[1]);
-	if (!pObject)
-		return 0;
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
 
-	return (pObject->m_byteMoving & 1);
+	CObject* pObject = pObjectPool->GetAt((WORD)params[1]);
+	if (pObject)
+	{
+		if (pObject->m_byteMoving & 1)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 static cell n_MoveObject(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "MoveObject", 5);
-	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
-	//BYTE byteObject = (BYTE)params[1];
-	CObject* pObject = pObjectPool->GetAt(params[1]);
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
+
+	WORD wObject = (WORD)params[1];
+	CObject* pObject = pObjectPool->GetAt(wObject);
 	float ret = 0.0f;
 
 	if (pObject)
 	{
+		if (pObject->m_byteMoving & 1)
+		{
+			pObject->Stop();
+
+			RakNet::BitStream bsParams;
+			bsParams.Write(wObject);
+
+			pNetGame->BroadcastData(RPC_ScrStopObject, &bsParams, INVALID_PLAYER_ID, 2);
+		}
+
 		RakNet::BitStream bsParams;
 
 		float x = amx_ctof(params[2]);
 		float y = amx_ctof(params[3]);
 		float z = amx_ctof(params[4]);
 		float s = amx_ctof(params[5]);
-		bsParams.Write((BYTE)params[1]);
+		float rx = amx_ctof(params[6]);
+		float ry = amx_ctof(params[7]);
+		float rz = amx_ctof(params[8]);
+		bsParams.Write(wObject);
 		bsParams.Write(pObject->m_matWorld.pos.X);
 		bsParams.Write(pObject->m_matWorld.pos.Y);
 		bsParams.Write(pObject->m_matWorld.pos.Z);
@@ -5525,8 +5585,11 @@ static cell n_MoveObject(AMX *amx, cell *params)
 		bsParams.Write(y);
 		bsParams.Write(z);
 		bsParams.Write(s);
+		bsParams.Write(rx);
+		bsParams.Write(ry);
+		bsParams.Write(rz);
 
-		pNetGame->GetRakServer()->RPC(RPC_ScrMoveObject , &bsParams, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
+		pNetGame->BroadcastData(RPC_ScrMoveObject, &bsParams, INVALID_PLAYER_ID, 2);
 		//return *amx_ftoc(pObject->MoveTo(x, y, z, s));
 		ret = pObject->MoveTo(x, y, z, s);
 	}
@@ -5537,24 +5600,29 @@ static cell n_MoveObject(AMX *amx, cell *params)
 static cell n_StopObject(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "StopObject", 1);
-	CObjectPool*	pObjectPool = pNetGame->GetObjectPool();
-	//BYTE byteObject = (BYTE)params[1];
-	CObject* pObject = pObjectPool->GetAt(params[1]);
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (!pObjectPool) return 0;
+
+	WORD wObject = (WORD)params[1];
+	CObject* pObject = pObjectPool->GetAt(wObject);
 	
 	if (pObject)
 	{
-		RakNet::BitStream bsParams;
+		if (pObject->m_byteMoving & 1)
+		{
+			RakNet::BitStream bsParams;
 
-		pObject->Stop();
-		bsParams.Write((BYTE)params[1]);
-		bsParams.Write(pObject->m_matWorld.pos.X);
-		bsParams.Write(pObject->m_matWorld.pos.Y);
-		bsParams.Write(pObject->m_matWorld.pos.Z);
-		// Make sure it stops for the player where the server thinks it is
+			pObject->Stop();
+			bsParams.Write(wObject);
+			//bsParams.Write(pObject->m_matWorld.pos.X);
+			//bsParams.Write(pObject->m_matWorld.pos.Y);
+			//bsParams.Write(pObject->m_matWorld.pos.Z);
+			// Make sure it stops for the player where the server thinks it is
 
-		pNetGame->GetRakServer()->RPC(RPC_ScrStopObject , &bsParams, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false);
-		//return *amx_ftoc(pObject->MoveTo(x, y, z, s));
-		return 1;
+			pNetGame->BroadcastData(RPC_ScrStopObject, &bsParams, INVALID_PLAYER_ID, 2);
+			//return *amx_ftoc(pObject->MoveTo(x, y, z, s));
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -5840,6 +5908,57 @@ static cell n_GetPlayerObjectModel(AMX* amx, cell* params)
 	return 0;
 }
 
+// native SelectObject(playerid);
+static cell n_SelectObject(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx,"SelectObject",1);
+
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool) return 0;
+
+	if (pPlayerPool->GetSlotState((WORD)params[1]))
+	{
+		CPlayer* pPlayer = pPlayerPool->GetAt((WORD)params[1]);
+		if (pPlayer)
+		{
+			//RakNet::BitStream bs;
+			pNetGame->RPC(RPC_ObjectSelect, NULL, (WORD)params[1], 2);
+			pPlayer->m_bSelectingObject = TRUE;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+// native CancelEdit(playerid);
+static cell n_CancelEdit(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx,"CancelEdit",1);
+
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool) return 0;
+}
+
+// native SetObjectsDefaultCameraCol(disable)
+static cell n_SetObjectsDefaultCameraCol(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "SetObjectsDefaultCameraCol", 1);
+
+	if(params[1])
+	{
+		if (pNetGame)
+			pNetGame->m_bDefaultObjectCameraCol = true;
+		return 1;
+	}
+	else
+	{
+		if (pNetGame)
+			pNetGame->m_bDefaultObjectCameraCol = false;
+		return 1;
+	}
+}
+
+/*
 // native GetActorPoolSize()
 static cell n_GetActorPoolSize(AMX* amx, cell* params)
 {
@@ -5847,7 +5966,7 @@ static cell n_GetActorPoolSize(AMX* amx, cell* params)
 
 	if (pNetGame->GetActorPool())
 	{
-		return pNetGame->GetActorPool()->GetLastActorID();
+		return pNetGame->GetActorPool()->GetPoolSize();
 	}
 	return (cell)-1;
 }
@@ -5867,7 +5986,7 @@ static cell n_CreateActor(AMX* amx, cell* params)
 		vecPosition.Z = amx_ctof(params[4]);
 		fRotation = amx_ctof(params[5]);
 
-		return (cell)pNetGame->GetActorPool()->New(params[1], vecPosition, fRotation);
+		return (cell)pNetGame->GetActorPool()->New(params[1], &vecPosition, fRotation);
 	}
 	return INVALID_ACTOR_ID;
 }
@@ -5879,7 +5998,7 @@ static cell n_DestroyActor(AMX* amx, cell* params)
 
 	if (pNetGame->GetActorPool()) // && pNetGame->GetActorPool->GetSlotState(params[1]));
 	{
-		return (cell)pNetGame->GetActorPool()->Destroy(params[1]);
+		return (cell)pNetGame->GetActorPool()->Delete(params[1]);
 	}
 	return 0;
 }
@@ -6120,14 +6239,11 @@ static cell n_SetActorHealth(AMX* amx, cell* params)
 // native IsValidActor(actorid)
 static cell n_IsValidActor(AMX* amx, cell* params)
 {
-	CHECK_PARAMS(amx, "IsValidActor", 1);
-
-	if (pNetGame->GetActorPool())
-	{
-		if (pNetGame->GetActorPool()->GetSlotState(params[1]))
-		{
-			return 1;
-		}
+	CHECK_PARAMS(amx,"IsValidActor",1);
+	CActorPool* pActorPool = pNetGame->GetActorPool();
+	if (!pActorPool) return 0;
+	if (pActorPool->GetSlotState(params[1])) {
+		return 1;
 	}
 	return 0;
 }
@@ -6154,9 +6270,22 @@ static cell n_SetActorInvulnerable(AMX* amx, cell* params)
 // native IsActorInvulnerable(actorid)
 static cell n_IsActorInvulnerable(AMX* amx, cell* params)
 {
-	CActor* pActor;
+	CHECK_PARAMS(amx,"IsActorInvulnerable",1);
+	CActorPool* pActorPool = pNetGame->GetActorPool();
+	if (!pActorPool) return 0;
+	CActor* pActor = pActorPool->GetAt(params[1]);
+	if (pActor) {
+		return 1;
+		//return pActor->m_byteInvulnerable != 0;
+	}
+	return 0;
 
-	CHECK_PARAMS(amx, "IsActorInvulnerable", 1);
+
+
+
+	/ *CActor* pActor;
+
+	
 
 	if (pNetGame->GetActorPool())
 	{
@@ -6168,9 +6297,9 @@ static cell n_IsActorInvulnerable(AMX* amx, cell* params)
 				return 1;
 			}
 		}
-	}
+	}* /
 	return 0;
-}
+}*/
 
 // Menus
 
@@ -6184,8 +6313,8 @@ static cell n_CreateMenu(AMX *amx, cell *params)
 	char* szMenuTitle;
 	float fX = amx_ctof(params[3]), fY = amx_ctof(params[4]),
 		fCol1Width = amx_ctof(params[5]), fCol2Width = amx_ctof(params[6]);
-	amx_StrParam(amx, params[1], szMenuTitle);
-	BYTE menuid = pMenuPool->New((szMenuTitle != 0) ? (szMenuTitle) : (""), fX, fY, params[2], fCol1Width, fCol2Width);
+	amx_StrParamEx(amx, params[1], szMenuTitle);
+	BYTE menuid = pMenuPool->New(szMenuTitle, fX, fY, params[2], fCol1Width, fCol2Width);
 	return menuid != 0xFF ? (menuid) : (-1);
 }
 
@@ -6210,8 +6339,8 @@ static cell n_AddMenuItem(AMX *amx, cell *params)
 	if (!pMenu)
 		return 0;
 	char* szItemText;
-	amx_StrParam(amx, params[3], szItemText);
-	BYTE ret = pMenu->AddMenuItem(params[2], szItemText ? (szItemText) : (""));
+	amx_StrParamEx(amx, params[3], szItemText);
+	BYTE ret = pMenu->AddMenuItem(params[2], szItemText);
 	return ret != 0xFF ? (ret) : (-1);
 }
 
@@ -6226,8 +6355,8 @@ static cell n_SetMenuColumnHeader(AMX *amx, cell *params)
 	if (!pMenu)
 		return 0;
 	char* szItemText;
-	amx_StrParam(amx, params[3], szItemText);
-	pMenu->SetColumnTitle(params[2], szItemText ? (szItemText) : (""));
+	amx_StrParamEx(amx, params[3], szItemText);
+	pMenu->SetColumnTitle(params[2], szItemText);
 	return 1;
 }
 
@@ -6244,8 +6373,8 @@ static cell n_ShowMenuForPlayer(AMX *amx, cell *params)
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	if (!pPlayerPool && !pPlayerPool->GetSlotState(params[2]))
 		return 0;
-	pMenu->ShowForPlayer((BYTE)params[2]);
-	pMenuPool->SetPlayerMenu((BYTE)params[2], (BYTE)params[1]);
+	pMenu->ShowForPlayer((WORD)params[2]);
+	pMenuPool->SetPlayerMenu((WORD)params[2], (BYTE)params[1]);
 	return 1;
 }
 
@@ -6262,8 +6391,8 @@ static cell n_HideMenuForPlayer(AMX *amx, cell *params)
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	if (!pPlayerPool && !pPlayerPool->GetSlotState(params[2]))
 		return 0;
-	pMenu->HideForPlayer((BYTE)params[2]);
-	pMenuPool->SetPlayerMenu((BYTE)params[2], (BYTE)params[1]);
+	pMenu->HideForPlayer((WORD)params[2]);
+	pMenuPool->SetPlayerMenu((WORD)params[2], (BYTE)params[1]);
 	return 1;
 }
 
@@ -6310,10 +6439,9 @@ static cell n_GetPlayerMenu(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetPlayerMenu", 1);
 	CMenuPool* pMenuPool = pNetGame->GetMenuPool();
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	if (!pMenuPool && !pPlayerPool && !pPlayerPool->GetSlotState(params[2]))
+	if (!pMenuPool)
 		return 255;
-	return pMenuPool->GetPlayerMenu((BYTE)params[1]);
+	return pMenuPool->GetPlayerMenu((WORD)params[1]);
 }
 
 static cell n_CreateExplosion(AMX *amx, cell *params)
@@ -6464,8 +6592,7 @@ static cell n_SetPlayerWantedLevel(AMX *amx, cell *params)
 		pPlayer->SetWantedLevel((BYTE)params[2]);
 		RakNet::BitStream bsParams;
 		bsParams.Write((BYTE)params[2]);
-		RakServerInterface* pRak = pNetGame->GetRakServer();
-		pRak->RPC(RPC_ScrSetPlayerWantedLevel, &bsParams, HIGH_PRIORITY, RELIABLE, 0, pRak->GetPlayerIDFromIndex((BYTE)params[1]), false, false);
+		pNetGame->RPC(RPC_ScrSetPlayerWantedLevel, &bsParams, (WORD)params[1], 2);
 		return 1;
 	}
 	return 0;
@@ -6479,6 +6606,56 @@ static cell n_GetPlayerWantedLevel(AMX *amx, cell *params)
 	return 0;
 }
 
+//----------------------------------------------------------------------------------
+// native SelectTextDraw(playerid, hovercolor);
+
+static cell n_SelectTextDraw(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "SelectTextDraw", 2);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+		if (pPlayer)
+		{
+			RakNet::BitStream bsData;
+
+			bsData.Write1(); // enable
+			bsData.Write((DWORD)params[2]); // hovercolor
+
+			pNetGame->SendToPlayer(params[1], RPC_ScrClickTextDraw, &bsData);
+
+			pPlayer->m_bSelectingText = true;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
+// native CancelSelectTextDraw(playerid);
+static cell n_CancelSelectTextDraw(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "CancelSelectTextDraw", 1);
+
+	// CPlayerPool::GetAt() check is unnecessary here, not added.. 
+	if (pNetGame->GetPlayerPool() &&
+		pNetGame->GetPlayerPool()->GetSlotState(params[1]))
+	{
+		RakNet::BitStream bsData;
+
+		bsData.Write0(); // disable
+		// SA-MP does read the hover color also, when receiving disable message,
+		// but the variable is unused that point, and the read can safely fail too
+		//bsData.Write((DWORD)0); // hovercolor
+
+		pNetGame->SendToPlayer(params[1], RPC_ScrClickTextDraw, &bsData);
+		return 1;
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 // native GetPlayerVelocity(playerid, &Float:x, &Float:y, &Float:z)
 static cell n_GetPlayerVelocity(AMX* amx, cell* params)
 {
@@ -6868,6 +7045,39 @@ static cell n_TextDrawSetProportional(AMX *amx, cell *params)
 	return 0;
 }
 
+//----------------------------------------------------------------------------------
+// native TextDrawSetSelectable(Text:text, set);
+
+static cell n_TextDrawSetSelectable(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "TextDrawSetSelectable", 2);
+
+	CTextDrawPool* pTextDraw = pNetGame->GetTextDrawPool();
+	if (pTextDraw && pTextDraw->GetSlotState(params[1]))
+	{
+		pTextDraw->SetSelectable(params[1], params[2] != 0);
+		return 1;
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
+// native TextDrawGetSelectable(Text:text);
+
+static cell n_TextDrawGetSelectable(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "TextDrawGetSelectable", 1);
+
+	CTextDrawPool* pTextDraw = pNetGame->GetTextDrawPool();
+	if (pTextDraw && pTextDraw->GetSlotState(params[1]))
+	{
+		return pTextDraw->IsSelectable(params[1]);
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
+
 static cell n_TextDrawShowForPlayer(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "TextDrawShowForPlayer", 2);
@@ -7123,6 +7333,50 @@ static cell n_PlayerTextDrawSetProportional(AMX* amx, cell* params)
 	return 0;
 }
 
+//----------------------------------------------------------------------------------
+// native PlayerTextDrawSetSelectable(playerid, PlayerText:text, set);
+
+static cell n_PlayerTextDrawSetSelectable(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayerTextDrawSetSelectable", 3);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer &&
+			pPlayer->m_pTextDraw &&
+			pPlayer->m_pTextDraw->IsValid(params[2]))
+		{
+			pPlayer->m_pTextDraw->SetSelectable(params[2], params[3] != 0);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
+// native PlayerTextDrawGetSelectable(playerid, PlayerText:text);
+
+static cell n_PlayerTextDrawGetSelectable(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "PlayerTextDrawGetSelectable", 2);
+
+	if (pNetGame->GetPlayerPool())
+	{
+		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
+
+		if (pPlayer &&
+			pPlayer->m_pTextDraw &&
+			pPlayer->m_pTextDraw->IsValid(params[2]))
+		{
+			return pPlayer->m_pTextDraw->IsSelectable(params[2]);
+		}
+	}
+	return 0;
+}
+
+//----------------------------------------------------------------------------------
 // native PlayerTextDrawShow(playerid, PlayerText:text)
 static cell n_PlayerTextDrawShow(AMX* amx, cell* params)
 {
@@ -7506,9 +7760,9 @@ static cell n_GetServerVarAsString(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetServerVarAsString", 3);
 	char *szParam = 0, *szValue = 0;
-	amx_StrParam(amx,params[1],szParam);
+	amx_StrParamEx(amx,params[1],szParam);
 	szValue = pConsole->GetStringVariable(szParam);
-	return set_amxstring(amx, params[2], (szValue == 0) ? ("") : (szValue), params[3]);
+	return set_amxstring(amx, params[2], szValue, params[3]);
 }
 
 // native GetServerVarAsInt(const varname[])
@@ -7516,7 +7770,7 @@ static cell n_GetServerVarAsInt(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetServerVarAsInt", 1);
 	char *szParam;
-	amx_StrParam(amx,params[1],szParam);
+	amx_StrParamEx(amx,params[1],szParam);
 	return pConsole->GetIntVariable(szParam);
 }
 
@@ -7525,8 +7779,18 @@ static cell n_GetServerVarAsBool(AMX *amx, cell *params)
 {
 	CHECK_PARAMS(amx, "GetServerVarAsBool", 1);
 	char *szParam;
-	amx_StrParam(amx,params[1],szParam);
-	return (int)pConsole->GetBoolVariable(szParam);
+	amx_StrParamEx(amx,params[1],szParam);
+	return (cell)pConsole->GetBoolVariable(szParam);
+}
+
+// native Float:GetServerVarAsFloat(const varname[])
+static cell n_GetServerVarAsFloat(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "GetServerVarAsFloat", 1);
+	char* szParam;
+	amx_StrParamEx(amx, params[1], szParam);
+	float fValue = pConsole->GetFloatVariable(szParam);
+	return amx_ftoc(fValue);
 }
 
 // native NetStats_GetConnectedTime(playerid)
@@ -7798,7 +8062,7 @@ static cell n_EnableStuntBonusForAll(AMX *amx, cell *params)
 	CHECK_PARAMS(amx, "EnableStuntBonusForAll", 1);
 	if (params[1] != 1) params[1] = 0;
 
-	pNetGame->m_bStuntBonus = (bool)params[1];
+	pNetGame->m_bStuntBonus = (params[1] != 0);
 	RakNet::BitStream bsParams;
 	bsParams.Write((bool)params[1]);
 
@@ -7816,8 +8080,7 @@ static cell n_EnableStuntBonusForPlayer(AMX *amx, cell *params)
 	RakNet::BitStream bsParams;
 	bsParams.Write((bool)params[2]);
 
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-	pRak->RPC(RPC_ScrEnableStuntBonus , &bsParams, HIGH_PRIORITY, RELIABLE, 0, pRak->GetPlayerIDFromIndex((BYTE)params[1]), false, false);
+	pNetGame->RPC(RPC_ScrEnableStuntBonus, &bsParams, (WORD)params[1], 2);
 	return 1;
 }
 
@@ -7853,8 +8116,7 @@ static cell n_SetNameTagDrawDistance(AMX *amx, cell *params)
 static cell n_DisableNameTagLOS(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "DisableNameTagLOS", 0);
-	if (pNetGame)
-		pNetGame->m_bNameTagLOS = false;
+	pNetGame->m_bNameTagLOS = false;
 
 	return 1;
 }
@@ -8031,16 +8293,10 @@ static cell n_HTTP(AMX* amx, cell* params)
 static cell n_gpci(AMX* amx, cell* params)
 {
 	CHECK_PARAMS(amx, "gpci", 3);
-
-	if (pNetGame->GetPlayerPool())
-	{
-		CPlayer* pPlayer = pNetGame->GetPlayerPool()->GetAt(params[1]);
-		if (pPlayer)
-		{
-			return set_amxstring(amx, params[2], pPlayer->m_szSerial, params[3]);
-		}
-	}
-	return 0;
+	WORD wPlayerID = (WORD)params[1];
+	if (wPlayerID >= MAX_PLAYERS || !pNetGame->GetPlayerPool()->GetSlotState(wPlayerID)) return 0;
+	return set_amxstring(amx, params[2], pNetGame->GetPlayerPool()->
+		GetPlayerSerial(wPlayerID), params[3]);
 }
 
 //----------------------------------------------------------------------------------
@@ -8177,10 +8433,23 @@ static cell n_FindTextureFileNameFromCRC(AMX* amx, cell* params)
 }
 
 //----------------------------------------------------------------------------------
+// native RedirectDownload(playerid, url[]);
+
+//----------------------------------------------------------------------------------
+// native IsFilterScript()
+
+static cell n_IsFilterScript(AMX* amx, cell* params)
+{
+	CHECK_PARAMS(amx, "IsFilterScript", 0);
+
+	return pNetGame->GetGameMode()->GetGameModePointer() != amx;
+}
+
+//----------------------------------------------------------------------------------
 
 AMX_NATIVE_INFO custom_Natives[] =
 {
-	DEFINE_NATIVE(gpci),
+	{ "gpci",					n_gpci },
 
 	// Util
 	{ "print",					n_print },
@@ -8188,16 +8457,16 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "format",					n_format },
 	{ "SetTimer",				n_SetTimer },
 	{ "KillTimer",				n_KillTimer },
-	DEFINE_NATIVE(SetMaxRconLoginAttempt),
+	{ "SetMaxRconLoginAttempt", n_SetMaxRconLoginAttempt},
 	{ "GetTickCount",			n_GetTickCount },
 	{ "GetServerTickCount",		n_GetServerTickCount },
 	{ "GetMaxPlayers",			n_GetMaxPlayers },
 	{ "SetTimerEx",				n_SetTimerEx },
-	{"VectorSize", n_VectorSize},
+	{ "VectorSize",				n_VectorSize },
 
 	//{ "SetMaxPlayers",			n_SetMaxPlayers },
 	{ "LimitGlobalChatRadius",	n_LimitGlobalChatRadius },
-	DEFINE_NATIVE(LimitPlayerMarkerRadius),
+	{ "LimitPlayerMarkerRadius", n_LimitPlayerMarkerRadius },
 	{ "SetWeather",				n_SetWeather },
 	{ "GetWeather",				n_GetWeather },
 	{ "SetPlayerWeather",		n_SetPlayerWeather },
@@ -8209,8 +8478,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "atan",					n_atan },
 
 	// NPC
-	DEFINE_NATIVE(ConnectNPC),
-	DEFINE_NATIVE(IsPlayerNPC),
+	{ "ConnectNPC",				n_ConnectNPC },
+	{ "IsPlayerNPC",			n_IsPlayerNPC },
 
 	// Hash
 	{ "SHA256_PassHash",		n_SHA256_PassHash },
@@ -8237,18 +8506,18 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "AddStaticVehicleEx",		n_AddStaticVehicleEx },
 
 	// Pickups
-	DEFINE_NATIVE(AddStaticPickup),
-	DEFINE_NATIVE(CreatePickup),
-	DEFINE_NATIVE(DestroyPickup),
-	DEFINE_NATIVE(DestroyAllPickups),
-	DEFINE_NATIVE(IsValidPickup),
-	DEFINE_NATIVE(IsStaticPickup),
-	DEFINE_NATIVE(GetPickupPoolSize),
-	DEFINE_NATIVE(GetPickupPos),
-	DEFINE_NATIVE(GetPickupModel),
-	DEFINE_NATIVE(GetPickupType),
-	DEFINE_NATIVE(GetPickupCount),
-	DEFINE_NATIVE(GetPickupVirtualWorld),
+	{"AddStaticPickup",			n_AddStaticPickup},
+	{"CreatePickup",			n_CreatePickup},
+	{"DestroyPickup",			n_DestroyPickup},
+	{"DestroyAllPickups",		n_DestroyAllPickups},
+	{"IsValidPickup",			n_IsValidPickup},
+	{"GetPickupPoolSize",		n_GetPickupPoolSize},
+	{"GetPickupPos",			n_GetPickupPos},
+	{"GetPickupModel",			n_GetPickupModel},
+	{"GetPickupType",			n_GetPickupType},
+	{"GetPickupCount",			n_GetPickupCount},
+	{"GetPickupVirtualWorld",	n_GetPickupVirtualWorld },
+	{"SetPickupVirtualWorld",	n_SetPickupVirtualWorld },
 
 	{ "ClearPlayerWorldBounds", n_ClearPlayerWorldBounds },
 	{ "GetPlayerWorldBounds",	n_GetPlayerWorldBounds },
@@ -8256,38 +8525,38 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "ShowNameTags",			n_ShowNameTags },
 	{ "ShowPlayerMarkers",		n_ShowPlayerMarkers },
 	{ "SetWorldTime",			n_SetWorldTime },
-	DEFINE_NATIVE(GetWorldTime),
+	{ "GetWorldTime",			n_GetWorldTime },
 	{ "GetWeaponName",			n_GetWeaponName },
-	DEFINE_NATIVE(FindWeaponID),
-	DEFINE_NATIVE(GetVehicleName),
-	DEFINE_NATIVE(FindVehicleModel),
+	{ "FindWeaponID",			n_FindWeaponID },
+	{ "GetVehicleName",			n_GetVehicleName },
+	{ "FindVehicleModel",		n_FindVehicleModel },
 	{ "EnableTirePopping",		n_EnableTirePopping },
 	{ "AllowInteriorWeapons",	n_AllowInteriorWeapons },
 	{ "SetGravity",				n_SetGravity },
 	{ "GetGravity",				n_GetGravity },
 	{ "AllowAdminTeleport",		n_AllowAdminTeleport },
 	{ "SetDeathDropAmount",		n_SetDeathDropAmount },
-	DEFINE_NATIVE(CreateExplosion),
-	DEFINE_NATIVE(CreateExplosionForPlayer),
+	{ "CreateExplosion",		n_CreateExplosion },
+	{ "CreateExplosionForPlayer",n_CreateExplosionForPlayer },
 	{ "SetDisabledWeapons",		n_SetDisabledWeapons },
 	{ "UsePlayerPedAnims",		n_UsePlayerPedAnims },
 	{ "DisableInteriorEnterExits", n_DisableInteriorEnterExits },
-	DEFINE_NATIVE(DisableVehicleMarkers),
+	{ "DisableVehicleMarkers",	n_DisableVehicleMarkers},
 	{ "SetNameTagDrawDistance", n_SetNameTagDrawDistance },
-	DEFINE_NATIVE(DisableNameTagLOS),
-	DEFINE_NATIVE(SetPlayerBlurLevel),
+	{ "DisableNameTagLOS",		n_DisableNameTagLOS},
+	{ "SetPlayerBlurLevel",		n_SetPlayerBlurLevel},
 
 	// Global 3D Text Labels
-	DEFINE_NATIVE(Create3DTextLabel),
-	DEFINE_NATIVE(Delete3DTextLabel),
-	DEFINE_NATIVE(Attach3DTextLabelToPlayer),
-	DEFINE_NATIVE(Attach3DTextLabelToVehicle),
-	DEFINE_NATIVE(Update3DTextLabelText),
+	{"Create3DTextLabel",			n_Create3DTextLabel},
+	{"Delete3DTextLabel",			n_Delete3DTextLabel},
+	{"Attach3DTextLabelToPlayer",	n_Attach3DTextLabelToPlayer},
+	{"Attach3DTextLabelToVehicle",	n_Attach3DTextLabelToVehicle},
+	{"Update3DTextLabelText",		n_Update3DTextLabelText},
 
 	// Per-player 3D Text Labels
-	DEFINE_NATIVE(CreatePlayer3DTextLabel),
-	DEFINE_NATIVE(DeletePlayer3DTextLabel),
-	DEFINE_NATIVE(UpdatePlayer3DTextLabelText),
+	{ "CreatePlayer3DTextLabel",		n_CreatePlayer3DTextLabel },
+	{ "DeletePlayer3DTextLabel",		n_DeletePlayer3DTextLabel },
+	{ "UpdatePlayer3DTextLabelText",	n_UpdatePlayer3DTextLabelText },
 
 	// Zones
 	{ "EnableZoneNames",		n_EnableZoneNames },
@@ -8303,49 +8572,54 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "GangZoneStopFlashForAll",	n_GangZoneStopFlashForAll },
 
 	// Artwork
-	DEFINE_NATIVE(AddCharModel),
-	DEFINE_NATIVE(AddSimpleModel),
-	DEFINE_NATIVE(AddSimpleModelTimed),
-	DEFINE_NATIVE(FindModelFileNameFromCRC),
-	DEFINE_NATIVE(FindTextureFileNameFromCRC),
+	{ "AddCharModel",				n_AddCharModel },
+	{ "AddSimpleModel",				n_AddSimpleModel },
+	{ "AddSimpleModelTimed",		n_AddSimpleModelTimed },
+	{ "FindModelFileNameFromCRC",	n_FindModelFileNameFromCRC },
+	{ "FindTextureFileNameFromCRC",	n_FindTextureFileNameFromCRC },
 
 	// Admin
-	DEFINE_NATIVE(IsPlayerAdmin),
-	DEFINE_NATIVE(SetPlayerAdmin),
+	{ "IsPlayerAdmin",			n_IsPlayerAdmin },
+	{ "SetPlayerAdmin",			n_SetPlayerAdmin },
 	{ "Kick",					n_Kick },
 	{ "Ban",					n_Ban },
 	{ "BanEx",					n_BanEx },
-	{ "RemoveBan", n_RemoveBan},
-	{ "IsBanned", n_IsBanned},
-	DEFINE_NATIVE(GetServerTickRate),
+	{ "RemoveBan",				n_RemoveBan},
+	{ "IsBanned",				n_IsBanned},
 	{ "BlockIpAddress",			n_BlockIpAddress },
 	{ "UnBlockIpAddress",		n_UnBlockIpAddress },
+	{ "GetServerTickRate",		n_GetServerTickRate },
 	{ "SendRconCommand",		n_SendRconCommand },
 	{ "GetServerVarAsString",	n_GetServerVarAsString },
 	{ "GetServerVarAsInt",		n_GetServerVarAsInt },
 	{ "GetServerVarAsBool",		n_GetServerVarAsBool },
+	{ "GetServerVarAsFloat",	n_GetServerVarAsFloat },
+	{ "GetConsoleVarAsString",	n_GetServerVarAsString },
+	{ "GetConsoleVarAsInt",		n_GetServerVarAsInt },
+	{ "GetConsoleVarAsBool",	n_GetServerVarAsString },
+	{ "GetConsoleVarAsFloat",	n_GetServerVarAsFloat },
 
 	// NetStats
-	DEFINE_NATIVE(NetStats_GetConnectedTime),
-	DEFINE_NATIVE(NetStats_MessagesReceived),
-	DEFINE_NATIVE(NetStats_BytesReceived),
-	DEFINE_NATIVE(NetStats_MessagesSent),
-	DEFINE_NATIVE(NetStats_BytesSent),
-	DEFINE_NATIVE(NetStats_MessagesRecvPerSecond),
-	DEFINE_NATIVE(NetStats_PacketLossPercent),
-	DEFINE_NATIVE(NetStats_ConnectionStatus),
-	DEFINE_NATIVE(NetStats_GetIpPort),
+	{ "NetStats_GetConnectedTime",		n_NetStats_GetConnectedTime },
+	{ "NetStats_MessagesReceived",		n_NetStats_MessagesReceived },
+	{ "NetStats_BytesReceived",			n_NetStats_BytesReceived },
+	{ "NetStats_MessagesSent",			n_NetStats_MessagesSent },
+	{ "NetStats_BytesSent",				n_NetStats_BytesSent },
+	{ "NetStats_MessagesRecvPerSecond",	n_NetStats_MessagesRecvPerSecond },
+	{ "NetStats_PacketLossPercent",		n_NetStats_PacketLossPercent },
+	{ "NetStats_ConnectionStatus",		n_NetStats_ConnectionStatus },
+	{ "NetStats_GetIpPort",				n_NetStats_GetIpPort },
 
-	DEFINE_NATIVE(GetPlayerNetworkStats),
-	DEFINE_NATIVE(GetNetworkStats),
+	{ "GetPlayerNetworkStats",	n_GetPlayerNetworkStats },
+	{ "GetNetworkStats",		n_GetNetworkStats },
 
 	// Player
-	DEFINE_NATIVE(IsActorStreamedIn),
-	DEFINE_NATIVE(IsPickupStreamedIn),
-	{ "GetPlayerIDFromName", n_GetPlayerIDFromName },
-	{ "GetPlayerCount", n_GetPlayerCount},
-	{"GetPlayerPoolSize", n_GetPlayerPoolSize },
-	DEFINE_NATIVE(GetPlayerVersion),
+	{ "IsActorStreamedIn",		n_IsActorStreamedIn },
+	{ "IsPickupStreamedIn",		n_IsPickupStreamedIn },
+	{ "GetPlayerIDFromName",	n_GetPlayerIDFromName },
+	{ "GetPlayerCount",			n_GetPlayerCount},
+	{ "GetPlayerPoolSize",		n_GetPlayerPoolSize },
+	{ "GetPlayerVersion",		n_GetPlayerVersion },
 	{ "SetSpawnInfo",			n_SetSpawnInfo },
 	{ "SpawnPlayer",			n_SpawnPlayer },
 	{ "SetPlayerTeam",			n_SetPlayerTeam },
@@ -8379,14 +8653,14 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetCameraBehindPlayer",	n_SetCameraBehindPlayer },
 	{ "TogglePlayerControllable",	n_TogglePlayerControllable },
 	{ "PlayerPlaySound",		n_PlayerPlaySound },
-	DEFINE_NATIVE(SetPlayerScore),
-	DEFINE_NATIVE(GetPlayerScore),
+	{ "SetPlayerScore",			n_SetPlayerScore },
+	{ "GetPlayerScore",			n_GetPlayerScore },
 	{ "SetPlayerFacingAngle",	n_SetPlayerFacingAngle },
 	{ "GetPlayerFacingAngle",	n_GetPlayerFacingAngle },
-	DEFINE_NATIVE(GivePlayerMoney),
-	DEFINE_NATIVE(SetPlayerMoney),
-	DEFINE_NATIVE(GetPlayerMoney),
-	DEFINE_NATIVE(ResetPlayerMoney),
+	{ "GivePlayerMoney",		n_GivePlayerMoney },
+	{ "SetPlayerMoney",			n_SetPlayerMoney },
+	{ "GetPlayerMoney",			n_GetPlayerMoney },
+	{ "ResetPlayerMoney",		n_ResetPlayerMoney },
 	{ "IsPlayerConnected",		n_IsPlayerConnected },
 	{ "GetPlayerState",			n_GetPlayerState },
 	{ "ResetPlayerWeapons",		n_ResetPlayerWeapons },
@@ -8407,32 +8681,32 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "ForceClassSelection",	n_ForceClassSelection },
 	{ "SetPlayerWantedLevel",	n_SetPlayerWantedLevel },
 	{ "GetPlayerWantedLevel",	n_GetPlayerWantedLevel },
-	DEFINE_NATIVE(GetPlayerTargetPlayer),
-	DEFINE_NATIVE(GetPlayerTargetActor),
-	DEFINE_NATIVE(GetPlayerVelocity),
-	DEFINE_NATIVE(SetPlayerVelocity),
-	DEFINE_NATIVE(SetPlayerSkillLevel),
-	DEFINE_NATIVE(GetPlayerSurfingVehicleID),
-	DEFINE_NATIVE(GetPlayerVehicleSeat),
-	DEFINE_NATIVE(GetPlayerCameraMode),
-	DEFINE_NATIVE(GetPlayerCameraZoom),
-	DEFINE_NATIVE(GetPlayerCameraAspectRatio),
-	DEFINE_NATIVE(GetPlayerCameraPos),
-	DEFINE_NATIVE(GetPlayerCameraFrontVector),
-	DEFINE_NATIVE(SetPlayerArmedWeapon),
-	DEFINE_NATIVE(GetPlayerFightingStyle),
-	DEFINE_NATIVE(GetPlayerFightingMove),
-	DEFINE_NATIVE(SetPlayerFightingStyle),
-	DEFINE_NATIVE(SetPlayerMaxHealth),
-	DEFINE_NATIVE(InterpolateCameraPos),
-	DEFINE_NATIVE(InterpolateCameraLookAt),
-	DEFINE_NATIVE(SetPlayerGameSpeed),
-	DEFINE_NATIVE(GetPlayerWeaponState),
-	DEFINE_NATIVE(SendClientCheck),
-	DEFINE_NATIVE(TogglePlayerChatbox),
-	DEFINE_NATIVE(TogglePlayerWidescreen),
-	DEFINE_NATIVE(SetPlayerShopName),
-	DEFINE_NATIVE(DisableRemoteVehicleCollisions),
+	{ "GetPlayerTargetPlayer",n_GetPlayerTargetPlayer },
+	{ "GetPlayerTargetActor",n_GetPlayerTargetActor },
+	{ "GetPlayerVelocity",n_GetPlayerVelocity },
+	{ "SetPlayerVelocity",n_SetPlayerVelocity },
+	{ "SetPlayerSkillLevel",n_SetPlayerSkillLevel },
+	{ "GetPlayerSurfingVehicleID",n_GetPlayerSurfingVehicleID },
+	{ "GetPlayerVehicleSeat",n_GetPlayerVehicleSeat },
+	{ "GetPlayerCameraMode",n_GetPlayerCameraMode },
+	{ "GetPlayerCameraZoom",n_GetPlayerCameraZoom },
+	{ "GetPlayerCameraAspectRatio",n_GetPlayerCameraAspectRatio },
+	{ "GetPlayerCameraPos",n_GetPlayerCameraPos },
+	{ "GetPlayerCameraFrontVector",n_GetPlayerCameraFrontVector },
+	{ "SetPlayerArmedWeapon",n_SetPlayerArmedWeapon },
+	{ "GetPlayerFightingStyle",n_GetPlayerFightingStyle },
+	{ "GetPlayerFightingMove",n_GetPlayerFightingMove },
+	{ "SetPlayerFightingStyle",n_SetPlayerFightingStyle },
+	{ "SetPlayerMaxHealth",n_SetPlayerMaxHealth },
+	{ "InterpolateCameraPos",n_InterpolateCameraPos },
+	{ "InterpolateCameraLookAt",n_InterpolateCameraLookAt },
+	{ "SetPlayerGameSpeed",n_SetPlayerGameSpeed },
+	{ "GetPlayerWeaponState",n_GetPlayerWeaponState },
+	{ "SendClientCheck",n_SendClientCheck },
+	{ "TogglePlayerChatbox",n_TogglePlayerChatbox },
+	{ "TogglePlayerWidescreen",n_TogglePlayerWidescreen },
+	{ "SetPlayerShopName",n_SetPlayerShopName },
+	{ "DisableRemoteVehicleCollisions",n_DisableRemoteVehicleCollisions },
 
 	{ "SetPlayerVirtualWorld",		n_SetPlayerVirtualWorld },
 	{ "GetPlayerVirtualWorld",		n_GetPlayerVirtualWorld },
@@ -8441,19 +8715,19 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "EnableStuntBonusForAll",		n_EnableStuntBonusForAll },
 	{ "EnableStuntBonusForPlayer",	n_EnableStuntBonusForPlayer },
 
-	{ "TogglePlayerSpectating",	n_TogglePlayerSpectating },
-	{ "PlayerSpectateVehicle",	n_PlayerSpectateVehicle },
-	{ "PlayerSpectatePlayer",	n_PlayerSpectatePlayer },
-	{ "ApplyAnimation",			n_ApplyAnimation },
-	{ "ClearAnimations",		n_ClearAnimations },
-	{ "SetPlayerSpecialAction", n_SetPlayerSpecialAction },
-	{ "GetPlayerSpecialAction", n_GetPlayerSpecialAction },
-	DEFINE_NATIVE(GetPlayerDrunkLevel),
-	DEFINE_NATIVE(SetPlayerDrunkLevel),
-	DEFINE_NATIVE(PlayAudioStreamForPlayer),
-	DEFINE_NATIVE(StopAudioStreamForPlayer),
-	DEFINE_NATIVE(PlayCrimeReportForPlayer),
-	DEFINE_NATIVE(SetPlayerChatBubble),
+	{ "TogglePlayerSpectating",		n_TogglePlayerSpectating },
+	{ "PlayerSpectateVehicle",		n_PlayerSpectateVehicle },
+	{ "PlayerSpectatePlayer",		n_PlayerSpectatePlayer },
+	{ "ApplyAnimation",				n_ApplyAnimation },
+	{ "ClearAnimations",			n_ClearAnimations },
+	{ "SetPlayerSpecialAction",		n_SetPlayerSpecialAction },
+	{ "GetPlayerSpecialAction",		n_GetPlayerSpecialAction },
+	{ "GetPlayerDrunkLevel",		n_GetPlayerDrunkLevel },
+	{ "SetPlayerDrunkLevel",		n_SetPlayerDrunkLevel },
+	{ "PlayAudioStreamForPlayer",	n_PlayAudioStreamForPlayer },
+	{ "StopAudioStreamForPlayer",	n_StopAudioStreamForPlayer },
+	{ "PlayCrimeReportForPlayer",	n_PlayCrimeReportForPlayer },
+	{ "SetPlayerChatBubble",		n_SetPlayerChatBubble },
 
 	// Player Variable
 	{ "SetPVarInt",				n_SetPVarInt },
@@ -8470,12 +8744,12 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "CreatePlayerPickup",		n_CreatePlayerPickup },
 	{ "DestroyPlayerPickup",	n_DestroyPlayerPickup },
 	{ "IsPlayerInRangeOfPoint", n_IsPlayerInRangeOfPoint },
-	DEFINE_NATIVE(GetPlayerDistanceFromPoint),
+	{ "GetPlayerDistanceFromPoint",n_GetPlayerDistanceFromPoint },
 
 		// Vehicle
-	{ "GetVehiclePoolSize", n_GetVehiclePoolSize },
-	DEFINE_NATIVE(GetVehicleModelCount),
-	DEFINE_NATIVE(GetVehicleModelsUsed),
+	{ "GetVehiclePoolSize",		n_GetVehiclePoolSize },
+	{ "GetVehicleModelCount",	n_GetVehicleModelCount },
+	{ "GetVehicleModelsUsed",	n_GetVehicleModelsUsed },
 	{ "IsValidVehicle",			n_IsValidVehicle },
 	{ "CreateVehicle",			n_CreateVehicle },
 	{ "DestroyVehicle",			n_DestroyVehicle },
@@ -8483,9 +8757,9 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetVehiclePos",			n_SetVehiclePos },
 	{ "GetVehicleZAngle",		n_GetVehicleZAngle },
 	{ "SetVehicleZAngle",		n_SetVehicleZAngle },
-	DEFINE_NATIVE(GetVehicleDistanceFromPoint),
-	{ "SetVehicleParamsForPlayer",	n_SetVehicleParamsForPlayer },
-	DEFINE_NATIVE(ManualVehicleEngineAndLights),
+	{ "GetVehicleDistanceFromPoint",	n_GetVehicleDistanceFromPoint },
+	{ "SetVehicleParamsForPlayer",		n_SetVehicleParamsForPlayer },
+	{ "ManualVehicleEngineAndLights",	n_ManualVehicleEngineAndLights },
 	{ "SetVehicleToRespawn",	n_SetVehicleToRespawn },
 	{ "AddVehicleComponent",	n_AddVehicleComponent },
 	{ "RemoveVehicleComponent",	n_RemoveVehicleComponent },
@@ -8499,61 +8773,61 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "IsTrailerAttachedToVehicle",		n_IsTrailerAttachedToVehicle },
 	{ "GetVehicleTrailer",		n_GetVehicleTrailer },
 	{ "SetVehicleNumberPlate",	n_SetVehicleNumberPlate },
-	DEFINE_NATIVE(GetVehicleNumberPlate),
+	{ "GetVehicleNumberPlate",	n_GetVehicleNumberPlate },
 	{ "GetVehicleModel",		n_GetVehicleModel },
 	{ "GetVehicleInterior", n_GetVehicleInterior },
 	{ "GetVehicleColor", n_GetVehicleColor },
 	{ "GetVehiclePaintjob", n_GetVehiclePaintjob },
 	{ "SetVehicleVirtualWorld",		n_SetVehicleVirtualWorld },
 	{ "GetVehicleVirtualWorld",		n_GetVehicleVirtualWorld },
-	DEFINE_NATIVE(GetVehicleSpawnInfo),
-	DEFINE_NATIVE(SetVehicleSpawnInfo),
-	DEFINE_NATIVE(RepairVehicle),
-	DEFINE_NATIVE(ExplodeVehicle),
-	DEFINE_NATIVE(SetVehicleParamsCarDoors),
-	DEFINE_NATIVE(GetVehicleParamsCarDoors),
-	DEFINE_NATIVE(SetVehicleParamsCarWindows),
-	DEFINE_NATIVE(GetVehicleParamsCarWindows),
-	DEFINE_NATIVE(ToggleTaxiLight),
-	DEFINE_NATIVE(SetVehicleEngineState),
-	DEFINE_NATIVE(GetVehicleVelocity),
-	DEFINE_NATIVE(SetVehicleVelocity),
+	{ "GetVehicleSpawnInfo",		n_GetVehicleSpawnInfo },
+	{ "SetVehicleSpawnInfo",		n_SetVehicleSpawnInfo },
+	{ "RepairVehicle",				n_RepairVehicle },
+	{ "ExplodeVehicle",				n_ExplodeVehicle },
+	{ "SetVehicleParamsCarDoors",	n_SetVehicleParamsCarDoors },
+	{ "GetVehicleParamsCarDoors",	n_GetVehicleParamsCarDoors },
+	{ "SetVehicleParamsCarWindows",	n_SetVehicleParamsCarWindows },
+	{ "GetVehicleParamsCarWindows",	n_GetVehicleParamsCarWindows },
+	{ "ToggleTaxiLight",			n_ToggleTaxiLight },
+	{ "SetVehicleEngineState",		n_SetVehicleEngineState },
+	{ "GetVehicleVelocity",			n_GetVehicleVelocity },
+	{ "SetVehicleVelocity",			n_SetVehicleVelocity },
 
-	DEFINE_NATIVE(IsVehicleOnItsSide),
-	DEFINE_NATIVE(IsVehicleUpsideDown),
-	DEFINE_NATIVE(GetVehicleSirenState),
-	DEFINE_NATIVE(IsVehicleWrecked),
-	DEFINE_NATIVE(IsVehicleSunked),
-	DEFINE_NATIVE(SetVehicleLightState),
-	DEFINE_NATIVE(SetVehicleRespawnDelay),
-	DEFINE_NATIVE(GetVehicleRespawnDelay),
-	DEFINE_NATIVE(GetVehicleSpawnPos),
-	DEFINE_NATIVE(SetVehicleSpawnPos),
-	DEFINE_NATIVE(GetVehicleComponentInSlot),
-	DEFINE_NATIVE(GetVehicleComponentType),
-	DEFINE_NATIVE(SetVehicleHoodState),
-	DEFINE_NATIVE(SetVehicleTrunkState),
-	DEFINE_NATIVE(SetVehicleDoorState),
-	DEFINE_NATIVE(SetVehicleFeature),
-	DEFINE_NATIVE(SetVehicleVisibility),
-	DEFINE_NATIVE(GetVehicleModelInfo),
-	DEFINE_NATIVE(GetVehicleParamsSirenState),
-	DEFINE_NATIVE(GetVehicleDamageStatus),
-	DEFINE_NATIVE(UpdateVehicleDamageStatus),
-	DEFINE_NATIVE(GetVehicleRotationQuat),
+	{ "IsVehicleOnItsSide",			n_IsVehicleOnItsSide },
+	{ "IsVehicleUpsideDown",		n_IsVehicleUpsideDown },
+	{ "GetVehicleSirenState",		n_GetVehicleSirenState },
+	{ "IsVehicleWrecked",			n_IsVehicleWrecked },
+	{ "IsVehicleSunked",			n_IsVehicleSunked },
+	{ "SetVehicleLightState",		n_SetVehicleLightState },
+	{ "SetVehicleRespawnDelay",		n_SetVehicleRespawnDelay },
+	{ "GetVehicleRespawnDelay",		n_GetVehicleRespawnDelay },
+	{ "GetVehicleSpawnPos",			n_GetVehicleSpawnPos },
+	{ "SetVehicleSpawnPos",			n_SetVehicleSpawnPos },
+	{ "GetVehicleComponentInSlot",	n_GetVehicleComponentInSlot },
+	{ "GetVehicleComponentType",	n_GetVehicleComponentType },
+	{ "SetVehicleHoodState",		n_SetVehicleHoodState },
+	{ "SetVehicleTrunkState",		n_SetVehicleTrunkState },
+	{ "SetVehicleDoorState",		n_SetVehicleDoorState },
+	{ "SetVehicleFeature",			n_SetVehicleFeature },
+	{ "SetVehicleVisibility",		n_SetVehicleVisibility },
+	{ "GetVehicleModelInfo",		n_GetVehicleModelInfo },
+	{ "GetVehicleParamsSirenState",	n_GetVehicleParamsSirenState },
+	{ "GetVehicleDamageStatus",		n_GetVehicleDamageStatus },
+	{ "UpdateVehicleDamageStatus",	n_UpdateVehicleDamageStatus },
+	{ "GetVehicleRotationQuat",		n_GetVehicleRotationQuat },
 
 	// Messaging
-	{ "SendClientMessage",		n_SendClientMessage },
-	{ "SendClientMessageToAll",	n_SendClientMessageToAll },
-	{ "SendDeathMessage",		n_SendDeathMessage },
-	DEFINE_NATIVE(SendDeathMessageToPlayer),
-	{ "GameTextForAll",			n_GameTextForAll },
-	{ "GameTextForPlayer",		n_GameTextForPlayer },
+	{ "SendClientMessage",			n_SendClientMessage },
+	{ "SendClientMessageToAll",		n_SendClientMessageToAll },
+	{ "SendDeathMessage",			n_SendDeathMessage },
+	{ "SendDeathMessageToPlayer",	n_SendDeathMessageToPlayer },
+	{ "GameTextForAll",				n_GameTextForAll },
+	{ "GameTextForPlayer",			n_GameTextForPlayer },
 	{ "SendPlayerMessageToPlayer",	n_SendPlayerMessageToPlayer },
 	{ "SendPlayerMessageToAll",		n_SendPlayerMessageToAll },
 	
 	{ "TextDrawCreate",				n_TextDrawCreate },
-	{ "TextDrawSetString",				n_TextDrawSetString },
+	{ "TextDrawSetString",			n_TextDrawSetString },
 	{ "TextDrawLetterSize",			n_TextDrawLetterSize },
 	{ "TextDrawTextSize",			n_TextDrawTextSize },
 	{ "TextDrawAlignment",			n_TextDrawAlignment },
@@ -8565,6 +8839,8 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "TextDrawBackgroundColor",	n_TextDrawBackgroundColor },
 	{ "TextDrawFont",				n_TextDrawFont },
 	{ "TextDrawSetProportional",	n_TextDrawSetProportional },
+	{ "TextDrawSetSelectable",		n_TextDrawSetSelectable },
+	{ "TextDrawGetSelectable",		n_TextDrawGetSelectable },
 	{ "TextDrawShowForPlayer",		n_TextDrawShowForPlayer },
 	{ "TextDrawShowForAll",			n_TextDrawShowForAll },
 	{ "TextDrawHideForPlayer",		n_TextDrawHideForPlayer },
@@ -8572,22 +8848,27 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "TextDrawDestroy",			n_TextDrawDestroy },
 	
 	// Player TextDraw
-	DEFINE_NATIVE(CreatePlayerTextDraw),
-	DEFINE_NATIVE(PlayerTextDrawLetterSize),
-	DEFINE_NATIVE(PlayerTextDrawTextSize),
-	DEFINE_NATIVE(PlayerTextDrawAlignment),
-	DEFINE_NATIVE(PlayerTextDrawColor),
-	DEFINE_NATIVE(PlayerTextDrawBoxColor),
-	DEFINE_NATIVE(PlayerTextDrawBackgroundColor),
-	DEFINE_NATIVE(PlayerTextDrawUseBox),
-	DEFINE_NATIVE(PlayerTextDrawSetShadow),
-	DEFINE_NATIVE(PlayerTextDrawFont),
-	DEFINE_NATIVE(PlayerTextDrawSetOutline),
-	DEFINE_NATIVE(PlayerTextDrawSetProportional),
-	DEFINE_NATIVE(PlayerTextDrawShow),
-	DEFINE_NATIVE(PlayerTextDrawHide),
-	DEFINE_NATIVE(PlayerTextDrawSetString),
-	DEFINE_NATIVE(PlayerTextDrawDestroy),
+	{ "CreatePlayerTextDraw",			n_CreatePlayerTextDraw },
+	{ "PlayerTextDrawLetterSize",		n_PlayerTextDrawLetterSize },
+	{ "PlayerTextDrawTextSize",			n_PlayerTextDrawTextSize },
+	{ "PlayerTextDrawAlignment",		n_PlayerTextDrawAlignment },
+	{ "PlayerTextDrawColor",			n_PlayerTextDrawColor },
+	{ "PlayerTextDrawBoxColor",			n_PlayerTextDrawBoxColor },
+	{ "PlayerTextDrawBackgroundColor",	n_PlayerTextDrawBackgroundColor },
+	{ "PlayerTextDrawUseBox",			n_PlayerTextDrawUseBox },
+	{ "PlayerTextDrawSetShadow",		n_PlayerTextDrawSetShadow },
+	{ "PlayerTextDrawFont",				n_PlayerTextDrawFont },
+	{ "PlayerTextDrawSetOutline",		n_PlayerTextDrawSetOutline },
+	{ "PlayerTextDrawSetProportional",	n_PlayerTextDrawSetProportional },
+	{ "PlayerTextDrawSetSelectable",	n_PlayerTextDrawSetSelectable },
+	{ "PlayerTextDrawGetSelectable",	n_PlayerTextDrawGetSelectable },
+	{ "PlayerTextDrawShow",				n_PlayerTextDrawShow },
+	{ "PlayerTextDrawHide",				n_PlayerTextDrawHide },
+	{ "PlayerTextDrawSetString",		n_PlayerTextDrawSetString },
+	{ "PlayerTextDrawDestroy",			n_PlayerTextDrawDestroy },
+
+	{ "SelectTextDraw",					n_SelectTextDraw },
+	{ "CancelSelectTextDraw",			n_CancelSelectTextDraw },
 
 	// Objects
 	{ "CreateObject",			n_CreateObject },
@@ -8595,13 +8876,13 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "SetObjectRot",			n_SetObjectRot },
 	{ "GetObjectPos",			n_GetObjectPos },
 	{ "GetObjectRot",			n_GetObjectRot },
-	DEFINE_NATIVE(GetObjectModel),
+	{ "GetObjectModel",			n_GetObjectModel },
 	{ "IsValidObject",			n_IsValidObject },
 	{ "DestroyObject",			n_DestroyObject },
-	DEFINE_NATIVE(IsObjectMoving),
+	{ "IsObjectMoving",			n_IsObjectMoving },
 	{ "MoveObject",				n_MoveObject },
 	{ "StopObject",				n_StopObject },
-	DEFINE_NATIVE(SetObjectScale),
+	{ "SetObjectScale",			n_SetObjectScale },
 	
 	{ "CreatePlayerObject",			n_CreatePlayerObject },
 	{ "SetPlayerObjectPos",			n_SetPlayerObjectPos },
@@ -8610,31 +8891,33 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "GetPlayerObjectRot",			n_GetPlayerObjectRot },
 	{ "IsValidPlayerObject",		n_IsValidPlayerObject },
 	{ "DestroyPlayerObject",		n_DestroyPlayerObject },
-	DEFINE_NATIVE(IsPlayerObjectMoving),
+	{ "IsPlayerObjectMoving",		n_IsPlayerObjectMoving },
 	{ "MovePlayerObject",			n_MovePlayerObject },
 	{ "StopPlayerObject",			n_StopPlayerObject },
-	DEFINE_NATIVE(GetPlayerObjectModel),
+	{ "GetPlayerObjectModel",		n_GetPlayerObjectModel },
+
+	{ "SetObjectsDefaultCameraCol", n_SetObjectsDefaultCameraCol },
 
 	{ "AttachObjectToPlayer",		n_AttachObjectToPlayer },
 	{ "AttachPlayerObjectToPlayer",	n_AttachPlayerObjectToPlayer },
 	
 	// Actors
-	DEFINE_NATIVE(GetActorPoolSize),
-	DEFINE_NATIVE(CreateActor),
-	DEFINE_NATIVE(DestroyActor),
-	DEFINE_NATIVE(SetActorPos),
-	DEFINE_NATIVE(GetActorPos),
-	DEFINE_NATIVE(SetActorVirtualWorld),
-	DEFINE_NATIVE(GetActorVirtualWorld),
-	DEFINE_NATIVE(ApplyActorAnimation),
-	DEFINE_NATIVE(ClearActorAnimations),
-	DEFINE_NATIVE(SetActorFacingAngle),
-	DEFINE_NATIVE(GetActorFacingAngle),
-	DEFINE_NATIVE(GetActorHealth),
-	DEFINE_NATIVE(SetActorHealth),
-	DEFINE_NATIVE(IsValidActor),
-	DEFINE_NATIVE(SetActorInvulnerable),
-	DEFINE_NATIVE(IsActorInvulnerable),
+	/*{"GetActorPoolSize",		n_GetActorPoolSize},
+	{ "CreateActor",			n_CreateActor },
+	{ "DestroyActor",			n_DestroyActor },
+	{ "SetActorPos",			n_SetActorPos },
+	{ "GetActorPos",			n_GetActorPos },
+	{ "SetActorVirtualWorld",	n_SetActorVirtualWorld },
+	{ "GetActorVirtualWorld",	n_GetActorVirtualWorld },
+	{ "ApplyActorAnimation",	n_ApplyActorAnimation },
+	{ "ClearActorAnimations",	n_ClearActorAnimations },
+	{ "SetActorFacingAngle",	n_SetActorFacingAngle },
+	{ "GetActorFacingAngle",	n_GetActorFacingAngle },
+	{ "GetActorHealth",			n_GetActorHealth },
+	{ "SetActorHealth",			n_SetActorHealth },
+	{ "IsValidActor",			n_IsValidActor },
+	{ "SetActorInvulnerable",	n_SetActorInvulnerable },
+	{ "IsActorInvulnerable",	n_IsActorInvulnerable },*/
 
 	// Menus
 	{ "CreateMenu",				n_CreateMenu },
@@ -8652,7 +8935,7 @@ AMX_NATIVE_INFO custom_Natives[] =
 	{ "TogglePlayerClock",		n_TogglePlayerClock },
 	{ "GetPlayerTime",			n_GetPlayerTime },
 
-	DEFINE_NATIVE(HTTP),
+	{ "HTTP", n_HTTP },
 
 	{ NULL, NULL }
 };

@@ -10,11 +10,12 @@ Copyright 2004-2005 SA:MP Team
 
 CObjectPool::CObjectPool()
 {
-	for(BYTE byteObjectID = 0; byteObjectID < MAX_OBJECTS; byteObjectID++)
+	for(WORD wObjectID = 0; wObjectID < MAX_OBJECTS; wObjectID++)
 	{
-		m_bObjectSlotState[byteObjectID]	= false;
-		m_pObjects[byteObjectID]			= NULL;
+		m_bObjectSlotState[wObjectID]	= false;
+		m_pObjects[wObjectID]			= NULL;
 	}
+	m_iPoolSize = 0;
 };
 
 CObjectPool::~CObjectPool()
@@ -25,16 +26,22 @@ CObjectPool::~CObjectPool()
 	}
 }
 
-bool CObjectPool::Delete(BYTE byteObjectID)
+bool CObjectPool::Delete(WORD wObjectID)
 {
-	if(!GetSlotState(byteObjectID) || !m_pObjects[byteObjectID])
+	if(!GetSlotState(wObjectID) || !m_pObjects[wObjectID])
 	{
 		return false; // Vehicle already deleted or not used.
 	}
 
-	m_bObjectSlotState[byteObjectID] = false;
-	delete m_pObjects[byteObjectID];
-	m_pObjects[byteObjectID] = NULL;
+	CCamera* pCamera = pGame->GetCamera();
+	if (pCamera->m_pEntity == m_pObjects[wObjectID])
+	{
+		pCamera->AttachToEntity(NULL);
+	}
+
+	m_bObjectSlotState[wObjectID] = false;
+	delete m_pObjects[wObjectID];
+	m_pObjects[wObjectID] = NULL;
 
 	return true;
 }
@@ -60,6 +67,21 @@ bool CObjectPool::New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRo
 
 //----------------------------------------------------
 
+void CObjectPool::UpdatePoolSize()
+{
+	int iNewSize = 0;
+	for (int i = 0; i < MAX_OBJECTS; i++)
+	{
+		if (m_bObjectSlotState[i])
+		{
+			iNewSize = 0;
+		}
+	}
+	m_iPoolSize = iNewSize;
+}
+
+//----------------------------------------------------
+
 int CObjectPool::FindIDFromGtaPtr(ENTITY_TYPE * pGtaObject)
 {
 	int x=1;
@@ -75,13 +97,26 @@ int CObjectPool::FindIDFromGtaPtr(ENTITY_TYPE * pGtaObject)
 void CObjectPool::Process()
 {
 	static unsigned long s_ulongLastCall = 0;
-	if (!s_ulongLastCall) s_ulongLastCall = GetTickCount();
+	if (!s_ulongLastCall) s_ulongLastCall = RakNet::GetTime();
 	unsigned long ulongTick = GetTickCount();
 	float fElapsedTime = ((float)(ulongTick - s_ulongLastCall)) / 1000.0f;
 	// Get elapsed time in seconds
-	for (BYTE i = 0; i < MAX_OBJECTS; i++)
+	for (int i = 0; i <= m_iPoolSize; i++)
 	{
 		if (m_bObjectSlotState[i]) m_pObjects[i]->Process(fElapsedTime);
 	}
 	s_ulongLastCall = ulongTick;
+}
+
+int CObjectPool::GetCount()
+{
+	int iCount = 0;
+	for (int i = 0; i < MAX_OBJECTS; i++)
+	{
+		if (m_bObjectSlotState[i])
+		{
+			iCount++;
+		}
+	}
+	return iCount;
 }

@@ -112,7 +112,8 @@ void CGameMode::Unload()
 
 	// Call in filterscripts
 	pNetGame->GetFilterScripts()->OnGameModeExit();
-	pNetGame->GetTimers()->DeleteForMode(&m_amx);
+	CScriptTimers* pScriptTimers = pNetGame->GetTimers();
+	if(pScriptTimers) pScriptTimers->DeleteForMode(&m_amx);
 
 	if (m_bInitialised)
 	{
@@ -949,6 +950,66 @@ void CGameMode::OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid)
 	}
 }
 
+void CGameMode::OnPlayerStreamIn(cell playerid, cell forplayerid)
+{
+	int idx;
+
+	if (m_bInitialised)
+	{
+		if (!amx_FindPublic(&m_amx, "OnPlayerStreamIn", &idx))
+		{
+			amx_Push(&m_amx, forplayerid);
+			amx_Push(&m_amx, playerid);
+			amx_Exec(&m_amx, NULL, idx);
+		}
+	}
+}
+
+void CGameMode::OnPlayerStreamOut(cell playerid, cell forplayerid)
+{
+	int idx;
+
+	if (m_bInitialised)
+	{
+		if (!amx_FindPublic(&m_amx, "OnPlayerStreamOut", &idx))
+		{
+			amx_Push(&m_amx, forplayerid);
+			amx_Push(&m_amx, playerid);
+			amx_Exec(&m_amx, NULL, idx);
+		}
+	}
+}
+
+void CGameMode::OnVehicleStreamIn(cell vehicleid, cell forplayerid)
+{
+	int idx;
+
+	if (m_bInitialised)
+	{
+		if (!amx_FindPublic(&m_amx, "OnVehicleStreamIn", &idx))
+		{
+			amx_Push(&m_amx, forplayerid);
+			amx_Push(&m_amx, vehicleid);
+			amx_Exec(&m_amx, NULL, idx);
+		}
+	}
+}
+
+void CGameMode::OnVehicleStreamOut(cell vehicleid, cell forplayerid)
+{
+	int idx;
+
+	if (m_bInitialised)
+	{
+		if (!amx_FindPublic(&m_amx, "OnVehicleStreamOut", &idx))
+		{
+			amx_Push(&m_amx, forplayerid);
+			amx_Push(&m_amx, vehicleid);
+			amx_Exec(&m_amx, NULL, idx);
+		}
+	}
+}
+
 void CGameMode::OnActorStreamIn(cell actorid, cell forplayerid)
 {
 	int idx = 0;
@@ -1011,3 +1072,38 @@ void CGameMode::OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell so
 	}
 }
 
+//---------------------------------------------------------------------------------
+// forward OnPlayerClickTextDraw(playerid, Text:clickedid);
+
+void CGameMode::OnPlayerClickTextDraw(cell playerid, cell text)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnPlayerClickTextDraw", &idx))
+	{
+		amx_Push(&m_amx, text);
+		amx_Push(&m_amx, playerid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}
+
+//---------------------------------------------------------------------------------
+// forward OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid);
+
+void CGameMode::OnPlayerClickPlayerTextDraw(cell playerid, cell playertext)
+{
+	int idx = 0;
+
+	if (!m_bInitialised)
+		return;
+
+	if (!amx_FindPublic(&m_amx, "OnPlayerClickPlayerTextDraw", &idx))
+	{
+		amx_Push(&m_amx, playertext);
+		amx_Push(&m_amx, playerid);
+		amx_Exec(&m_amx, NULL, idx);
+	}
+}

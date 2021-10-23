@@ -3,140 +3,99 @@
 
 CActorPool::CActorPool()
 {
-	memset(m_pActors, 0, sizeof(CActor*) * MAX_ACTORS);
-	memset(m_bSlotState, 0, sizeof(bool) * MAX_ACTORS);
-	//memset(m_iVirtualWorld, 0, sizeof(int) * MAX_ACTORS);
-
-	m_iLastActorID = -1;
+	for (WORD wActorID = 0; wActorID != MAX_ACTORS; wActorID++)
+	{
+		m_bSlotState[wActorID] = false;
+		m_pActors[wActorID] = NULL;
+		m_iVirtualWorld[wActorID] = 0;
+	}
+	m_iPoolSize = -1; // 0;
 }
 
 CActorPool::~CActorPool()
 {
-	for (unsigned short i = 0; i < MAX_ACTORS; i++)
-	{
-		//Destroy(i);
-		
-		SAFE_DELETE(m_pActors[i]);
-		m_bSlotState[i] = false;
+	for (WORD wActorID = 0; wActorID < MAX_ACTORS; wActorID++) {
+		Delete(wActorID);
 	}
-
-	m_iLastActorID = -1;
 }
 
-CActor* CActorPool::GetAt(int iActorID)
+void CActorPool::UpdatePoolSize()
 {
-	if (iActorID >= 0 && iActorID < MAX_ACTORS)
-	{
-		return  m_pActors[iActorID];
-	}
-	return NULL;
-}
-
-bool CActorPool::GetSlotState(int iActorID)
-{
-	if (iActorID >= 0 && iActorID < MAX_ACTORS)
-	{
-		return  m_bSlotState[iActorID];
-	}
-	return false;
-}
-
-void CActorPool::UpdateLastActorID()
-{
-	m_iLastActorID = -1;
-
+	int iNewSize = -1;
 	for (int i = 0; i < MAX_ACTORS; i++)
 	{
 		if (m_bSlotState[i])
-		{
-			m_iLastActorID = i;
-		}
+			iNewSize = i;
 	}
+	m_iPoolSize = iNewSize;
 }
 
-unsigned short CActorPool::New(int iModelID, VECTOR vecPos, float fAngle)
+WORD CActorPool::New(int iModelID, VECTOR* vecPos, float fAngle)
 {
-	CActor* pActor;
-	unsigned short ActorID;
-
-	for (ActorID = 0; ActorID < MAX_ACTORS; ActorID++)
+	WORD ActorID;
+	for (ActorID = 0; ActorID != MAX_ACTORS; ActorID++)
 	{
-		if (!m_bSlotState[ActorID])
-		{
-			break;
-		}
+		if (!m_bSlotState[ActorID]) break;
 	}
 
 	if (ActorID == MAX_ACTORS) return INVALID_ACTOR_ID;
 
-	pActor = new CActor(ActorID, iModelID, vecPos, fAngle);
-	if (pActor)
+	m_pActors[ActorID] = new CActor(iModelID, vecPos, fAngle);
+	if (m_pActors[ActorID])
 	{
-		m_pActors[ActorID] = pActor;
+		m_pActors[ActorID]->SetID(ActorID);
 		m_bSlotState[ActorID] = true;
-		//m_iVirtualWorld[ActorID] = 0;
+		m_iVirtualWorld[ActorID] = 0;
 
-		UpdateLastActorID();
+		UpdatePoolSize();
 
 		return ActorID;
 	}
 	return INVALID_ACTOR_ID;
 }
 
-// moved to CActor
-/*void CActorPool::SetActorVirtualWorld(unsigned short ActorID, int iVirtualWorld)
+bool CActorPool::Delete(WORD wActorID)
 {
-	if (ActorID < MAX_ACTORS && m_bSlotState[ActorID])
+	if (!GetSlotState(wActorID) || !m_pActors[wActorID])
 	{
-		m_iVirtualWorld[ActorID] = iVirtualWorld;
+		return false;
 	}
-}*/
 
-// moved to CActor
-/*int CActorPool::GetActorVirtualWorld(unsigned short ActorID)
-{
-	if (ActorID < MAX_ACTORS)
-	{
-		return m_iVirtualWorld[ActorID];
-	}
-	return 0;
-}*/
+	delete m_pActors[wActorID];
+	m_pActors[wActorID] = NULL;
+	m_bSlotState[wActorID] = false;
 
-bool CActorPool::Destroy(int iActorID)
-{
-	if ((iActorID >= 0 && iActorID < MAX_ACTORS) && m_bSlotState[iActorID])
-	{
-		SAFE_DELETE(m_pActors[iActorID]);
-		m_bSlotState[iActorID] = false;
-		UpdateLastActorID();
-		return true;
-	}
-	return false;
+	UpdatePoolSize();
+
+	return true;
 }
 
-void CActorPool::StreamActorInForPlayer(unsigned short ActorID, unsigned short PlayerID)
+void CActorPool::StreamActorInForPlayer(WORD wActorID, WORD wPlayerID)
 {
 	CActor* pActor;
 	ACTOR_TRANSMIT Transmit;
 
-	if (ActorID < MAX_ACTORS && m_bSlotState[ActorID])
+	if (wActorID < MAX_ACTORS && m_bSlotState[wActorID])
 	{
 		RakNet::BitStream bsSend;
 
-		pActor = m_pActors[ActorID];
-		Transmit.usActorID = ActorID;
-		Transmit.iModelID = pActor->GetModel();
-		Transmit.vecPosition = pActor->GetPosition();
-		Transmit.fFacingAngle = pActor->GetFacingAngle();
-		Transmit.fHealth = pActor->GetHealth();
-		Transmit.bInvurnable = pActor->IsInvulnerable();
+		pActor = m_pActors[wActorID];
+		Transmit.wActorID = wActorID;
+		Transmit.iSkin = pActor->GetSpawnInfo()->iSkin;
+		Transmit.iBaseSkin = pActor->GetSpawnInfo()->iBaseSkin;
+		Transmit.vecPos.X = pActor->m_vecPos.X;
+		Transmit.vecPos.Y = pActor->m_vecPos.Y;
+		Transmit.vecPos.Z = pActor->m_vecPos.Z;
+		Transmit.fRotation = pActor->m_fRotation;
+		Transmit.fHealth = pActor->m_fHealth;
+		Transmit.byteInvurnable = pActor->m_byteInvulnerable;
 
 		bsSend.Write((char*)&Transmit, sizeof(ACTOR_TRANSMIT));
 
-		pNetGame->SendToPlayer(PlayerID, RPC_WorldAddActor, &bsSend);
+		pNetGame->RPC(RPC_WorldAddActor, &bsSend, wPlayerID, 2);
 
-		if (pActor->IsAnimationOnLoop())
-			pActor->SendAnimation(PlayerID, pActor->GetLoopedAnimationData());
+		if (pActor->bHasAnimation)
+			pActor->SendAnimation(wPlayerID, &pActor->m_Animation);
 	}
 }
 

@@ -73,20 +73,34 @@ public:
 	int OnPlayerInteriorChange(cell playerid, cell newid, cell oldid);
 	int OnPlayerKeyStateChange(cell playerid, cell newkeys, cell oldkeys);
 	int OnPlayerUpdate(cell playerid);
+	int OnScriptCash(cell playerid, cell amount, cell source);
+	int OnDialogResponse(cell playerid, cell dialogid, cell response, cell listitem, char* szInputText);
 	int OnIncomingConnection(cell playerid, const char* ip, cell port);
 	int OnPlayerClickMap(cell playerid, float fX, float fY, float fZ);
 	int OnTrailerUpdate(cell playerid, cell vehicleid);
 	int OnRconLoginAttempt(char* szIP, char* szPassword, cell success);
+	int OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
+	int OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
+	int OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
+	int OnPlayerTakeDamage(cell playerid, cell issuerid, float amount, cell weaponid, cell bodypart);
+	int OnPlayerGiveDamage(cell playerid, cell damagedid, float amount, cell weaponid, cell bodypart);
+	int OnUnoccupiedVehicleUpdate(cell vehicleid, cell playerid, cell seat, VECTOR* pos, VECTOR* vel);
+	int OnPlayerStreamIn(cell playerid, cell forplayerid);
+	int OnPlayerStreamOut(cell playerid, cell forplayerid);
+	int OnVehicleStreamIn(cell vehicleid, cell forplayerid);
+	int OnVehicleStreamOut(cell vehicleid, cell forplayerid);
+	int OnActorStreamIn(cell actorid, cell forplayerid);
+	int OnActorStreamOut(cell actorid, cell forplayerid);
+	int OnPlayerGiveDamageActor(cell playerid, cell actorid, float amount, cell weaponid, cell bodypart);
+	int OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell source);
+	int OnPlayerClickTextDraw(cell playerid, cell text);
+	int OnPlayerClickPlayerTextDraw(cell playerid, cell playertext);
+	int OnPlayerFinishedDownloading(cell playerid, cell vw);
+	int OnPlayerRequestDownload(cell playerid, cell type, cell crc);
+
 	void OnPlayerBeginTyping(cell playerid);
 	void OnPlayerEndTyping(cell playerid);
 	int OnPlayerStunt(cell playerid, cell vehicleid);
-	void OnClientCheckResponse(cell playerid, cell type, cell address, cell checksum);
-	int OnVehicleSirenStateChange(cell playerid, cell vehicleid, cell newstate);
-	void OnVehicleDamageStatusUpdate(cell vehicleid, cell playerid);
-	void OnActorStreamIn(cell actorid, cell forplayerid);
-	void OnActorStreamOut(cell actorid, cell forplayerid);
-	void OnPlayerGiveDamageActor(cell playerid, cell actorid, float fDamage, cell weaponid, cell bodypart);
-	void OnPlayerClickPlayer(cell playerid, cell clickedplayerid, cell source);
 };
 
 //----------------------------------------------------------------------------------

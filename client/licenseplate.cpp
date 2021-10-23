@@ -7,6 +7,7 @@ CLicensePlate::CLicensePlate(IDirect3DDevice9* pDevice)
 	m_pTexture = NULL;
 	m_pRenderToSurface = NULL;
 	m_pSurface = NULL;
+	m_pDefaultTexture = NULL;
 
 	RestoreDeviceObjects();
 }
@@ -21,7 +22,7 @@ void CLicensePlate::DeleteDeviceObjects()
 	SAFE_RELEASE(m_pSurface);
 	SAFE_RELEASE(m_pTexture);
 	SAFE_RELEASE(m_pRenderToSurface);
-	SAFE_RELEASE(m_pLastTexture);
+	SAFE_RELEASE(m_pDefaultTexture);
 }
 
 void CLicensePlate::RestoreDeviceObjects()

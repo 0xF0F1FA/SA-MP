@@ -19,9 +19,9 @@ CMenuPool::CMenuPool()
 		m_bMenuSlotState[byteMenuID] = false;
 		m_pMenus[byteMenuID] = NULL;
 	}
-	for (BYTE bytePlayer = 0; bytePlayer < MAX_PLAYERS; bytePlayer++)
+	for (WORD wPlayer = 0; wPlayer < MAX_PLAYERS; wPlayer++)
 	{
-		m_bytePlayerMenu[bytePlayer] = INVALID_MENU_ID;
+		m_bytePlayerMenu[wPlayer] = INVALID_MENU_ID;
 	}
 }
 
@@ -70,7 +70,7 @@ BYTE CMenuPool::New(PCHAR pTitle, float fX, float fY, BYTE byteColumns, float fC
 
 bool CMenuPool::Delete(BYTE byteMenuID)
 {
-	if (m_bMenuSlotState[byteMenuID] == false || !m_pMenus[byteMenuID])
+	if (byteMenuID >= MAX_MENUS || m_bMenuSlotState[byteMenuID] == false || !m_pMenus[byteMenuID])
 	{
 		return false;
 	}

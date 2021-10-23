@@ -22,13 +22,15 @@ static int iExceptPlayerMessageDisplayed=0;
 CPlayerPool::CPlayerPool()
 {
 	m_pLocalPlayer = new CLocalPlayer();
-	m_byteLocalPlayerID = INVALID_PLAYER_ID;
+	m_wLocalPlayerID = INVALID_PLAYER_ID;
 
 	// loop through and initialize all net players to null and slot states to false
 	for(BYTE bytePlayerID = 0; bytePlayerID < MAX_PLAYERS; bytePlayerID++) {
 		m_bPlayerSlotState[bytePlayerID] = false;
 		m_pPlayers[bytePlayerID] = NULL;
 	}
+
+	m_iPoolSize = -1; // =0;
 }
 
 //----------------------------------------------------
@@ -52,10 +54,11 @@ bool CPlayerPool::New(BYTE bytePlayerID, PCHAR szPlayerName)
 	if(m_pPlayers[bytePlayerID])
 	{
 		m_pPlayers[bytePlayerID]->SetID(bytePlayerID);
-		m_pPlayers[bytePlayerID]->SetName(szPlayerName);
+		//m_pPlayers[bytePlayerID]->SetName(szPlayerName);
 		m_bPlayerSlotState[bytePlayerID] = true;
 		//if(pChatWindow) 
 			//pChatWindow->AddInfoMessage("*** %s joined the server.",szPlayerName);
+		UpdatePoolSize();
 		return true;
 	}
 	else
@@ -85,7 +88,22 @@ bool CPlayerPool::Delete(BYTE bytePlayerID, BYTE byteReason)
 		//m_szPlayerNames[bytePlayerID],szQuitReasons[byteReason]);
 	//}
 
+	UpdatePoolSize();
+
 	return true;
+}
+
+//----------------------------------------------------
+
+void CPlayerPool::UpdatePoolSize()
+{
+	int iLastIndex = -1;
+	for(int i = 0; i < MAX_PLAYERS; i++)
+	{
+		if(m_bPlayerSlotState[i])
+			iLastIndex = i;
+	}
+	m_iPoolSize = iLastIndex;
 }
 
 //----------------------------------------------------
@@ -169,6 +187,46 @@ BYTE CPlayerPool::GetCount()
 
 //----------------------------------------------------
 
+int CPlayerPool::GetCount(bool bIncludeNPCs)
+{
+	int iCount, i;
+
+	iCount = 0;
+
+	if (bIncludeNPCs)
+	{
+		/*i = 0;
+		do
+		{
+			if (i < MAX_PLAYERS && m_bPlayerSlotState[i] == TRUE)
+				iResult++;
+			if (i + 1 < MAX_PLAYERS && m_bPlayerSlotState[i + 1] == TRUE)
+				iResult++;
+			if (i + 2 < MAX_PLAYERS && m_bPlayerSlotState[i + 2] == TRUE)
+				iResult++;
+			if (i + 3 < MAX_PLAYERS && m_bPlayerSlotState[i + 3] == TRUE)
+				iResult++;
+
+			i += 4;
+		} while (i < MAX_PLAYERS);*/
+		
+		for (i = 0; i < MAX_PLAYERS; i++)
+		{
+			if (m_bPlayerSlotState[i] == TRUE)
+			{
+				iCount++;
+			}
+		}
+	}
+	else
+	{
+		// TODO: Counting for NPCs?
+	}
+	return iCount;
+}
+
+//----------------------------------------------------
+
 void CPlayerPool::DeactivateAll()
 {
 	m_pLocalPlayer->m_bIsActive = false;
@@ -178,6 +236,16 @@ void CPlayerPool::DeactivateAll()
 		if(true == m_bPlayerSlotState[bytePlayerID]) {
 			m_pPlayers[bytePlayerID]->Deactivate();
 		}
+	}
+}
+
+//----------------------------------------------------
+
+void CPlayerPool::DeleteAll()
+{
+	for (WORD wPlayerID = 0; wPlayerID < MAX_PLAYERS; wPlayerID++) {
+		if (m_bPlayerSlotState[wPlayerID])
+			Delete(wPlayerID, 0);
 	}
 }
 

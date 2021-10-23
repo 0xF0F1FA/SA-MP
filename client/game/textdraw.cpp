@@ -10,7 +10,28 @@ Version: $Id: textdraw.cpp,v 1.4 2008-04-16 08:54:17 kyecvs Exp $
 #include "../main.h"
 #include "font.h"
 
+#define MAX_SPRITES 200
+#define INVALID_SPRITE_ID -1
+
 //char ProvideTmp[1024];
+
+bool bSpriteSlotState[MAX_SPRITES]; // BOOL
+
+int FindFreeSpriteSlot()
+{
+	int iSpriteID = 0;
+	while (iSpriteID < MAX_SPRITES)
+	{
+		if (bSpriteSlotState[iSpriteID] == 0)
+			break;
+		iSpriteID++;
+	}
+	if (iSpriteID == MAX_SPRITES) return -1;
+
+	bSpriteSlotState[iSpriteID] = true;
+
+	return iSpriteID;
+}
 
 CTextDraw::CTextDraw(TEXT_DRAW_TRANSMIT *TextDrawTransmit, PCHAR szText)
 {
@@ -37,22 +58,91 @@ CTextDraw::CTextDraw(TEXT_DRAW_TRANSMIT *TextDrawTransmit, PCHAR szText)
 	m_TextDrawData.fY = TextDrawTransmit->fY;
 	m_TextDrawData.dwParam1 = 0xFFFFFFFF;
 	m_TextDrawData.dwParam2 = 0xFFFFFFFF;
-	
-	strncpy(m_szText, szText, MAX_TEXT_DRAW_LINE);
-	m_szText[MAX_TEXT_DRAW_LINE - 1] = '\0';
+	m_TextDrawData.byteSelectable = TextDrawTransmit->byteSelectable;
+
+	m_TextDrawData.iSpriteID = -1;
+
+	//m_bHasKeyCode = false;
+
+	SetText(szText);
+
+	if (m_TextDrawData.dwStyle == TEXT_DRAW_FONT_SPRITE)
+	{
+		m_TextDrawData.iSpriteID = FindFreeSpriteSlot();
+		SetupSprite();
+	}
+
+	m_TextDrawData.bHasBoundingBox = false;
+	m_rcBoundingBox.left = 0;
+	m_rcBoundingBox.right = 0;
+	m_rcBoundingBox.top = 0;
+	m_rcBoundingBox.bottom = 0;
+	m_bMouseover = false;
+	m_dwHoverColor = 0;
+}
+
+void CTextDraw::SetupSprite()
+{
+	char szTxdName[64];
+	char szTextureName[64];
+
+	// CHANGED: No free slot, return here instead after TXD
+	// and texture names being processed
+	if (m_TextDrawData.iSpriteID == -1)
+		return;
+
+	char* szText = m_szText;
+	char* szSplitPos = strchr(m_szText,':');
+
+	if (!szSplitPos || strlen(m_szText) >= 64 ||
+		strchr(m_szText, '\\') || strchr(m_szText, '/'))
+		return;
+
+	strncpy_s(szTxdName, m_szText, szSplitPos - szText);
+	strcpy_s(szTextureName, szSplitPos + 1);
+
+	if (!memcmp(szTxdName, "hud", 4))
+	{
+
+	}
+	if (!memcmp(szTxdName, "samaps", 7))
+	{
+
+	}
+	if (!memcmp(szTxdName, "vehicleprev", 12))
+	{
+
+	}
 }
 
 void CTextDraw::SetText(char* szText)
 {
-	memset(m_szText,0,MAX_TEXT_DRAW_LINE);
-	strncpy(m_szText, szText, MAX_TEXT_DRAW_LINE);
+	/*memset(m_szText,0,MAX_TEXT_DRAW_LINE);
+
+	if (strlen(szText) >= MAX_TEXT_DRAW_LINE)
+		return;
+
+	strncpy_s(m_szText, szText, MAX_TEXT_DRAW_LINE);
 	m_szText[MAX_TEXT_DRAW_LINE-1] = 0;
+
+	//m_bHasKeyCode = false;
+
+	char* szText = m_szText;
+	while (*szText)
+	{
+		if (*szText == '~')
+		{
+
+		}
+		szText++;
+	}*/
 }
 
 
 void CTextDraw::Draw()
 {
-	if(!m_szText || !strlen(m_szText)) return;
+	//if(!m_szText || !strlen(m_szText)) return;
+	if (!m_szText || m_szText[0] == '\0') return;
 
 	strcpy(m_szString,m_szText);
 
@@ -68,7 +158,12 @@ void CTextDraw::Draw()
 	float fScaleX = (float)iScreenWidth * fHorizHudScale * m_TextDrawData.fLetterWidth;
 
 	Font_SetScale(fScaleX,fScaleY);
-	Font_SetColor(m_TextDrawData.dwLetterColor);
+
+	if (m_bMouseover)
+		Font_SetColor(m_dwHoverColor);
+	else
+		Font_SetColor(m_TextDrawData.dwLetterColor);
+
     Font_Unk12(0);
 
 	if(m_TextDrawData.byteAlignRight) Font_SetJustify(2);
@@ -110,4 +205,30 @@ void CTextDraw::Draw()
     
     Font_PrintString(fUseX,fUseY,m_szString);
 	Font_SetOutline(0);
+
+	if (m_TextDrawData.byteAlignRight)
+	{
+		m_rcBoundingBox.left = (LONG)(fUseX - (fLineWidth - fUseX));
+		m_rcBoundingBox.right = (LONG)fUseX;
+		m_rcBoundingBox.top = (LONG)fUseY;
+		m_rcBoundingBox.bottom = (LONG)(fUseY + fLineHeight);
+		m_TextDrawData.bHasBoundingBox = true;
+	}
+	else if (m_TextDrawData.byteCentered)
+	{
+		float fX = fUseX - fLineHeight * 0.5f;
+		m_rcBoundingBox.left = (LONG)fX;
+		m_rcBoundingBox.right = (LONG)(fX + fLineHeight);
+		m_rcBoundingBox.top = (LONG)fUseY;
+		m_rcBoundingBox.bottom = (LONG)(fUseY + fLineWidth);
+		m_TextDrawData.bHasBoundingBox = true;
+	}
+	else
+	{
+		m_rcBoundingBox.left = (LONG)fUseX;
+		m_rcBoundingBox.right = (LONG)(fLineWidth - fUseX + fUseX);
+		m_rcBoundingBox.top = (LONG)fUseY;
+		m_rcBoundingBox.bottom = (LONG)(fUseY + fLineHeight);
+		m_TextDrawData.bHasBoundingBox = true;;
+	}
 }

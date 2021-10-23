@@ -5,28 +5,43 @@
 class CActorPool
 {
 private:
+	int m_iVirtualWorld[MAX_ACTORS];
+	bool m_bSlotState[MAX_ACTORS]; // BOOL
 	CActor* m_pActors[MAX_ACTORS];
-	bool m_bSlotState[MAX_ACTORS];
-	//int m_iVirtualWorld[MAX_ACTORS]; // moved to CActor
-	int m_iLastActorID;
+	int m_iPoolSize;
 
 public:
 	CActorPool();
 	~CActorPool();
 
-	CActor* GetAt(int iActorID);
-	bool GetSlotState(int iActorID);
+	void UpdatePoolSize();
+	WORD New(int iModelID, VECTOR* vecPos, float fAngle);
+	bool Delete(WORD wActorID);
 
-	void UpdateLastActorID();
-	unsigned short New(int iModelID, VECTOR vecPos, float fAngle);
-	bool Destroy(int iActorID);
-	//void SetActorVirtualWorld(unsigned short ActorID, int iVirtualWorld); // moved to CActor
-	//int GetActorVirtualWorld(unsigned short ActorID); // moved to CActor
+	CActor* GetAt(WORD wActorID) {
+		if (wActorID >= MAX_ACTORS) { return NULL; }
+		return m_pActors[wActorID];
+	};
+
+	bool GetSlotState(WORD wActorID) {
+		if (wActorID >= MAX_ACTORS) { return false; }
+		return m_bSlotState[wActorID];
+	};
+
+	int SetActorVirtualWorld(WORD wActorID) {
+		if (wActorID >= MAX_ACTORS || !m_bSlotState[wActorID]) { return 0; }
+		return m_iVirtualWorld[wActorID];
+	};
+
+	int GetActorVirtualWorld(WORD wActorID) {
+		if (wActorID >= MAX_ACTORS) { return 0; }
+		return m_iVirtualWorld[wActorID];
+	};
+
 	void StreamActorInForPlayer(unsigned short ActorID, unsigned short PlayerID);
 	void StreamActorOutForPlayer(unsigned short ActorID, unsigned short PlayerID);
 
-	inline int GetLastActorID() { return m_iLastActorID; };
-
+	int GetPoolSize() { return m_iPoolSize; };
 };
 
 #endif // SAMPSRV_ACTORPOOL_H

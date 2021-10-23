@@ -23,13 +23,16 @@ private:
 	
 	bool	m_bPlayerSlotState[MAX_PLAYERS];
 	CPlayer *m_pPlayers[MAX_PLAYERS];
-	//CHAR	m_szPlayerName[MAX_PLAYERS][MAX_PLAYER_NAME+1];
-	//int 	m_iPlayerScore[MAX_PLAYERS];
-	//int	m_iPlayerMoney[MAX_PLAYERS];
-	//bool	m_bIsAnAdmin[MAX_PLAYERS];
-	//BYTE	m_byteVirtualWorld[MAX_PLAYERS];
+	CHAR	m_szPlayerName[MAX_PLAYERS][MAX_PLAYER_NAME+1];
+	CHAR	m_szPlayerSerial[MAX_PLAYERS][MAX_PLAYER_SERIAL+1];
+	CHAR	m_szPlayerVersion[MAX_PLAYERS][MAX_PLAYER_VERSION+1];
+	int 	m_iPlayerScore[MAX_PLAYERS];
+	int		m_iPlayerMoney[MAX_PLAYERS];
+	bool	m_bIsAnAdmin[MAX_PLAYERS];
+	int		m_iVirtualWorld[MAX_PLAYERS];
+	bool	m_bIsAnNPC[MAX_PLAYERS];
 	int		m_iPlayerCount;
-	int		m_iLastPlayerId;
+	int		m_iPoolSize;
 	float	m_fLastTimerTime;
 
 public:
@@ -38,9 +41,10 @@ public:
 	~CPlayerPool();
 
 	bool Process(float fElapsedTime);
-	bool New(BYTE bytePlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC = false);
-	bool Delete(BYTE bytePlayerID, BYTE byteReason);
-		
+	bool New(WORD wPlayerID, PCHAR szPlayerName, char* szSerial, char* szVersion, bool bIsNPC = false);
+	bool Delete(WORD wPlayerID, BYTE byteReason);
+	void UpdatePoolSize();
+
 	// Retrieve a player
 	CPlayer* GetAt(WORD wPlayerID) {
 		if (wPlayerID >= MAX_PLAYERS) { return NULL; }
@@ -54,9 +58,19 @@ public:
 	};
 	};
 
-	/*PCHAR GetPlayerName(BYTE bytePlayerID) {
-		if(bytePlayerID >= MAX_PLAYERS) { return NULL; }
-		return m_szPlayerName[bytePlayerID];
+	PCHAR GetPlayerName(WORD wPlayerID) {
+		if(wPlayerID >= MAX_PLAYERS) { return NULL; }
+		return m_szPlayerName[wPlayerID];
+	};
+
+	PCHAR GetPlayerVersion(WORD wPlayerID) {
+		if (wPlayerID >= MAX_PLAYERS) { return NULL; }
+		return m_szPlayerVersion[wPlayerID];
+	};
+
+	PCHAR GetPlayerSerial(WORD wPlayerID) {
+		if (wPlayerID >= MAX_PLAYERS) { return NULL; }
+		return m_szPlayerSerial[wPlayerID];
 	};
 
 	int GetPlayerScore(BYTE bytePlayerID) {
@@ -69,54 +83,66 @@ public:
 		m_iPlayerScore[bytePlayerID] = iScore;
 	};
 
-	void SetPlayerName(BYTE bytePlayerID, PCHAR szName) {
-		strcpy(m_szPlayerName[bytePlayerID], szName);
+	void SetPlayerName(WORD wPlayerID, PCHAR szName) {
+		strcpy(m_szPlayerName[wPlayerID], szName);
 	}
 
-	int GetPlayerMoney(BYTE bytePlayerID) {
-		if(bytePlayerID >= MAX_PLAYERS) { return 0; }
-		return m_iPlayerMoney[bytePlayerID];
+	int GetPlayerMoney(WORD wPlayerID) {
+		if(wPlayerID >= MAX_PLAYERS) { return 0; }
+		return m_iPlayerMoney[wPlayerID];
 	};
 
-	void SetPlayerMoney(BYTE bytePlayerID, int iMoney) {
-		if(bytePlayerID >= MAX_PLAYERS) return;
-		m_iPlayerMoney[bytePlayerID] = iMoney;
-	};*/
+	void SetPlayerMoney(WORD wPlayerID, int iMoney) {
+		if(wPlayerID >= MAX_PLAYERS) return;
+		m_iPlayerMoney[wPlayerID] = iMoney;
+	};
 
-	/*void ResetPlayerScoresAndMoney() {
-		//memset(&m_iPlayerScore[0],0,sizeof(int) * MAX_PLAYERS);
-		//memset(&m_iPlayerMoney[0],0,sizeof(int) * MAX_PLAYERS);	
-		//memset(&m_byteVirtualWorld[0],0,sizeof(BYTE) * MAX_PLAYERS);	
+	void ResetPlayerScoresAndMoney() {
+		memset(&m_iPlayerScore[0],0,sizeof(int) * MAX_PLAYERS);
+		memset(&m_iPlayerMoney[0],0,sizeof(int) * MAX_PLAYERS);
+		memset(&m_iVirtualWorld[0],0,sizeof(int) * MAX_PLAYERS);
 	};
 	
-	void SetPlayerVirtualWorld(BYTE bytePlayerID, BYTE byteVirtualWorld);
+	void SetPlayerVirtualWorld(WORD wPlayerID, int iVirtualWorld);
 	
-	BYTE GetPlayerVirtualWorld(BYTE bytePlayerID) {
-		if (bytePlayerID >= MAX_PLAYERS) { return 0; }
-		return m_byteVirtualWorld[bytePlayerID];		
-	};*/
+	int GetPlayerVirtualWorld(WORD wPlayerID) {
+		if (wPlayerID >= MAX_PLAYERS) { return 0; }
+		return m_iVirtualWorld[wPlayerID];		
+	};
 
-	/*void SetAdmin(unsigned int iPlayerId, bool bToggle) { m_bIsAnAdmin[iPlayerId] = bToggle; }
-	void SetAdmin(BYTE bytePlayerID) { m_bIsAnAdmin[bytePlayerID] = true; };
-	bool IsAdmin(BYTE bytePlayerID) { return m_bIsAnAdmin[bytePlayerID]; };*/
+	void SetAdmin(WORD wPlayerID, bool bAdmin = true) { m_bIsAnAdmin[wPlayerID] = bAdmin; };
+	bool IsAdmin(WORD wPlayerID) { return m_bIsAnAdmin[wPlayerID]; };
+
+	bool IsPlayerNPC(WORD wPlayerID) {
+		return m_bIsAnNPC[wPlayerID];
+	}
+
+	bool IsValidID(WORD wPlayerID) { return wPlayerID < MAX_PLAYERS; };
 
 	void InitPlayersForPlayer(BYTE bytePlayerID);
 	void InitSpawnsForPlayer(BYTE bytePlayerID);
 
 	BYTE GetKillType(BYTE byteWhoKilled, BYTE byteWhoDied);
 
-	float GetDistanceFromPlayerToPlayer(BYTE bytePlayer1, BYTE bytePlayer2);
+	float GetDistanceFromPlayerToPlayer(WORD wPlayer1, WORD wPlayer2);
 	float GetDistanceSquaredFromPlayerToPlayer(BYTE bytePlayer1, BYTE bytePlayer2);
 	bool  IsNickInUse(PCHAR szNick);
 
-	int GetPlayerCount() { return m_iPlayerCount; };
+	int GetPlayerCount();
+	int GetNPCCount();
+
+	int GetCount() { return m_iPlayerCount; };
+	int GetPoolSize() { return m_iPoolSize; };
 
 	void DestroyActorForPlayers(unsigned short usActorID);
 
 	void UpdateTimersForAll();
 
 	void DeactivateAll();
+<<<<<<< Updated upstream
 	int GetLastPlayerId() const { return m_iLastPlayerId; }
+=======
+>>>>>>> Stashed changes
 };
 
 //----------------------------------------------------

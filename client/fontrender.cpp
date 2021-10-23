@@ -37,18 +37,17 @@ CFontRender::~CFontRender()
 // Font size multiplier ranges: -3 to 5
 int GetFontSize()
 {
-	int n, w = pGame->GetScreenWidth();
-
-	if (w >= 1600)
-		n = 20;
-	else if (w >= 1400)
-		n = 18;
-	else if (w >= 1024)
-		n = 16;
-	else
-		n = 14;
-
-	return n + 2 * 0; // TODO: 0 should be replace with pConfig->GetInt("fontsize");
+	int iFontSize;
+	if (pGame->GetScreenWidth() < 1024) {
+		iFontSize = 14;
+	} else if (pGame->GetScreenWidth() < 1400) {
+		iFontSize = 16;
+	} else if (pGame->GetScreenWidth() < 1600) {
+		iFontSize = 18;
+	} else {
+		iFontSize = 20;
+	}
+	return iFontSize + 2 * pConfigFile->GetInt("fontsize");
 }
 
 int GetFontWeight()
@@ -64,18 +63,25 @@ int GetFontWeight()
 
 char* GetFontFace()
 {
-	char* szFontFace;
-	if (pConfigFile &&
-		(szFontFace = pConfigFile->GetString("fontface")) != NULL)
+	if (pConfigFile && pConfigFile->GetString("fontface"))
 	{
-		//return pConfigFile->GetString("fontface");
-		return szFontFace; 
+		return pConfigFile->GetString("fontface"); 
 	}
 	return "Arial";
 }
 
 int GetDeathWindowFontSize()
 {
+	int iFontSize = 14;
+	if (pGame->GetScreenWidth() < 1024) {
+		iFontSize = 12;
+	}
+
+
+
+
+
+
 	int iSize, iResult;
 
 	iSize = 14;
@@ -85,6 +91,11 @@ int GetDeathWindowFontSize()
 	iResult = iSize + 2 * pConfigFile->GetInt("fontsize");
 
 	return (iResult < iSize) ? iSize : iResult;
+}
+
+int GetDXUTFontSize()
+{
+	return 2 * pConfigFile->GetInt("fontsize") + 20;
 }
 
 void CFontRender::CreateFonts()
@@ -108,7 +119,7 @@ void CFontRender::CreateFonts()
 	szFontFace = GetFontFace();
 
 	iSmallerFont = iFontSize - 2;
-
+	0x10;
 	D3DXCreateFontA(m_pD3DDevice, iFontSize, 0, iFontWeight, 1, FALSE, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, szFontFace, &pFont);
 

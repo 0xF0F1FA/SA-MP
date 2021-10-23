@@ -16,8 +16,17 @@
 
 NUDE Font_PrintString(float X, float Y, char *sz)
 {
+	//_asm mov eax, 0x71A700
+	//_asm jmp eax
+
+	_asm push sz
+	_asm push Y
+	_asm push X
 	_asm mov eax, 0x71A700
-	_asm jmp eax
+	_asm call eax
+	_asm pop eax
+	_asm pop eax
+	_asm pop eax
 }
 
 //----------------------------------------------------------

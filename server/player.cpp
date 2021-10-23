@@ -50,8 +50,7 @@ void DecompressNormalVector(VECTOR * vec, C_VECTOR1 * c1)
 
 CPlayer::CPlayer()
 {
-	memset(m_szName, 0, sizeof(char) * MAX_PLAYER_NAME);
-	m_ucNameLength = 0;
+	m_wPlayerID = INVALID_PLAYER_ID;
 	m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
 	m_bytePlayerID = INVALID_PLAYER_ID;
 	m_VehicleID = 0;
@@ -78,15 +77,10 @@ CPlayer::CPlayer()
 	m_SpectateID = 0xFFFFFFFF;
 	m_iDrunkLevel = 0;
 	m_uiRconAttempt = 0;
-	m_iVirtualWorld = 0;
-	m_bIsAdmin = false;
-	m_iMoney = 0;
 	m_bHasSpawnInfo = false;
-	m_iScore = 0;
 	m_nLastPingUpdate = 0;
 	m_ucFightingStyle = 4; // FIGHT_STYLE_NORMAL
 	m_ucFightingMove = 0;
-	m_bIsNPC = false;
 
 	m_pTextDraw = new CPlayerTextDrawPool(m_bytePlayerID);
 	m_pLabelPool = NULL;
@@ -117,8 +111,6 @@ CPlayer::CPlayer()
 	m_tmLastStreamRateTick = 0;
 	m_usPickupLimitCount = 0;
 
-	memset(m_szSerial, 0, sizeof(m_szSerial));
-
 	Deactivate();
 }
 
@@ -143,20 +135,19 @@ void CPlayer::Deactivate()
 	m_fArmour = 0.0f;
 	m_wTargetedPlayer = INVALID_PLAYER_ID;
 	m_wTargetedActor = INVALID_ACTOR_ID;
+	m_bSelectingText = false;
 
 	SAFE_DELETE(m_pPlayerVars);
 	m_pPlayerVars = new CPlayerVars();
 
 	SAFE_DELETE(m_pLabelPool);
 	m_pLabelPool = new CPlayerLabelPool();
-}
 
-//----------------------------------------------------
+	memset(m_bIsActorStreamedIn, 0, sizeof(bool) * MAX_ACTORS);
+	m_iStreamedActorCount = 0;	
 
-void CPlayer::SetName(const char* szName, unsigned char ucLength)
-{
-	strcpy_s(m_szName, szName);
-	m_ucNameLength = ucLength;
+	memset(m_bStreamedInLabel, 0, sizeof(bool) * MAX_LABEL_GLOBAL);
+	m_wStreamedLabelCount = 0;
 }
 
 //----------------------------------------------------
@@ -183,7 +174,7 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 	m_vecPos.Z = z;
 
 	RakNet::Time tmNow = RakNet::GetTime();
-	if (tmNow - m_tmLastStreamRateTick > (RakNet::Time)g_iStreamRate) {
+	if (tmNow - m_tmLastStreamRateTick > (RakNet::Time)iStreamRate) {
 		ProcessStreaming();
 		m_tmLastStreamRateTick = tmNow;
 	}
@@ -239,9 +230,21 @@ void CPlayer::UpdatePosition(float x, float y, float z)
 	}
 }
 
+// Seems like SA-MP doesn't care about PLAYER_MARKERS_MODE_STREAMED (2) mode from ShowPlayerMarkers(), only
+// check if it's set to 1 (enabled), but markers are still gets streamed despite on PLAYER_MARKERS_MODE_GLOBAL (1)
+void CPlayer::ProcessMarkers()
+{
+	if (pNetGame->m_bShowPlayerMarkers)
+	{
+		//RakNet::BitStream bsSend;
+
+		//bsSend.Write((unsigned char)ID_MARKER_SYNC);
+	}
+}
+
 void CPlayer::ProcessStreaming()
 {
-	CPickupPool* pPickupPool = pNetGame->GetPickupPool();
+	/*CPickupPool* pPickupPool = pNetGame->GetPickupPool();
 	CActorPool* pActorPool;
 	CActor* pActor;
 	float fDistance;
@@ -283,11 +286,48 @@ void CPlayer::ProcessStreaming()
 				}
 			}
 		}
+	}*/
+}
+
+//----------------------------------------------------
+
+void CPlayer::StreamPlayerIn(WORD wPlayerID)
+{
+	if (!m_bPlayerStreamedIn[wPlayerID] && m_iStreamedInPlayerCount <= MAX_CLIENT_PLAYERS)
+	{
+		m_bPlayerStreamedIn[wPlayerID] = true; // or m_bPlayerStreamedIn[wPlayerID]++;?
+		m_iStreamedInPlayerCount++;
+		if (pNetGame->GetFilterScripts())
+			pNetGame->GetFilterScripts()->OnPlayerStreamIn(wPlayerID, m_wPlayerID);
+		if (pNetGame->GetGameMode())
+			pNetGame->GetGameMode()->OnPlayerStreamIn(wPlayerID, m_wPlayerID);
 	}
 }
 
+//----------------------------------------------------
+
+void CPlayer::StreamPlayerOut(WORD wPlayerID)
+{
+	if (pNetGame->GetPlayerPool())
+	{
+		if (m_bPlayerStreamedIn[wPlayerID])
+		{
+			m_bPlayerStreamedIn[wPlayerID] = false;
+			m_iStreamedInPlayerCount--;
+
+			if (pNetGame->GetFilterScripts())
+				pNetGame->GetFilterScripts()->OnPlayerStreamOut(wPlayerID, m_wPlayerID);
+			if (pNetGame->GetGameMode())
+				pNetGame->GetGameMode()->OnPlayerStreamOut(wPlayerID, m_wPlayerID);
+		}
+	}
+}
+
+//----------------------------------------------------
+
 bool CPlayer::IsPickupStreamedIn(int iPickupID)
 {
+	if (iPickupID < 0 || iPickupID >= MAX_PICKUPS) return false;
 	return m_bStreamedInPickup[iPickupID];
 }
 
@@ -295,7 +335,7 @@ void CPlayer::StreamPickupIn(int iPickupID)
 {
 	// Apperently in SA-MP 0.3.7DL-R1, theres a 11477 variable that counts created pickups, but not used anywhere?
 	if (pNetGame->GetPickupPool() && m_usPickupLimitCount <= 200) {
-		pNetGame->GetPickupPool()->StreamIn(iPickupID, m_bytePlayerID);
+		pNetGame->GetPickupPool()->SpawnPickupForPlayer(iPickupID, m_bytePlayerID);
 		m_bStreamedInPickup[iPickupID] = true;
 		m_usPickupLimitCount++;
 	}
@@ -304,7 +344,7 @@ void CPlayer::StreamPickupIn(int iPickupID)
 void CPlayer::StreamPickupOut(int iPickupID)
 {
 	if (pNetGame->GetPickupPool()) {
-		pNetGame->GetPickupPool()->StreamOut(iPickupID, m_bytePlayerID);
+		pNetGame->GetPickupPool()->DeletePickupForPlayer(iPickupID, m_bytePlayerID);
 		m_bStreamedInPickup[iPickupID] = false;
 		m_usPickupLimitCount--;
 	}
@@ -470,7 +510,7 @@ void CPlayer::BroadcastSyncData()
 		bsSync.Write((const char*)&m_ofSync.vecPos,sizeof(VECTOR));
 	
 		// ROTATION
-		bsSync.Write(m_ofSync.fRotation);
+		//bsSync.Write(m_ofSync.fRotation);
 
 		// HEALTH/ARMOR
 		BYTE byteSyncHealthArmour=0;
@@ -681,7 +721,7 @@ void CPlayer::StoreOnFootFullSyncData(ONFOOT_SYNC_DATA *pofSync)
 
 	UpdatePosition(m_ofSync.vecPos.X,m_ofSync.vecPos.Y,m_ofSync.vecPos.Z);
 	m_byteUpdateFromNetwork = UPDATE_TYPE_ONFOOT;
-	m_fRotation = m_ofSync.fRotation;
+	//m_fRotation = m_ofSync.fRotation;
 	m_fHealth = (float)m_ofSync.byteHealth;
 	m_fArmour = (float)m_ofSync.byteArmour;
 	
@@ -859,10 +899,28 @@ void CPlayer::StoreInCarFullSyncData(INCAR_SYNC_DATA *picSync)
 
 void CPlayer::StoreTrailerFullSyncData(TRAILER_SYNC_DATA* trSync)
 {
+	if (!pNetGame->GetVehiclePool()) return;
+
+	memcpy(&m_trSync, trSync, sizeof(TRAILER_SYNC_DATA));
+
+	if (m_byteState == PLAYER_STATE_DRIVER)
+	{
+		if (m_icSync.TrailerID == trSync->TrailerID)
+		{
+			//QuaternionToMatrix();
+
+			//pVehicle->Update(m_bytePlayerID, &matWorld, 1000.0, 0); // Could be used for trailer trains, as I accidentally leaked in #betateam :o
+
+			//memcpy(&pVehicle->m_vecMoveSpeed, &m_trSync.vecMoveSpeed, sizeof(VECTOR));
+		}
+	}
+
+
+
 	VEHICLEID TrailerID = m_icSync.TrailerID;
 	if (!TrailerID) return;
 	
-	memcpy(&m_trSync, trSync, sizeof (TRAILER_SYNC_DATA));
+	
 
 	CVehicle *pVehicle = pNetGame->GetVehiclePool()->GetAt(TrailerID);
 	if(pVehicle) 
@@ -870,8 +928,8 @@ void CPlayer::StoreTrailerFullSyncData(TRAILER_SYNC_DATA* trSync)
 		MATRIX4X4 matWorld;
 
 		memcpy(&matWorld.pos, &m_trSync.vecPos, sizeof(VECTOR));
-		DecompressNormalVector(&matWorld.up, &m_trSync.cvecDirection);
-		DecompressNormalVector(&matWorld.right, &m_trSync.cvecRoll);
+		//DecompressNormalVector(&matWorld.up, &m_trSync.cvecDirection);
+		//DecompressNormalVector(&matWorld.right, &m_trSync.cvecRoll);
 		
 		pVehicle->Update(m_bytePlayerID, &matWorld, 1000.0, 0); // Could be used for trailer trains, as I accidentally leaked in #betateam :o
 		memcpy(&pVehicle->m_vecMoveSpeed, &m_trSync.vecMoveSpeed, sizeof (VECTOR));
@@ -982,17 +1040,16 @@ void CPlayer::Say(unsigned char * szText, size_t byteTextLen)
 
 //----------------------------------------------------
 
-// TODO: Move CPlayer::HandleDeath to CPlayerPool? 
-void CPlayer::HandleDeath(BYTE byteReason, BYTE byteWhoWasResponsible)
+void CPlayer::HandleDeath(BYTE byteReason, WORD wWhoWasResponsible)
 {
 	RakNet::BitStream bsPlayerDeath;
 	PlayerID playerid = pNetGame->GetRakServer()->GetPlayerIDFromIndex(m_bytePlayerID);
 
 	SetState(PLAYER_STATE_WASTED);
 	
-	pNetGame->GetFilterScripts()->OnPlayerDeath((cell)m_bytePlayerID, (cell)byteWhoWasResponsible, (cell)byteReason);
+	pNetGame->GetFilterScripts()->OnPlayerDeath((cell)m_wPlayerID, (cell)wWhoWasResponsible, (cell)byteReason);
 	CGameMode *pGameMode = pNetGame->GetGameMode();
-	if(pGameMode) pGameMode->OnPlayerDeath((cell)m_bytePlayerID, (cell)byteWhoWasResponsible, (cell)byteReason);
+	if(pGameMode) pGameMode->OnPlayerDeath((cell)m_wPlayerID, (cell)wWhoWasResponsible, (cell)byteReason);
 
 	bsPlayerDeath.Write(m_bytePlayerID);
 
@@ -1007,16 +1064,14 @@ void CPlayer::HandleDeath(BYTE byteReason, BYTE byteWhoWasResponsible)
 		pRcon->GetRakServer()->RPC( RPC_Death, &bsPlayerDeath, HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_PLAYER_ID, true, false );
 #endif*/
 
-	// Return here instead, if 'chatlogging' is disabled
-	if (!pConsole->GetIntVariable("chatlogging"))
-		return;
-
-	if ( byteWhoWasResponsible == INVALID_PLAYER_ID )
+	if (pConsole->GetIntVariable("chatlogging"))
 	{
-		logprintf("[death] %s died %d", m_szName, byteReason);
-	} else {
-		CPlayer* pKiller = pNetGame->GetPlayerPool()->GetAt(byteWhoWasResponsible);
-		logprintf("[kill] %s killed %s %s", pKiller->GetName(), m_szName, pNetGame->GetWeaponName(byteReason));
+		if (wWhoWasResponsible == INVALID_PLAYER_ID)
+		{
+			logprintf("[death] %s died %d", pNetGame->GetPlayerPool()->GetPlayerName(m_wPlayerID), byteReason);
+		} else {
+			logprintf("[kill] %s killed %s %s", pNetGame->GetPlayerPool()->GetPlayerName(wWhoWasResponsible), pNetGame->GetPlayerPool()->GetPlayerName(m_wPlayerID), pNetGame->GetWeaponName(byteReason));
+		}
 	}
 }
 
@@ -1044,7 +1099,7 @@ void CPlayer::Spawn()
 		// Reset all their sync attributes.
 		m_ofSync.vecPos = m_SpawnInfo.vecPos;
 		m_vecPos = m_SpawnInfo.vecPos;
-		m_ofSync.fRotation = m_SpawnInfo.fRotation;
+		//m_ofSync.fRotation = m_SpawnInfo.fRotation;
 		m_VehicleID=0;
 		
 		// Spawn them
@@ -1104,7 +1159,7 @@ void CPlayer::SpawnForPlayer(BYTE byteForPlayerID)
 	bsPlayerSpawn.Write(m_ofSync.vecPos.X);
 	bsPlayerSpawn.Write(m_ofSync.vecPos.Y);
 	bsPlayerSpawn.Write(m_ofSync.vecPos.Z);
-	bsPlayerSpawn.Write(m_ofSync.fRotation);
+	//bsPlayerSpawn.Write(m_ofSync.fRotation);
 	bsPlayerSpawn.Write(m_dwColor);
 
 	pNetGame->GetRakServer()->RPC(RPC_Spawn,&bsPlayerSpawn,HIGH_PRIORITY,RELIABLE,
@@ -1190,11 +1245,10 @@ void CPlayer::SetPlayerColor(DWORD dwColor)
 	
 	m_dwColor = dwColor;
 
-	bsColor.Write(m_bytePlayerID);
+	bsColor.Write(m_wPlayerID);
 	bsColor.Write(dwColor);
 
-	pNetGame->GetRakServer()->RPC(RPC_ScrSetPlayerColor,&bsColor,HIGH_PRIORITY,RELIABLE,
-		0,UNASSIGNED_PLAYER_ID,true,false);
+	pNetGame->BroadcastData(RPC_ScrSetPlayerColor, &bsColor, INVALID_PLAYER_ID, 2);
 }
 
 //----------------------------------------------------
@@ -1215,22 +1269,16 @@ void CPlayer::ToggleCheckpoint(bool bEnabled)
 {
 	m_bCheckpointEnabled = bEnabled;
 	m_bInCheckpoint = false;
-
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-
-	RakNet::BitStream bsParams;
-
 	if (bEnabled)
 	{
+		RakNet::BitStream bsParams;
 		bsParams.Write(m_vecCheckpoint.X);
 		bsParams.Write(m_vecCheckpoint.Y);
 		bsParams.Write(m_vecCheckpoint.Z);
 		bsParams.Write(m_fCheckpointSize);
-		pRak->RPC(RPC_SetCheckpoint, &bsParams, HIGH_PRIORITY, RELIABLE, 0,
-			pRak->GetPlayerIDFromIndex(m_bytePlayerID), false, false);
+		pNetGame->RPC(RPC_SetCheckpoint, &bsParams, m_wPlayerID, 2);
 	} else {
-		pRak->RPC(RPC_DisableCheckpoint, NULL, HIGH_PRIORITY, RELIABLE, 0,
-			pRak->GetPlayerIDFromIndex(m_bytePlayerID), false, false);
+		pNetGame->RPC(RPC_DisableCheckpoint, NULL, m_wPlayerID, 2);
 	}
 }
 
@@ -1283,13 +1331,9 @@ void CPlayer::ToggleRaceCheckpoint(bool bEnabled)
 {
 	m_bRaceCheckpointEnabled = bEnabled;
 	m_bInRaceCheckpoint = false;
-
-	RakServerInterface* pRak = pNetGame->GetRakServer();
-
-	RakNet::BitStream bsParams;
-
 	if (bEnabled)
 	{
+		RakNet::BitStream bsParams;
 		bsParams.Write(m_byteRaceCheckpointType);
 		bsParams.Write(m_vecRaceCheckpoint.X);
 		bsParams.Write(m_vecRaceCheckpoint.Y);
@@ -1298,11 +1342,9 @@ void CPlayer::ToggleRaceCheckpoint(bool bEnabled)
 		bsParams.Write(m_vecRaceNextCheckpoint.Y);
 		bsParams.Write(m_vecRaceNextCheckpoint.Z);
 		bsParams.Write(m_fRaceCheckpointSize);
-		pRak->RPC(RPC_SetRaceCheckpoint, &bsParams, HIGH_PRIORITY, RELIABLE, 0,
-			pRak->GetPlayerIDFromIndex(m_bytePlayerID), false, false);
+		pNetGame->RPC(RPC_SetRaceCheckpoint, &bsParams, m_wPlayerID, 2);
 	} else {
-		pRak->RPC(RPC_DisableRaceCheckpoint, NULL, HIGH_PRIORITY, RELIABLE, 0,
-			pRak->GetPlayerIDFromIndex(m_bytePlayerID), false, false);
+		pNetGame->RPC(RPC_DisableRaceCheckpoint, NULL, m_wPlayerID, 2);
 	}
 }
 
@@ -1353,16 +1395,6 @@ void CPlayer::CheckKeyUpdatesForScript(WORD wKeys)
 	}
 }
 
-void CPlayer::SetVirtualWorld(int iVirtualWorld)
-{
-	m_iVirtualWorld = iVirtualWorld;
-
-	RakNet::BitStream bsData;
-	bsData.Write(m_bytePlayerID); // player id
-	bsData.Write(iVirtualWorld); // vw id
-	pNetGame->SendToAll(RPC_ScrSetPlayerVirtualWorld, &bsData);
-}
-
 unsigned long CPlayer::GetCurrentWeaponAmmo()
 {
 	unsigned char ucWeapon = -1;
@@ -1411,6 +1443,16 @@ bool CPlayer::SendClientCheck(BYTE byteType, DWORD dwAddress, WORD wOffset, WORD
 	bsSend.Write(wCount);
 
 	return pNetGame->SendToPlayer(m_bytePlayerID, RPC_ClientCheck, &bsSend);
+}
+
+//----------------------------------------------------
+
+void CPlayer::SetSkillLevel(int iSkill, int iLevel)
+{
+	if (0 <= iSkill && iSkill < 11)
+	{
+		m_wSkillLevel[iSkill] = (WORD)iLevel;
+	}
 }
 
 //----------------------------------------------------

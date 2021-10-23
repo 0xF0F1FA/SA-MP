@@ -59,6 +59,33 @@ void CEntity::SetMatrix(MATRIX4X4 Matrix)
 
 //-----------------------------------------------------------
 
+void CEntity::UpdateRW()
+{
+	// Check for CPlaceable messup
+	if (!m_pEntity || m_pEntity->vtable == 0x863C40) return;
+
+	if (m_pEntity->pdwRenderWare && m_pEntity->mat)
+	{
+		DWORD dwThisEntity = (DWORD)m_pEntity;
+		DWORD dwThisMatrix = (DWORD)m_pEntity->mat;
+		DWORD dwRenderWare = (DWORD)m_pEntity->pdwRenderWare;
+
+		_asm mov edx, dwRenderWare
+		_asm mov eax, [edx+4]
+		_asm add eax, 16
+		_asm push eax
+		_asm mov ecx, dwThisMatrix
+		_asm mov edx, 0x59AD70
+		_asm call edx
+
+		_asm mov ecx, dwThisEntity
+		_asm mov edx, 0x532B00
+		_asm call edx
+	}
+}
+
+//-----------------------------------------------------------
+
 void CEntity::GetMoveSpeedVector(PVECTOR Vector)
 {
 	Vector->X = m_pEntity->vecMoveSpeed.X;
@@ -176,7 +203,7 @@ void CEntity::TeleportTo(float x, float y, float z)
 {
 	DWORD dwThisEntity = (DWORD)m_pEntity;
 
-	if(dwThisEntity) {
+	if(dwThisEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL) {
 		if( GetModelIndex() != TRAIN_PASSENGER_LOCO &&
 			GetModelIndex() != TRAIN_FREIGHT_LOCO &&
 			GetModelIndex() != TRAIN_TRAM) {
@@ -427,7 +454,7 @@ bool CEntity::HasExceededWorldBoundries(float fPX, float fZX, float fPY, float f
 
 //-----------------------------------------------------------
 
-bool CEntity::UsesCollision()
+bool CEntity::GetCollisionChecking()
 {
 	if (m_pEntity && m_pEntity->vtable != ADDR_PLACEABLE_VTBL)
 	{
@@ -460,4 +487,133 @@ void CEntity::SetGravityProcessing(bool bState)
 		else
 			m_pEntity->dwProcessingFlags |= 0x80000002;
 	}
+}
+
+//-----------------------------------------------------------
+
+void CEntity::SetAlwaysRender()
+{
+	if (!m_pEntity || m_pEntity->vtable == 0x863C40) return;
+
+	m_pEntity->dwProcessingFlags |= 0x80000000;
+}
+
+//-----------------------------------------------------------
+
+void CEntity::SetNotCollidable()
+{
+	if (!m_pEntity) return;
+
+	DWORD dwThisEntity = (DWORD)m_pEntity;
+
+	_asm mov eax, dwThisEntity
+	_asm and dword ptr [eax+64], 0xFFFFFFF7
+}
+
+//-----------------------------------------------------------
+
+void CEntity::MatrixToEulerAngles(float* X, float* Y, float* Z)
+{
+	if (!m_pEntity) return;
+
+	if (m_pEntity->mat)
+	{
+		DWORD dwThisMatrix = (DWORD)m_pEntity->mat;
+
+		_asm push 21
+		_asm push Z
+		_asm push Y
+		_asm push X
+		_asm mov ecx, dwThisMatrix
+		_asm mov eax, 0x59A840
+		_asm call eax
+	}
+
+	*X *= (180.0f / PI) * -1.0f;
+	*Y *= (180.0f / PI) * -1.0f;
+	*Z *= (180.0f / PI) * -1.0f;
+}
+
+//-----------------------------------------------------------
+
+DWORD CEntity::GetRenderWare()
+{
+	if (m_pEntity)
+	{
+		return (DWORD)m_pEntity->pdwRenderWare;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------
+
+void CEntity::Render()
+{
+	DWORD dwThisEntity = (DWORD)m_pEntity;
+	DWORD vtable = m_pEntity->vtable;
+
+/*	if (m_pEntity->nModelIndex >= 400 && m_pEntity->nModelIndex <= 611)
+	{
+		if()
+	}
+*/
+	_asm mov eax, vtable
+	_asm mov ecx, dwThisEntity
+	_asm call dword ptr [eax+68]
+}
+
+//-----------------------------------------------------------
+
+void CEntity::DestroyRwObject()
+{
+	if (!m_pEntity || !m_pEntity->pdwRenderWare) return;
+
+	DWORD dwThisEntity = (DWORD)m_pEntity;
+
+	_asm mov ecx, dwThisEntity
+	_asm mov eax, [ecx]
+	_asm call dword ptr [eax+32]
+}
+
+//-----------------------------------------------------------
+// Similar to gta_sa.exe:005A17B0
+
+void CEntity::Teleport(MATRIX4X4 m)
+{
+	if (!m_pEntity) return;
+	if (!m_pEntity->mat) return;
+
+	DWORD vtbl = (DWORD)m_pEntity->vtable;
+	DWORD dwThisEntity = (DWORD)m_pEntity;
+
+	_asm mov eax, vtbl
+	_asm mov ecx, dwThisEntity
+	_asm call dword ptr [eax+12] ; CEntity::Remove()
+
+	MATRIX4X4 mat;
+	memcpy(&mat, &m, sizeof(MATRIX4X4));
+	SetMatrix(mat);
+	UpdateRW();
+
+	_asm mov eax, vtbl
+	_asm mov ecx, dwThisEntity
+	_asm call dword ptr [eax+8] ; CEntity::Add()
+}
+
+// Hello people from SA-MP mobile. I knew you'll be here.
+void CEntity::MoveStep()
+{
+	if (!m_pEntity) return;
+
+	float fTimeStep = *(float*)0xB7CB5C;
+
+	MATRIX4X4 matPos;
+	GetMatrix(&matPos);
+	matPos.pos.X *= fTimeStep * m_pEntity->vecMoveSpeed.X;
+	matPos.pos.Y *= fTimeStep * m_pEntity->vecMoveSpeed.Y;
+	matPos.pos.Z *= fTimeStep * m_pEntity->vecMoveSpeed.Z;
+
+	MATRIX4X4 matTemp;
+	memcpy(&matTemp, &matPos, sizeof(MATRIX4X4));
+	Teleport(matTemp);
 }

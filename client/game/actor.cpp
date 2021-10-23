@@ -2,33 +2,31 @@
 #include "../main.h"
 #include "util.h"
 
-CActor::CActor(int iModelID, VECTOR vecPos, float fAngle)
+//-----------------------------------------------------------
+// This is the constructor for creating new player.
+
+CActor::CActor(int iSkin, float fX, float fY, float fZ, float fRotation)
 {
-	DWORD dwHandle;
-	float fZ;
-
-	m_pPed = NULL;
+	m_pPed = 0;
 	m_dwGTAId = 0;
-	m_bInvulnerable = false;
+	DWORD dwActorID = 0;
 
-	if (!pGame->IsModelLoaded(iModelID))
+	if (!pGame->IsModelLoaded(iSkin))
 	{
-		pGame->RequestModel(iModelID);
+		pGame->RequestModel(iSkin);
 		pGame->LoadRequestedModels();
-		while (!pGame->IsModelLoaded(iModelID))
+		while (!pGame->IsModelLoaded(iSkin))
 			Sleep(1);
 	}
 
-	fZ = vecPos.Z - 1.0f;
-	ScriptCommand(&create_actor, 5, iModelID, vecPos.X, vecPos.Y, fZ, &dwHandle);
-	ScriptCommand(&set_actor_z_angle, dwHandle, fAngle);
+	ScriptCommand(&create_actor,5,iSkin,fX,fY,fZ-1.0f,&dwActorID);
+	ScriptCommand(&set_actor_z_angle,dwActorID,fRotation);
 
-	m_dwGTAId = dwHandle;
-	m_pPed = GamePool_Ped_GetAt(dwHandle);
+	m_dwGTAId = dwActorID;
+	m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
 	m_pEntity = (ENTITY_TYPE*)m_pPed;
-
-	ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
-	ScriptCommand(&actor_task_sit, m_dwGTAId, 65542);
+	ScriptCommand(&set_actor_can_be_decapitated,m_dwGTAId,0);
+	ScriptCommand(&set_actor_dicision,m_dwGTAId,65542);
 }
 
 CActor::~CActor()
@@ -38,27 +36,25 @@ CActor::~CActor()
 
 void CActor::Destroy()
 {
-	DWORD dwPed = (DWORD)m_pPed;
+	DWORD dwPedPtr = (DWORD)m_pPed;
 
-	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) && m_pPed->entity.vtable != ADDR_PLACEABLE_VTBL)
+	// If it points to the CPlaceable vtable it's not valid
+	if (!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId) || m_pPed->entity.vtable == 0x863C40)
 	{
-		_asm
-		{
-			mov ecx, dwPed;
-			mov ebx, [ecx];
-			push 1
-			call [ebx]
-		}
-
 		m_pPed = NULL;
 		m_pEntity = NULL;
-	}
-	else
-	{
 		m_dwGTAId = 0;
-		m_pPed = NULL;
-		m_pEntity = NULL;
+		return;
 	}
+
+	// DESTROY METHOD
+	_asm mov ecx, dwPedPtr
+	_asm mov ebx, [ecx] ; vtable
+	_asm push 1
+	_asm call [ebx] ; destroy
+
+	m_pPed = NULL;
+	m_pEntity = NULL;
 }
 
 void CActor::ApplyAnimation(char* szAnimName, char* szAnimFile, float fT,

@@ -193,7 +193,7 @@ const SCRIPT_COMMAND enter_passenger_driveby   			= { 0x0713, "iiiffffiii" };
 const SCRIPT_COMMAND lock_actor							= { 0x04d7, "ii" };
 const SCRIPT_COMMAND refresh_streaming_at				= { 0x04E4, "ff" };
 const SCRIPT_COMMAND put_actor_in_car2					= { 0x0430, "iii" };
-
+const SCRIPT_COMMAND attach_object_to_ped				= { 0x070A, "iifffiissi" };
 const SCRIPT_COMMAND kill_actor							= { 0x0321, "i" };
 
 //const SCRIPT_COMMAND kill_actor					= { 0x5BE, "i" };
@@ -220,7 +220,6 @@ const SCRIPT_COMMAND get_actor_distance_from_ground 	= { 0x0819, "iv" }; // iAct
 const SCRIPT_COMMAND is_actor_falling_think				= { 0x0818, "i" }; // iActor
 
 const SCRIPT_COMMAND attach_object_to_actor				= { 0x069b, "iiffffff" };
-const SCRIPT_COMMAND attach_to_object					= { 0x070a, "iifffiissi" };
 const SCRIPT_COMMAND set_object_visible					= { 0x0750, "ii" };
 const SCRIPT_COMMAND destroy_object_with_fade			= { 0x09A2, "i" };
 const SCRIPT_COMMAND disassociate_object				= { 0x0682, "ifffi" };
@@ -258,7 +257,7 @@ const SCRIPT_COMMAND set_camera_pos						= { 0x03cb, "fff" };
 const SCRIPT_COMMAND set_actor_collision_detection		= { 0x0619, "ii" };
 
 const SCRIPT_COMMAND toggle_actor_cellphone				= { 0x0729, "ii" };
-const SCRIPT_COMMAND actor_task_sit						= { 0x06b0, "ii" };
+const SCRIPT_COMMAND set_actor_dicision					= { 0x060B, "ii" };
 const SCRIPT_COMMAND actor_task_handsup					= { 0x5c4, "ii" };
 const SCRIPT_COMMAND actor_task_use_atm					= { 0x5c7, "ii" };
 const SCRIPT_COMMAND clear_task = { 0x0687, "i" };
@@ -315,5 +314,3 @@ const SCRIPT_COMMAND add_sprite_blip_for_coord			= { 0x02A8, "fffiv" };
 const SCRIPT_COMMAND clear_mission_audio = { 0x040D, "i" };
 const SCRIPT_COMMAND load_mission_audio = { 0x03CF, "ii" };
 const SCRIPT_COMMAND set_mission_audio_position = { 0x03D7, "ifff" };
-
-const SCRIPT_COMMAND set_player_drunk_level = { 0x052C, "ii" };

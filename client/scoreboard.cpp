@@ -146,10 +146,10 @@ void CScoreBoard::UpdateList()
 	PLAYER_SCORE_INFO* Players;
 	Players = (PLAYER_SCORE_INFO*)calloc(playercount, sizeof(PLAYER_SCORE_INFO));
 
-	strcpy_s(Players[0].szName, pLocalPlayer->GetName());
+	strcpy_s(Players[0].szName, pPlayerPool->GetLocalPlayerName());
 	Players[0].dwColor = pLocalPlayer->GetPlayerColorAsARGB();
-	Players[0].iScore = pLocalPlayer->m_iScore;
-	Players[0].dwPing = pLocalPlayer->m_usPing;
+	Players[0].iScore = pPlayerPool->GetLocalPlayerScore();
+	Players[0].dwPing = pPlayerPool->GetLocalPlayerPing();
 	Players[0].dwId = pPlayerPool->GetLocalPlayerID();
 	
 	int i = 1;
@@ -162,9 +162,9 @@ void CScoreBoard::UpdateList()
 		{
 			CRemotePlayer* pRemotePlayer = pPlayerPool->GetAt(x);
 
-			Players[i].dwPing = pRemotePlayer->m_usPing;
-			strcpy_s(Players[i].szName, pRemotePlayer->GetName());
-			Players[i].iScore = pRemotePlayer->m_iScore;
+			Players[i].dwPing = pPlayerPool->GetPlayerPing(x);
+			strcpy_s(Players[i].szName, pPlayerPool->GetPlayerName(x));
+			Players[i].iScore = pPlayerPool->GetPlayerScore(x);
 			Players[i].dwColor = pRemotePlayer->GetPlayerColorAsARGB();
 			Players[i].dwId = x;
 			

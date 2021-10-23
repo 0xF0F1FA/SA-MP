@@ -327,6 +327,22 @@ static cell AMX_NATIVE_CALL n_floatabs(AMX *amx,cell *params)
     return amx_ftoc(fA);
 }
 
+/******************************************************************/
+/* return the integer part of a real value, truncated
+ * Return integer part of float, truncated (same as floatround
+ * with mode 3)
+ */
+static cell AMX_NATIVE_CALL n_floatint(AMX* amx, const cell* params)
+{
+    REAL fA = amx_ctof(params[1]);
+    if (fA >= 0.0)
+        fA = (REAL)(floor((double)fA));
+    else
+        fA = (REAL)(ceil((double)fA));
+    (void)amx;
+    return (cell)fA;
+}
+
 #if defined __cplusplus
   extern "C"
 #endif
@@ -347,6 +363,7 @@ const AMX_NATIVE_INFO float_Natives[] = {
   { "floatcos",    n_floatcos   },
   { "floattan",    n_floattan   },
   { "floatabs",    n_floatabs   },
+  { "floatint",    n_floatint   },  // also add user-defined operator "="
   { NULL, NULL }        /* terminator */
 };
 

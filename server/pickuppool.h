@@ -25,27 +25,33 @@ class CPickupPool
 {
 private:
 	PICKUP  m_Pickups[MAX_PICKUPS];
-	int		m_iPickupCount;
-	BYTE	m_bActive[MAX_PICKUPS];
-	short	m_sLastPickupID;
+	bool	m_bSlotState[MAX_PICKUPS];
 	int		m_iVirtualWorld[MAX_PICKUPS];
+	int		m_iPoolSize;
+	int		m_iPickupCount;
 
 public:
 	CPickupPool();
 
-	int New(int iModel, int iType, float fX, float fY, float fZ, BYTE staticp, int iVirtualWorld);
+	int New(int iModel, int iType, float fX, float fY, float fZ, int iVirtualWorld);
 	int Destroy(int iPickup);
-	bool IsValid(int iPickupId);
-	bool IsStatic(int iPickupId);
-	void ProcessLastID();
-	void StreamIn(int iPickupID, BYTE bytePlayerID);
-	void StreamOut(int iPickupID, BYTE bytePlayerID);
-	int GetVirtualWorld(int iPickupID);
+	void UpdatePoolSize();
+	void SpawnPickupForPlayer(int iPickup, WORD wPlayer);
+	void DeletePickupForPlayer(int iPickup, WORD wPlayer);
+	
+	bool GetSlotState(int iPickup)
+	{
+		if (iPickup < 0 || iPickup >= MAX_PICKUPS) return false;
+		return m_bSlotState[iPickup];
+	}
 
-	inline bool IsActive(int iPickupID) { return m_bActive[iPickupID] != 0; }
-	inline PICKUP Get(int iPickupId) { return m_Pickups[iPickupId]; }
-	inline int GetCount() { return m_iPickupCount; }
-	inline int GetLastID() { return m_sLastPickupID; }
+	PICKUP* GetAt(int iPickup) { return &m_Pickups[iPickup]; }
+
+	int GetVirtualWorld(int iPickup) { return m_iVirtualWorld[iPickup]; };
+	void SetVirtualWorld(int iPickup, int iVirtualWorld) { m_iVirtualWorld[iPickup] = iVirtualWorld; };
+
+	int GetPoolSize() { return m_iPoolSize; };
+	int GetCount() { return m_iPickupCount; }
 };
 
 #endif

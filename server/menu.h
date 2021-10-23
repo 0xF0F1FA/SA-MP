@@ -45,16 +45,19 @@ public:
 	
 	void SetID(BYTE byteMenuID) { m_byteMenuID = byteMenuID; };
 	
-	void InitForPlayer(BYTE bytePlayerID);
-	void ShowForPlayer(BYTE bytePlayerID);
-	void HideForPlayer(BYTE bytePlayerID);
+	void InitForPlayer(WORD wPlayerID);
+	void ShowForPlayer(WORD wPlayerID);
+	void HideForPlayer(WORD wPlayerID);
 	
 	void ResetPlayer(BYTE bytePlayerID)
 	{
 		if (bytePlayerID < MAX_PLAYERS) m_bInitedForPlayer[bytePlayerID] = false;
 	};
 	void DisableInteraction() { m_MenuInteraction.bMenu = false; };
-	void DisableRow(BYTE byteRow) { m_MenuInteraction.bRow[byteRow] = false; };
+	void DisableRow(BYTE byteRow) { 
+		if (byteRow >= MAX_MENU_ITEMS) return;
+		m_MenuInteraction.bRow[byteRow] = false;
+	};
 	
 	bool ValidRow(unsigned char ucRow);
 };

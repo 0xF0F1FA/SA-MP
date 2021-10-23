@@ -10,6 +10,7 @@ Copyright 2004-2005 SA:MP Team
 class CObjectPool
 {
 private:
+	int			m_iPoolSize;
 	bool		m_bObjectSlotState[MAX_OBJECTS];
 	CObject		*m_pObjects[MAX_OBJECTS];
 
@@ -19,21 +20,25 @@ public:
 	~CObjectPool();
 
 	bool New(byte byteObjectID, int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDist=0.0f);
-	bool Delete(BYTE byteObjectID);
+	bool Delete(WORD wObjectID);
+
+	void UpdatePoolSize();
 
 	// Find out if the slot is inuse.
-	bool GetSlotState(BYTE byteObjectID) {
-		if(byteObjectID > MAX_OBJECTS) { return false; }
-		return m_bObjectSlotState[byteObjectID];
+	bool GetSlotState(WORD wObjectID) {
+		if(wObjectID >= MAX_OBJECTS) { return false; }
+		return m_bObjectSlotState[wObjectID];
 	};
 
 	// Retrieve a vehicle
-	CObject* GetAt(BYTE byteObjectID) {
-		if(byteObjectID> MAX_OBJECTS || !m_bObjectSlotState[byteObjectID]) { return NULL; }
-		return m_pObjects[byteObjectID];
+	CObject* GetAt(WORD wObjectID) {
+		if(wObjectID>= MAX_OBJECTS || !m_bObjectSlotState[wObjectID]) { return NULL; }
+		return m_pObjects[wObjectID];
 	};
 
 	int FindIDFromGtaPtr(ENTITY_TYPE * pGtaObject);
 	
 	void Process();
+
+	int GetCount();
 };

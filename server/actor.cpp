@@ -1,200 +1,106 @@
 
 #include "main.h"
 
-CActor::CActor(unsigned short usActorID, int iModelID, VECTOR vecPos, float fAngle)
+CActor::CActor(int iSkin, VECTOR* vecPos, float fRotation)
 {
-	m_usActorID = usActorID;
-	m_fHealth = 100.0f;
-	m_iModelID = iModelID;
-	m_vecSpawnPosition = vecPos;
-	m_fSpawnFacingAngle = fAngle;
-	m_vecPosition = vecPos;
-	m_fFacingAngle = fAngle;
-	m_bInvulnerable = true;
-	m_iVirtualWorld = 0;
-	m_bAnimLoopedOrFreezed = false;
+	m_SpawnInfo.byteTeam = 0;
+	m_SpawnInfo.vecPos.X = vecPos->X;
+	m_SpawnInfo.vecPos.Y = vecPos->Y;
+	m_SpawnInfo.vecPos.Z = vecPos->Z;
 
-	memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
+	if (iSkin > 20000 && pArtwork) {
+		int iNewSkin = pArtwork->GetBaseIDFromNewID(iSkin);
+		if (iNewSkin < 0 || iNewSkin >= 20000) {
+			m_SpawnInfo.iSkin = 0;
+			m_SpawnInfo.iBaseSkin = 0;
+		} else {
+			m_SpawnInfo.iSkin = iNewSkin;
+			m_SpawnInfo.iBaseSkin = iSkin;
+		}
+	} else {
+		m_SpawnInfo.iSkin = iSkin;
+		m_SpawnInfo.iBaseSkin = 0;
+	}
+
+	m_SpawnInfo.fRotation = fRotation;
+	m_vecPos.X = vecPos->X;
+	m_vecPos.Y = vecPos->Y;
+	m_vecPos.Z = vecPos->Z;
+	m_fRotation = fRotation;
+	bHasAnimation = false;
+	m_fHealth = 100.0f;
+	m_byteInvulnerable = 1;
+	memset(&m_Animation, 0, sizeof(ANIMATION_INFO));
 }
 
 CActor::~CActor()
 {
-	if (pNetGame->GetPlayerPool())
-	{
-		pNetGame->GetPlayerPool()->DestroyActorForPlayers(m_usActorID);
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool) {
+		pPlayerPool->DestroyActorForPlayers(m_wActorID);
 	}
 }
 
-void CActor::SetPosition(float fX, float fY, float fZ)
+void CActor::UpdatePosition(float x, float y, float z)
 {
-	CPlayerPool* pPlayerPool;
-	CPlayer* pPlayer;
-
-	m_vecPosition.X = fX;
-	m_vecPosition.Y = fY;
-	m_vecPosition.Z = fZ;
-
-	pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
-	{
-		RakNet::BitStream bsSend;
-
-		bsSend.Write(m_usActorID);
-		/*bsSend.Write(fX);
-		bsSend.Write(fY);
-		bsSend.Write(fZ);*/
-		bsSend.Write(m_vecPosition);
-
-		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
-		{
-			pPlayer = pPlayerPool->GetAt(i);
-
-			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
-			{
-				pNetGame->SendToPlayer(i, RPC_ScrSetActorPos, &bsSend);
-			}
-		}
-	}
+	m_vecPos.X=x;
+	m_vecPos.Y=y;
+	m_vecPos.Z=z;
 }
 
-VECTOR* CActor::GetPosition()
+void CActor::UpdateRotation(float fRotation)
 {
-	return &m_vecPosition;
-}
-
-void CActor::SetFacingAngle(float fAngle)
-{
-	CPlayerPool* pPlayerPool;
-	CPlayer* pPlayer;
-
-	m_fFacingAngle = fAngle;
-
-	pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
-	{
-		RakNet::BitStream bsSend;
-
-		bsSend.Write(m_usActorID);
-		bsSend.Write(fAngle);
-
-		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
-		{
-			pPlayer = pPlayerPool->GetAt(i);
-
-			if (pPlayer && pPlayer->IsActorStreamedIn(i))
-			{
-				pNetGame->SendToPlayer(i, RPC_ScrSetActorFacingAngle, &bsSend);
-			}
-		}
-	}
-}
-
-float CActor::GetFacingAngle()
-{
-	return m_fFacingAngle;
+	m_fRotation = fRotation;
 }
 
 float CActor::GetSquaredDistanceFrom2DPoint(float fX, float fY)
 {
-	float
-		X = m_vecPosition.X - fX,
-		Y = m_vecPosition.Y - fY;
+	float fSX,fSY;
 
-	return Y * Y + X * X;
+	fSX = m_vecPos.X - fX * m_vecPos.X - fX,
+	fSY = m_vecPos.Y - fY * m_vecPos.Y - fY;
+
+	return fSX + fSY;
 }
 
 void CActor::SetHealth(float fHealth)
 {
-	CPlayerPool* pPlayerPool;
-	CPlayer* pPlayer;
-
 	m_fHealth = fHealth;
 
-	pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool) return;
+
+	RakNet::BitStream bsHealth;
+	bsHealth.Write(m_wActorID);
+	bsHealth.Write(m_fHealth);
+
+	for (int i = 0; i <= pPlayerPool->GetPoolSize(); i++)
 	{
-		RakNet::BitStream bsSend;
-
-		bsSend.Write(m_usActorID);
-		bsSend.Write(m_fHealth);
-
-		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		if (pPlayerPool->GetSlotState(i))
 		{
-			pPlayer = pPlayerPool->GetAt(i);
-
-			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			CPlayer* pPlayer = pPlayerPool->GetAt(i);
+			if (pPlayer)
 			{
-				pNetGame->SendToPlayer(i, RPC_ScrSetActorHealth, &bsSend);
+				if (pPlayer->IsActorStreamedIn(m_wActorID))
+				{
+					pNetGame->RPC(RPC_ScrSetActorHealth, &bsHealth, i, 2);
+				}
 			}
 		}
 	}
 }
 
-float CActor::GetHealth()
+void CActor::SendAnimation(WORD wPlayerID, ANIMATION_INFO* pAnim)
 {
-	return m_fHealth;
-}
-
-void CActor::ApplyAnimation(char* szAnimLib, char* szAnimName, float fDelta,
-	bool bLoop, bool bLockX, bool bLockY, bool bFreeze, int iTime)
-{
-	ACTOR_ANIMATION Animation;
-	CPlayerPool* pPlayerPool;
-	CPlayer* pPlayer;
-
-	memset(&Animation, 0, sizeof(ACTOR_ANIMATION));
-
-	strncpy_s(Animation.szAnimLib, szAnimLib, sizeof(Animation.szAnimLib));
-	strncpy_s(Animation.szAnimName, szAnimName, sizeof(Animation.szAnimName));
-	
-	Animation.fDelta = fDelta;
-	Animation.bLoop = bLoop;
-	Animation.bLockX = bLockX;
-	Animation.bLockY = bLockY;
-	Animation.bFreeze = bFreeze;
-	Animation.iTime = iTime;
-
-	pPlayerPool = pNetGame->GetPlayerPool();
-
-	if (pPlayerPool)
-	{
-		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
-		{
-			pPlayer = pPlayerPool->GetAt(i);
-
-			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
-			{
-				SendAnimation((unsigned short)i, &Animation);
-			}
-		}
-	}
-
-	if (bLoop || bFreeze)
-	{
-		memcpy(&m_Animation, &Animation, sizeof(ACTOR_ANIMATION));
-		m_bAnimLoopedOrFreezed = true;
-	}
-	else
-	{
-		memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
-		m_bAnimLoopedOrFreezed = false;
-	}
-}
-
-void CActor::SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim)
-{
-	unsigned char ucLibLen, ucNameLen;
-
-	ucLibLen = (unsigned char)strlen(pAnim->szAnimLib);
-	ucNameLen = (unsigned char)strlen(pAnim->szAnimName);
-
 	RakNet::BitStream bsSend;
+	BYTE byteAnimLibLen = (BYTE)strlen(pAnim->szAnimLib);
+	BYTE byteAnimNameLen; (BYTE)strlen(pAnim->szAnimName);
 
-	bsSend.Write(m_usActorID);
-	bsSend.Write(ucLibLen);
-	bsSend.Write(pAnim->szAnimLib, ucLibLen);
-	bsSend.Write(ucNameLen);
-	bsSend.Write(pAnim->szAnimName, ucNameLen);
+	bsSend.Write(m_wActorID);
+	bsSend.Write(byteAnimLibLen);
+	bsSend.Write(pAnim->szAnimLib, byteAnimLibLen);
+	bsSend.Write(byteAnimNameLen);
+	bsSend.Write(pAnim->szAnimName, byteAnimNameLen);
 	bsSend.Write(pAnim->fDelta);
 	bsSend.Write(pAnim->bLoop);
 	bsSend.Write(pAnim->bLockX);
@@ -202,56 +108,79 @@ void CActor::SendAnimation(unsigned short usPlayerID, ACTOR_ANIMATION* pAnim)
 	bsSend.Write(pAnim->bFreeze);
 	bsSend.Write(pAnim->iTime);
 
-	if (pNetGame->GetPlayerPool() &&
-		pNetGame->GetPlayerPool()->GetSlotState(usPlayerID))
-	{
-		pNetGame->SendToPlayer(usPlayerID, RPC_ScrApplyActorAnimation, &bsSend);
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool && pPlayerPool->GetAt(wPlayerID)) {
+		pNetGame->RPC(RPC_ScrApplyActorAnimation, &bsSend, wPlayerID, 2);
 	}
 }
 
 void CActor::ClearAnimations()
 {
-	CPlayerPool* pPlayerPool;
-	CPlayer* pPlayer;
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (!pPlayerPool) return;
 
-	pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
+	RakNet::BitStream bsSend;
+	bsSend.Write(m_wActorID);
+	for (int i = 0; i <= pPlayerPool->GetPoolSize(); i++)
 	{
-		RakNet::BitStream bsSend;
-
-		bsSend.Write(m_usActorID);
-
-		for (int i = 0; i <= pPlayerPool->GetLastPlayerId(); i++)
+		if (pPlayerPool->GetSlotState(i))
 		{
-			pPlayer = pPlayerPool->GetAt(i);
-			
-			if (pPlayer && pPlayer->IsActorStreamedIn(m_usActorID))
+			CPlayer* pPlayer = pPlayerPool->GetAt(i);
+			if (pPlayer)
 			{
-				pNetGame->SendToPlayer(i, RPC_ScrClearActorAnimation, &bsSend);
+				if (pPlayer->IsActorStreamedIn(m_wActorID))
+				{
+					pNetGame->RPC(RPC_ScrClearActorAnimation, &bsSend, i, 2);
+				}
 			}
 		}
 	}
 
-	m_bAnimLoopedOrFreezed = false;
-	memset(&m_Animation, 0, sizeof(ACTOR_ANIMATION));
+	bHasAnimation = false;
+	memset(&m_Animation, 0, sizeof(ANIMATION_INFO));
 }
 
-void CActor::SetInvulnerable(bool bInvulnerable)
+void CActor::ApplyAnimation(char* szAnimLib, char* szAnimName, float fDelta, bool bLoop, bool bLockX, bool bLockY, bool bFreeze, int iTime)
 {
-	m_bInvulnerable = bInvulnerable;
-}
+	ANIMATION_INFO Animation;
+	memset(&Animation, 0, sizeof(ANIMATION_INFO));
 
-bool CActor::IsInvulnerable()
-{
-	return m_bInvulnerable;
-}
+	strncpy(Animation.szAnimLib, szAnimLib, 64);
+	strncpy(Animation.szAnimName, szAnimName, 64);
+	Animation.fDelta = fDelta;
+	Animation.bLoop = bLoop;
+	Animation.bLockX = bLockX;
+	Animation.bLockY = bLockY;
+	Animation.bFreeze = bFreeze;
+	Animation.iTime = iTime;
 
-void CActor::SetVirtualWorld(int iVirtualWorld)
-{
-	m_iVirtualWorld = iVirtualWorld;
-}
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	if (pPlayerPool)
+	{
+		for (int i = 0; i <= pPlayerPool->GetPoolSize(); i++)
+		{
+			if (pPlayerPool->GetSlotState(i))
+			{
+				CPlayer* pPlayer = pPlayerPool->GetAt(i);
+				if (pPlayer)
+				{
+					if (pPlayer->IsActorStreamedIn(m_wActorID))
+					{
+						SendAnimation(i, &Animation);
+					}
+				}
+			}
+		}
+	}
 
-int CActor::GetVirtualWorld()
-{
-	return m_iVirtualWorld;
+	if (bLoop || bFreeze)
+	{
+		bHasAnimation = true;
+		memcpy(&m_Animation, &Animation, sizeof(ANIMATION_INFO));
+	}
+	else
+	{
+		bHasAnimation = false;
+		memset(&m_Animation, 0, sizeof(ANIMATION_INFO));
+	}
 }

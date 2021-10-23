@@ -11,6 +11,7 @@
 
 #include "game.h"
 #include "entity.h"
+#include <d3dx9.h>
 
 //-----------------------------------------------------------
 
@@ -69,7 +70,7 @@ public:
 	BOOL    IsSirenOn();
 	void    SetLandingGearState(eLandingGearState state);
 	eLandingGearState	GetLandingGearState();
-	bool	IsLandingGearNotUp();
+	bool	IsLandingGearDown();
 	void	SetLandingGearState(bool bUpState);
 	void	SetInvulnerable(BOOL bInv);
 	BOOL	IsInvulnerable() { return m_bIsInvulnerable; };
@@ -112,8 +113,19 @@ public:
 	void SetFeature(bool bToggle);
 	void SetVisibility(bool bVisible);
 	void ToggleDoor(int iDoor, int iNodeIndex, float fAngle);
+	void SetAlarmState(WORD wState);
 
 	unsigned char GetNumOfPassengerSeats();
+
+	void SetEngine(bool bOn) { m_bEngineState = bOn; };
+	void SetLights(bool bOn) { m_bLightState = bOn; };
+	void SetObjective(bool bOn) { m_bObjective = bOn; };
+
+	CVehicle* sub_100B7D00();
+
+	void SetLicensePlateText(char* szText);
+	void CreateLicensePlateTexture();
+	void DestroyLicensePlateTexture();
 
 	VEHICLE_TYPE	*m_pVehicle;
 	BOOL		m_bIsInvulnerable;
@@ -124,6 +136,11 @@ public:
 	DWORD		m_dwTimeSinceLastDriven;
 	BOOL		m_bHasBeenDriven;
 	CVehicle*   m_pTrailer;
+	bool		m_bEngineState;
+	bool		m_bLightState;
+	bool		m_bObjective;
+	char		m_szLicensePlate[MAX_LICENSE_PLATE_TEXT+1];
+	IDirect3DTexture9* m_pLicensePlateTexture;
 };
 
 //-----------------------------------------------------------

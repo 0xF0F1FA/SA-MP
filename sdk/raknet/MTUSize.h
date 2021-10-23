@@ -38,7 +38,7 @@
 
 /// The largest value for an UDP datagram
 /// \sa RakPeer::SetMTUSize() //
-#define MAXIMUM_MTU_SIZE 576
+#define MAXIMUM_MTU_SIZE 1492
 
 #endif
 

@@ -15,6 +15,8 @@
 #ifndef SAMPSRV_VEHICLE_H
 #define SAMPSRV_VEHICLE_H
 
+#define RANDOM_VEHICLE_COLOR (rand() % (256))
+
 typedef struct _VEHICLE_SPAWN_INFO
 {
 	int iVehicleType;
@@ -56,6 +58,7 @@ public:
 	bool					m_bHasSiren;
 	VEHICLE_OPEN_CLOSE_FLAG m_Windows;
 	VEHICLE_OPEN_CLOSE_FLAG m_Doors;
+	VEHICLE_PARAMS m_Params;
 
 	int m_iPanelDamageStatus;
 	int m_iDoorDamageStatus;
@@ -91,11 +94,15 @@ public:
 	void Respawn();
 	bool IsOccupied();
 	bool IsATrainPart();
+	bool HasParamsSet();
 	bool HandleSiren(unsigned char ucPlayerId, bool bSirenState);
+	void SetColor(WORD wPlayerID, int iColor1, int iColor2);
+	void SetPaintjob(WORD wPlayerID, int iPaintjob);
 
 	void Update(BYTE bytePlayerID, MATRIX4X4 * matWorld, float fHealth, VEHICLEID TrailerID);
 	void UpdateDamage(PLAYERID PlayerID, int iPanels, int iDoors, unsigned char ucLights, unsigned char ucTires);
 
+	float GetSquaredDistanceFrom2DPoint(float fX, float fY);
 	float GetDistanceFromPoint(float fX, float fY, float fZ);
 
 	void SetVirtualWorld(int iVirtualWorld);

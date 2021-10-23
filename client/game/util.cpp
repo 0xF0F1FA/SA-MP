@@ -536,9 +536,9 @@ int __stdcall GameGetWeaponModelIDFromWeaponID(int iWeaponID)
 
 //-----------------------------------------------------------
 
-void __stdcall SetRadarColor(BYTE nIndex,DWORD dwColor)
+void __stdcall SetRadarColor(DWORD nIndex,DWORD dwColor)
 {
-	if(nIndex < sizeof(dwUseHudColors)) {
+	if(nIndex < NUM_RADAR_COLORS) {
 		dwUseHudColors[nIndex] = dwColor;
 	}
 }
@@ -589,7 +589,12 @@ void GameResetRadarColors()
 
 BOOL __stdcall GameIsEntityOnScreen(DWORD * pdwEnt)
 {
-	return TRUE;
+	BOOL bResult = 0;
+	_asm mov ecx, pdwEnt
+	_asm mov edx, 0x534540
+	_asm call edx
+	_asm mov bResult, eax
+	return bResult != 0;
 }
 
 //-----------------------------------------------------------
@@ -655,6 +660,17 @@ float FloatOffset(float f1, float f2)
 
 //-----------------------------------------------------------
 
+float NormalizeAngle(float fAngle)
+{
+	if (fAngle > 180.0f)
+		fAngle -= 360.0f;
+	if (fAngle < -180.0f)
+		fAngle += 360.0f;
+	return fAngle;
+}
+
+//-----------------------------------------------------------
+
 float DistanceBetweenHorizontalPoints(float x1, float y1, float x2, float y2)
 {
 	float fSX,fSY;
@@ -694,6 +710,18 @@ void VectorNormalise(VECTOR *vec)
 float GetNormalisation(VECTOR *vec)
 {
 	return ((vec->X * vec->X) + (vec->Y * vec->Y) + (vec->Z * vec->Z));
+}
+
+//----------------------------------------------------
+
+bool IsWithinWorldRange(VECTOR* v)
+{
+	return *(float*)&v->X < 20000.0 &&
+		   *(float*)&v->X > -20000.0 &&
+		   *(float*)&v->Y < 20000.0 &&
+		   *(float*)&v->Y > -20000.0 &&
+		   *(float*)&v->Z < 100000.0 &&
+		   *(float*)&v->Z > -10000.0;
 }
 
 //----------------------------------------------------
@@ -880,12 +908,14 @@ int GetTaskTypeFromTask(DWORD* task)
 
 	if (!task || *task < 0x800000 || *task > 0x900000) return 0;
 
+	_asm pushad
 	_asm mov edx, task
 	_asm mov ebx, [edx]
 	_asm mov edx, [ebx+16]
 	_asm mov ecx, task
 	_asm call edx
 	_asm mov i, eax
+	_asm popad
 
 	return i;
 }
@@ -906,6 +936,33 @@ DWORD* GetNextTaskFromTask(DWORD* task)
 	_asm mov ret_task, eax
 
 	return ret_task;
+}
+
+//----------------------------------------------------
+
+DWORD GetAnimAssoc(DWORD dwID1, DWORD dwID2)
+{
+	DWORD dwReturnPtr = 0;
+	DWORD dwReturn = 0;
+
+	_asm push dwID2
+	_asm push dwID1
+	_asm mov edx, 0x4D3A60
+	_asm call edx
+	_asm mov dwReturnPtr, eax
+	_asm pop edx
+	_asm pop edx
+
+	if (dwReturnPtr)
+	{
+		_asm mov eax, dwReturnPtr
+		_asm mov edx, [eax+16]
+		_asm mov eax, [edx]
+		_asm mov dwReturn, eax
+
+		return dwReturn;
+	}
+	return 0;
 }
 
 //----------------------------------------------------
@@ -939,7 +996,7 @@ MODEL_INFO_TYPE* GetModelInfo(int iModelID)
 	{
 		return NULL;
 	}
-	
+	GTASA_VERSION_USA10;
 	MODEL_INFO_TYPE** pModelInfo = (MODEL_INFO_TYPE**)0xA9B0C8;
 
 	return pModelInfo[iModelID];
@@ -961,16 +1018,62 @@ WORD GetModelUseCount(int iModelID)
 
 //----------------------------------------------------
 
+bool IsPedModel(int iModelID)
+{
+	return false;
+}
+
+//----------------------------------------------------
+
+void TransformPoint(VECTOR* vecOut, MATRIX4X4* matIn, VECTOR* vecIn)
+{
+	vecOut->X =	matIn->at.X * vecIn->Z +
+				matIn->up.X * vecIn->Y +
+				matIn->right.X * vecIn->X +
+				matIn->pos.X;
+	vecOut->Y = matIn->at.Y * vecIn->Z +
+				matIn->up.Y * vecIn->Y +
+				matIn->right.Y * vecIn->X +
+				matIn->pos.Y;
+	vecOut->Z = matIn->at.Z * vecIn->Z +
+				matIn->up.Z * vecIn->Y +
+				matIn->right.Z * vecIn->X +
+				matIn->pos.Z;
+}
+
+//----------------------------------------------------
+
+void RtQuatConvertFromMatrix(MATRIX4X4* matIn, QUATERNION* quatOut)
+{
+	QUATERNION quat;
+	DWORD dwParam1 = (DWORD)&quat;
+	DWORD dwFunc = (iGtaVersion != GTASA_VERSION_USA10) ? 0x7EB600 : 0x7EB5C0;
+
+	_asm push matIn
+	_asm push dwParam1
+	_asm mov eax, dwFunc
+	_asm call eax
+	_asm pop edx
+	_asm pop edx
+
+	// RtQuatConvertFromMatrix uses RtQuat structure, which the real part (W)
+	// is in the last offset, and the imaginary parts (X,Y,Z) are in front
+	quatOut->W = quat.Z;
+	quatOut->X = quat.W;
+	quatOut->Y = quat.X;
+	quatOut->Z = quat.Y;
+}
+
+//----------------------------------------------------
+
 // https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION* quat)
+void MatrixToQuaternion(MATRIX4X4* mat, QUATERNION* quat)
 {
 	float tr;
 	float S1, S2, S3, S4;
-	float L0, L1;
+	float L0;
 
-	L0 = mat->up.Y + mat->at.Z;
-
-	tr = mat->right.X + L0 + 1.0f;
+	tr = mat->right.X + mat->up.Y + mat->at.Z + 1.0f;
 	if (tr < 0.0f)
 		tr = 0.0f;
 	S1 = sqrtf(tr) * 0.5f;
@@ -979,43 +1082,195 @@ void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION* quat)
 	if (tr < 0.0f)
 		tr = 0.0f;
 	S2 = sqrtf(tr) * 0.5f;
+	
+	L0 = 1.0f - mat->right.X;
 
-	L1 = 1.0f - mat->right.X;
-
-	tr = mat->up.Y + L1 - mat->at.Z;
+	tr = mat->up.Y + L0 - mat->at.Z;
 	if (tr < 0.0f)
 		tr = 0.0f;
 	S3 = sqrtf(tr) * 0.5f;
 
-	tr = L1 - L0;
+	tr = L0 - mat->up.Y + mat->at.Z;
 	if (tr < 0.0f)
 		tr = 0.0f;
 	S4 = sqrtf(tr) * 0.5f;
 
 	if (S1 < 0.0f) S1 = 0.0f;
-	if (S2 < 0.0f) S2 = 0.0f; 
+	if (S2 < 0.0f) S2 = 0.0f;
 	if (S3 < 0.0f) S3 = 0.0f;
 	if (S4 < 0.0f) S4 = 0.0f;
 
-	quat->x = S1;
-	quat->y = copysignf(S2, mat->at.Y - mat->up.Z);
-	quat->z = copysignf(S3, mat->right.Z - mat->at.X);
-	quat->w = copysignf(S4, mat->up.X - mat->right.Y);
+	quat->W = S1;
+	quat->X = copysignf(S2, mat->at.Y - mat->up.Z);
+	quat->Y = copysignf(S3, mat->right.Z - mat->at.X);
+	quat->Z = copysignf(S4, mat->up.X - mat->right.Y);
 }
 
-void QuatNormalize(D3DXQUATERNION* pQuat)
+//----------------------------------------------------
+
+// https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
+void QuaternionToMatrix(QUATERNION* quat, MATRIX4X4* mat)
+{
+	float sqw = quat->W * quat->W;
+	float sqx = quat->X * quat->X;
+	float sqy = quat->Y * quat->Y;
+	float sqz = quat->Z * quat->Z;
+	mat->right.X = sqx - sqy - sqz + sqw;
+	mat->up.Y = sqy - sqx - sqz + sqw;
+	mat->at.Z = sqz - (sqy + sqx) + sqw;
+
+	float tmp1 = quat->X * quat->Y;
+	float tmp2 = quat->W * quat->Z;
+	mat->up.X = tmp2 + tmp1 + tmp2 + tmp1;
+	mat->right.Y = tmp1 - tmp2 + tmp1 - tmp2;
+
+	tmp1 = quat->X * quat->Z;
+	tmp2 = quat->W * quat->Y;
+	mat->at.X = tmp1 - tmp2 + tmp1 - tmp2;
+	mat->right.Z = tmp2 + tmp1 + tmp2 + tmp1;
+
+	tmp1 = quat->Y * quat->Z;
+	tmp2 = quat->W * quat->X;
+	mat->at.Y = tmp2 + tmp1 + tmp2 + tmp1;
+	mat->up.Z = tmp1 - tmp2 + tmp1 - tmp2;
+}
+
+// https://books.google.hu/books?id=zkEY9RIm4WkC&pg=PA190&lpg=PA190&dq=2.0+/+qx+*+qx+%2B+qy+*+qy+%2B+qz+*+qz+%2B+qw+*+qw;&source=bl&ots=t_u7CCN8KY&sig=ACfU3U2hlFbd3_OdgqMi7CZMW-8RbquWxw&hl=en&sa=X&ved=2ahUKEwi5y5a_-IrzAhXI_qQKHSF8AX0Q6AF6BAgSEAM#v=onepage&q=q.z*xs&f=false
+void QuatRotate(QUATERNION* q, MATRIX4X4* m)
+{
+	float xs,ys,zs,wx,wy,wz,xx,xy,xz,yy,yz,zz;
+	float qx,qy,qz,qw;
+
+	qx = q->X;
+	qy = q->Y;
+	qz = q->Z;
+	qw = q->W;
+
+	float s = 2.0f / (q->X * q->X + q->Y * q->Y +  q->Z * q->Z + q->W * q->W);
+
+	xs = s * qx;
+	ys = s * qy;
+	zs = s * qz;
+	wx = qw * xs;
+	wy = qw * ys;
+	wz = qw * zs;
+	xx = qx * xs;
+	xy = qx * ys;
+	xz = qx * zs; // xz = qz * xs; typo?
+	yy = qy * ys;
+	yz = qy * zs;
+	zz = qz * zs;
+
+	m->right.X = 1.0f - (yy + zz);
+	m->right.Y = xy + wz;
+	m->right.Z = xz - wy;
+	m->up.X = xy - wz;
+	m->up.Y = 1.0f - (xx + zz);
+	m->up.Z = yz + wx;
+	m->at.X = xz + wy;
+	m->at.Y = yz - wx;
+	m->at.Z = 1.0f - (xx + yy);
+}
+
+void QuatSlerp(QUATERNION* pOut, QUATERNION* pQ1, QUATERNION* pQ2, float fT)
+{
+	D3DXQUATERNION Out, Q1, Q2;
+
+	Q1.w = pQ1->W;
+	Q1.x = pQ1->X;
+	Q1.y = pQ1->Y;
+	Q1.z = pQ1->Z;
+
+	Q2.w = pQ2->W;
+	Q2.x = pQ2->X;
+	Q2.y = pQ2->Y;
+	Q2.z = pQ2->Z;
+
+	D3DXQuaternionSlerp(&Out, &Q1, &Q2, fT);
+
+	pOut->W = Out.w;
+	pOut->X = Out.x;
+	pOut->Y = Out.y;
+	pOut->Z = Out.z;
+}
+
+void QuatNormalize(QUATERNION* pQuat)
 {
 	D3DXQUATERNION Out, Source;
 
-	Source.x = pQuat->x;
-	Source.y = pQuat->y;
-	Source.z = pQuat->z;
-	Source.w = pQuat->w;
+	Source.x = pQuat->X;
+	Source.y = pQuat->Y;
+	Source.z = pQuat->Z;
+	Source.w = pQuat->W;
 
 	D3DXQuaternionNormalize(&Out, &Source);
 
-	pQuat->x = Out.x;
-	pQuat->y = Out.y;
-	pQuat->z = Out.z;
-	pQuat->w = Out.w;
+	pQuat->W = Out.w;
+	pQuat->X = Out.x;
+	pQuat->Y = Out.y;
+	pQuat->Z = Out.z;
 }
+
+//----------------------------------------------------
+
+DWORD dwRwV3dTransformPoints = 0x7EDD90;
+void RwV3dTransformPoints(VECTOR* vecOut, VECTOR* vecPoints, MATRIX4X4* matIn)
+{
+	if (iGtaVersion == GTASA_VERSION_EU10)
+		dwRwV3dTransformPoints = 0x7EDDD0;
+
+	_asm push matIn
+	_asm push 1
+	_asm push vecPoints
+	_asm push vecOut
+	_asm mov edx, RwV3dTransformPoints
+	_asm call edx
+	_asm pop edx
+	_asm pop edx
+	_asm pop edx
+	_asm pop edx
+}
+
+//----------------------------------------------------
+
+DWORD dwRwMatrixInvert;
+DWORD dwInvertMatrixIn;
+DWORD dwInvertMatrixOut;
+void RwMatrixInvert(MATRIX4X4* matOut, MATRIX4X4* matIn)
+{
+	dwRwMatrixInvert = (iGtaVersion != GTASA_VERSION_USA10) ? 0x7F20B0 : 0x7F2070;
+	dwInvertMatrixOut = (DWORD)matOut;
+	dwInvertMatrixIn = (DWORD)matIn;
+
+	_asm pushad
+	
+	_asm push dwInvertMatrixOut
+	_asm push dwInvertMatrixIn
+	_asm mov edx, dwRwMatrixInvert
+	_asm call edx
+	_asm pop edx
+	_asm pop edx
+
+	_asm popad
+}
+
+//----------------------------------------------------
+
+int GetVehicleSubtype(VEHICLE_TYPE* pVehicle)
+{
+	if (!pVehicle) return 0;
+
+	switch (pVehicle->entity.vtable)
+	{
+	case 0x871120: return VEHICLE_SUBTYPE_CAR;
+	case 0x8721A0: return VEHICLE_SUBTYPE_BOAT;
+	case 0x871360: return VEHICLE_SUBTYPE_BIKE;
+	case 0x871948: return VEHICLE_SUBTYPE_PLANE;
+	case 0x871680: return VEHICLE_SUBTYPE_HELI;
+	case 0x871528: return VEHICLE_SUBTYPE_PUSHBIKE;
+	case 0x872370: return VEHICLE_SUBTYPE_TRAIN;
+	}
+	return 0;
+}
+
+//----------------------------------------------------

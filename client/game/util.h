@@ -25,7 +25,7 @@ void DecompressNormalVector(VECTOR * vec, C_VECTOR1 * c1);
 float FloatDifference(float f1, float f2);
 float FloatOffset(float f1, float f2);
 
-void __stdcall SetRadarColor(BYTE nIndex,DWORD dwColor);
+void __stdcall SetRadarColor(DWORD nIndex,DWORD dwColor);
 
 void __stdcall WorldRemoveEntity(DWORD *dwEnt);
 void __stdcall WorldAddEntity(DWORD *dwEnt);
@@ -68,16 +68,24 @@ BOOL __stdcall IsValidModel(int iModelID);
 int GetTaskTypeFromTask(DWORD* task);
 DWORD* GetNextTaskFromTask(DWORD * task);
 
+DWORD GetAnimAssoc(DWORD dwID1, DWORD dwID2);
 unsigned int CRC32UppercaseString(char* szString);
 
 void RemoveBuilding(int iModelId, float fX, float fY, float fZ, float fRadius);
 
-//void ConvertMatrixToQuat(MATRIX4X4* mat, D3DXQUATERNION * quat);
-//void QuatNormalize(D3DXQUATERNION* pQuat);
 MODEL_INFO_TYPE* GetModelInfo(int iModelID);
 MODEL_COL_TYPE* GetModelColInfo(int iModelID);
 WORD GetModelUseCount(int iModelID);
 
+float NormalizeAngle(float fAngle);
+
+void QuatSlerp(QUATERNION * pOut, QUATERNION * pQ1, QUATERNION * pQ2, float fT);
+void QuatRotate(QUATERNION * q, MATRIX4X4 * m);
+
+void MatrixToQuaternion(MATRIX4X4 * mat, QUATERNION * quat);
+void QuatNormalize(QUATERNION * pQuat);
+
+int GetVehicleSubtype(VEHICLE_TYPE * pVehicle);
 
 //-----------------------------------------------------------
 

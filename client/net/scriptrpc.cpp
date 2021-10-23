@@ -73,7 +73,7 @@ void ScrSetPlayerTeam(RPCParameters *rpcParams)
 
 void ScrSetPlayerName(RPCParameters *rpcParams)
 {
-	BYTE bytePlayerID;
+	WORD wPlayerID;
 	BYTE byteNickLen;
 	char szNewName[MAX_PLAYER_NAME+1];
 	BYTE byteSuccess;
@@ -82,35 +82,32 @@ void ScrSetPlayerName(RPCParameters *rpcParams)
 
 	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
 
-	bsData.Read(bytePlayerID);
+	bsData.Read(wPlayerID);
 	bsData.Read(byteNickLen);
 
 	if(byteNickLen > MAX_PLAYER_NAME) return;
 
 	bsData.Read(szNewName, byteNickLen);
-	szNewName[byteNickLen] = '\0';
-
-	// TODO: Remove this
-	// Why would you even send packet from server to tell the client it was a success,
-	// a.k.a. when the nick is not in use?
 	bsData.Read(byteSuccess);
+
+	szNewName[byteNickLen] = '\0';
 	
-	if (pPlayerPool->GetLocalPlayerID() == bytePlayerID) {
-		CLocalPlayer* pPlayer = pPlayerPool->GetLocalPlayer();
-
-		if (pDeathWindow)
-			pDeathWindow->ChangeNick((PCHAR)pPlayer->GetName(), szNewName);
-
-		pPlayer->SetName(szNewName);
-	} else {
-		CRemotePlayer* pPlayer = pPlayerPool->GetAt(bytePlayerID);
-		if (pPlayer != NULL) {
-			if (pDeathWindow)
-				pDeathWindow->ChangeNick((PCHAR)pPlayer->GetName(), szNewName);
-
-			pPlayer->SetName(szNewName);
+	// Additional: Update names in death entries
+	if (pDeathWindow)
+	{
+		if (pPlayerPool->GetLocalPlayerID() == wPlayerID)
+		{
+			pDeathWindow->ChangeNick(pPlayerPool->GetLocalPlayerName(), szNewName);
+		} else {
+			pDeathWindow->ChangeNick(pPlayerPool->GetPlayerName(wPlayerID), szNewName);
 		}
 	}
+
+	if (byteSuccess == 1) pPlayerPool->SetPlayerName(wPlayerID, szNewName);
+	
+	// Extra addition which we need to do if this is the local player;
+	if( pPlayerPool->GetLocalPlayerID() == wPlayerID )
+		pPlayerPool->SetLocalPlayerName( szNewName );
 }
 
 void ScrSetPlayerSkin(RPCParameters *rpcParams)
@@ -225,16 +222,16 @@ void ScrSetPlayerColor(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
 	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
-	BYTE bytePlayerID;
+	WORD wPlayerID;
 	DWORD dwColor;
 
-	bsData.Read(bytePlayerID);
+	bsData.Read(wPlayerID);
 	bsData.Read(dwColor);
 
-	if(bytePlayerID == pPlayerPool->GetLocalPlayerID()) {
+	if(wPlayerID == pPlayerPool->GetLocalPlayerID()) {
 		pPlayerPool->GetLocalPlayer()->SetPlayerColor(dwColor);
 	} else {
-		CRemotePlayer *pPlayer = pPlayerPool->GetAt(bytePlayerID);
+		CRemotePlayer *pPlayer = pPlayerPool->GetAt(wPlayerID);
 		if(pPlayer)	pPlayer->SetPlayerColor(dwColor);
 	}
 }
@@ -517,13 +514,12 @@ void ScrDeathMessage(RPCParameters *rpcParams)
 		szKillerName = NULL; dwKillerColor = 0;
 	} else {
 		if(pPlayerPool->GetLocalPlayerID() == byteKiller) {
-			szKillerName = (PCHAR)pPlayerPool->GetLocalPlayer()->GetName();
+			szKillerName = pPlayerPool->GetLocalPlayerName();
 			dwKillerColor = pPlayerPool->GetLocalPlayer()->GetPlayerColorAsARGB();
 		} else {
-			CRemotePlayer* pPlayer = pPlayerPool->GetAt(byteKiller);
-			if (pPlayer != NULL) {
-				szKillerName = (PCHAR)pPlayer->GetName();
-				dwKillerColor = pPlayer->GetPlayerColorAsARGB();
+			if(pPlayerPool->GetSlotState(byteKiller)) {
+				szKillerName = pPlayerPool->GetPlayerName(byteKiller);
+				dwKillerColor = pPlayerPool->GetAt(byteKiller)->GetPlayerColorAsARGB();
 			} else {
 				//pChatWindow->AddDebugMessage("Slot State Killer FALSE");
 				szKillerName = NULL; dwKillerColor = 0;
@@ -533,13 +529,12 @@ void ScrDeathMessage(RPCParameters *rpcParams)
 
 	// Determine the killee's name and color
 	if(pPlayerPool->GetLocalPlayerID() == byteKillee) {
-		szKilleeName = (PCHAR)pPlayerPool->GetLocalPlayer()->GetName();
+		szKilleeName = pPlayerPool->GetLocalPlayerName();
 		dwKilleeColor = pPlayerPool->GetLocalPlayer()->GetPlayerColorAsARGB();
 	} else {
-		CRemotePlayer* pPlayer = pPlayerPool->GetAt(byteKillee);
-		if (pPlayer != NULL) {
-			szKilleeName = (PCHAR)pPlayer->GetName();
-			dwKilleeColor = pPlayer->GetPlayerColorAsARGB();
+		if(pPlayerPool->GetSlotState(byteKillee)) {
+			szKilleeName = pPlayerPool->GetPlayerName(byteKillee);
+			dwKilleeColor = pPlayerPool->GetAt(byteKillee)->GetPlayerColorAsARGB();
 		} else {
 			//pChatWindow->AddDebugMessage("Slot State Killee FALSE");
 			szKilleeName = NULL; dwKilleeColor = 0;
@@ -694,17 +689,17 @@ void ScrCreateObject(RPCParameters *rpcParams)
 
 void ScrSetObjectPos(RPCParameters *rpcParams)
 {
-	byte byteObjectID;
+	WORD wObjectID;
 	float fX, fY, fZ, fRotation;
 	RakNet::BitStream bsData(rpcParams);
-	bsData.Read(byteObjectID);
+	bsData.Read(wObjectID);
 	bsData.Read(fX);
 	bsData.Read(fY);
 	bsData.Read(fZ);
 	bsData.Read(fRotation);
 
 	CObjectPool*	pObjectPool =	pNetGame->GetObjectPool();
-	CObject*		pObject		=	pObjectPool->GetAt(byteObjectID);
+	CObject*		pObject		=	pObjectPool->GetAt(wObjectID);
 	if (pObject)
 	{
 		pObject->TeleportTo(fX, fY, fZ);
@@ -715,19 +710,22 @@ void ScrSetObjectPos(RPCParameters *rpcParams)
 
 void ScrSetObjectRotation(RPCParameters *rpcParams)
 {
-	byte byteObjectID;
-	float fX, fY, fZ;
+	WORD wObjectID;
+	VECTOR vecRot;
 	RakNet::BitStream bsData(rpcParams);
-	bsData.Read(byteObjectID);
-	bsData.Read(fX);
-	bsData.Read(fY);
-	bsData.Read(fZ);
+	bsData.Read(wObjectID);
+	bsData.Read(vecRot.X);
+	bsData.Read(vecRot.Y);
+	bsData.Read(vecRot.Z);
 
-	CObjectPool*	pObjectPool =	pNetGame->GetObjectPool();
-	CObject*		pObject		=	pObjectPool->GetAt(byteObjectID);
-	if (pObject)
+	CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+	if (pObjectPool)
 	{
-		pObject->InstantRotate(fX, fY, fZ);
+		CObject* pObject = pObjectPool->GetAt(wObjectID);
+		if (pObject)
+		{
+			pObject->InstantRotate(&vecRot);
+		}
 	}
 }
 
@@ -735,14 +733,14 @@ void ScrSetObjectRotation(RPCParameters *rpcParams)
 
 void ScrDestroyObject(RPCParameters *rpcParams)
 {
-	byte byteObjectID;
+	WORD wObjectID;
 	RakNet::BitStream bsData(rpcParams);
-	bsData.Read(byteObjectID);
+	bsData.Read(wObjectID);
 
 	CObjectPool* pObjectPool =	pNetGame->GetObjectPool();
-	if (pObjectPool->GetAt(byteObjectID))
+	if (pObjectPool->GetAt(wObjectID))
 	{
-		pObjectPool->Delete(byteObjectID);
+		pObjectPool->Delete(wObjectID);
 	}
 }
 
@@ -873,31 +871,46 @@ void ScrMoveObject(RPCParameters *rpcParams)
 void ScrStopObject(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
-	BYTE byteObjectID;
-	float newx, newy, newz;
+	WORD wObjectID;
+	//float newx, newy, newz;
 
-	bsData.Read(byteObjectID);
-	bsData.Read(newx);
-	bsData.Read(newy);
-	bsData.Read(newz);
+	bsData.Read(wObjectID);
+	//bsData.Read(newx);
+	//bsData.Read(newy);
+	//bsData.Read(newz);
 
-	CObject* pObject = pNetGame->GetObjectPool()->GetAt(byteObjectID);
+	CObject* pObject = pNetGame->GetObjectPool()->GetAt(wObjectID);
 	if (pObject)
 	{
-		pObject->MoveTo(newx, newy, newz, pObject->m_fMoveSpeed);
+		//pObject->MoveTo(newx, newy, newz, pObject->m_fMoveSpeed);
+		pObject->Stop();
 	}
 }
 
 void ScrNumberPlate(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
-	
-	VEHICLEID Vehicle;
-	CHAR cNumberPlate[9];
-	
-	bsData.Read(Vehicle);
-	bsData.Read(cNumberPlate, 9);
-	strcpy_s(pNetGame->GetVehiclePool()->m_charNumberPlate[Vehicle], cNumberPlate);
+
+	VEHICLEID Vehicle=INVALID_VEHICLE_ID;
+	BYTE bytePlateLen=0;
+	CHAR cNumberPlate[MAX_LICENSE_PLATE_TEXT+1];
+	CVehicle* pVehicle;
+
+	memset(cNumberPlate, 0, sizeof(cNumberPlate));
+
+	if (!pNetGame->GetVehiclePool() ||
+		!bsData.Read(Vehicle) || !pNetGame->GetVehiclePool()->GetSlotState(Vehicle) ||
+		!bsData.Read(bytePlateLen) || bytePlateLen > MAX_LICENSE_PLATE_TEXT ||
+		!bsData.Read(cNumberPlate, bytePlateLen))
+	{
+		return;
+	}
+
+	cNumberPlate[bytePlateLen] = '\0';
+
+	pVehicle = pNetGame->GetVehiclePool()->GetAt(Vehicle);
+	//if(pVehicle)
+		//pVehicle->SetNumberPlateText(cNumberPlate);
 }
 
 //----------------------------------------------------
@@ -1055,6 +1068,28 @@ void ScrAttachObjectToPlayer(RPCParameters *rpcParams)
 	} catch(...) {}
 }
 
+static void ScrAttachObjectToCamera(RPCParameters* rpcParams)
+{
+	unsigned short usObjectID;
+	CObject* pObject;
+
+	if (pNetGame->GetObjectPool() &&
+		rpcParams->numberOfBitsOfData == 16)
+	{
+		RakNet::BitStream bsData(rpcParams);
+
+		usObjectID = (unsigned short)-1;
+
+		bsData.Read(usObjectID);
+
+		pObject = pNetGame->GetObjectPool()->GetAt((BYTE)usObjectID);
+		if (pObject)
+		{
+			pGame->GetCamera()->AttachToEntity(pObject);
+		}
+	}
+}
+
 void ScrInitMenu(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
@@ -1063,12 +1098,14 @@ void ScrInitMenu(RPCParameters *rpcParams)
 	CMenuPool* pMenuPool = pNetGame->GetMenuPool();
 
 	BYTE byteMenuID;
-	bool bColumns; // 0 = 1, 1 = 2
+	BOOL bColumns; // 0 = 1, 1 = 2
 	CHAR cText[MAX_MENU_LINE];
 	float fX;
 	float fY;
 	float fCol1;
-	float fCol2 = 0.0;
+	float fCol2 = 0.0f;
+	BOOL bMenu;
+	BOOL bRow;
 	MENU_INT MenuInteraction;
 	
 	bsData.Read(byteMenuID);
@@ -1078,10 +1115,12 @@ void ScrInitMenu(RPCParameters *rpcParams)
 	bsData.Read(fY);
 	bsData.Read(fCol1);
 	if (bColumns) bsData.Read(fCol2);
-	bsData.Read(MenuInteraction.bMenu);
+	bsData.Read(bMenu);
+	MenuInteraction.bMenu = bMenu != FALSE;
 	for (BYTE i = 0; i < MAX_MENU_ITEMS; i++)
 	{
-		bsData.Read(MenuInteraction.bRow[i]);
+		bsData.Read(bRow);
+		MenuInteraction.bRow[i] = bRow != FALSE;
 	}
 
 	CMenu* pMenu;
@@ -1147,12 +1186,10 @@ void ScrHideMenu(RPCParameters *rpcParams)
 void ScrSetPlayerWantedLevel(RPCParameters *rpcParams)
 {
 	RakNet::BitStream bsData(rpcParams);
-	
-	if(!pGame) return;
+	BYTE byteLevel=0;
 
-	BYTE byteLevel;
-	bsData.Read(byteLevel);
-	pGame->SetWantedLevel(byteLevel);
+	if(bsData.Read(byteLevel))
+		pGame->SetWantedLevel(byteLevel);
 }
 
 void ScrShowTextDraw(RPCParameters *rpcParams)
@@ -1175,13 +1212,17 @@ void ScrShowTextDraw(RPCParameters *rpcParams)
 
 void ScrHideTextDraw(RPCParameters *rpcParams)
 {
-	RakNet::BitStream bsData(rpcParams);
 	CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
 	if (pTextDrawPool)
 	{
+		RakNet::BitStream bsData(rpcParams);
 		WORD wTextID;
-		bsData.Read(wTextID);
-		pTextDrawPool->Delete(wTextID);
+
+		if (bsData.Read(wTextID) &&
+			wTextID < MAX_CLIENT_TEXT_DRAWS)
+		{
+			pTextDrawPool->Delete(wTextID);
+		}
 	}
 }
 
@@ -1460,9 +1501,9 @@ static void ScrSetPlayer(RPCParameters* rpcParams)
 	{
 	case 1:
 	{
-		int iDrunkLevel = 0;
-		in.Read(iDrunkLevel);
-		pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->SetDrunkLevel(iDrunkLevel);
+		float fDrunkLevel = 0.0f;
+		in.Read(fDrunkLevel);
+		pGame->SetDrunkLevel(fDrunkLevel);
 		break;
 	}
 	case 2:
@@ -1676,14 +1717,18 @@ static void ScrSetShopName(RPCParameters* pParams)
 
 		bsData.Read(szSectionName);
 
-#ifdef _DEBUG
-		if (pChatWindow)
-			pChatWindow->AddDebugMessage("[DEBUG] Disabling interior script: %s", szSectionName);
-#endif
-
 		CPlayerPed* pPlayerPed = pGame->FindPlayerPed();
 		if (pPlayerPed) {
 			pPlayerPed->SetEntryExit(szSectionName);
+
+			if (szSectionName[0] != '\0')
+			{
+				pPlayerPed->LoadShoppingData(szSectionName);
+			}
+			else
+			{
+				pPlayerPed->LoadShoppingData("");
+			}
 		}
 	}
 }
@@ -1917,13 +1962,37 @@ static void ScrClearActorAnimation(RPCParameters* rpcParams)
 
 //----------------------------------------------------
 
-static void ScrDisableVehicleCollision(RPCParameters* rpcParams)
+static void ScrClickTextDraw(RPCParameters* rpcParams)
 {
-	if (rpcParams->numberOfBitsOfData == 1)
-	{
-		RakNet::BitStream bsData(rpcParams);
+	if (!pTextDrawSelect)
+		return;
 
-		pNetGame->m_bDisableVehicleCollision = bsData.ReadBit();
+	RakNet::BitStream bsData(rpcParams);
+	bool bEnable = false;
+	DWORD dwHoverColor = 0;
+
+	bsData.Read(bEnable);
+	
+	if (bEnable)
+	{
+		bsData.Read(dwHoverColor);
+
+		pTextDrawSelect->Enable(dwHoverColor);
+	}
+	else
+		pTextDrawSelect->Disable();
+
+}
+
+//----------------------------------------------------
+
+static void ScrVehicleCollision(RPCParameters* rpcParams)
+{
+	RakNet::BitStream bsData(rpcParams);
+	bool bDisable=false;
+
+	if (bsData.Read(bDisable)) {
+		pNetGame->m_bRemoteVehicleCollisions = bDisable;
 	}
 }
 
@@ -1988,6 +2057,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrRemoveComponent);
 	REGISTER_STATIC_RPC(pRakClient, ScrForceSpawnSelection);
 	REGISTER_STATIC_RPC(pRakClient, ScrAttachObjectToPlayer);
+	REGISTER_STATIC_RPC(pRakClient, ScrAttachObjectToCamera);
 	REGISTER_STATIC_RPC(pRakClient, ScrInitMenu);
 	REGISTER_STATIC_RPC(pRakClient, ScrShowMenu);
 	REGISTER_STATIC_RPC(pRakClient, ScrHideMenu);
@@ -2021,7 +2091,8 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	REGISTER_STATIC_RPC(pRakClient, ScrSetActorHealth);
 	REGISTER_STATIC_RPC(pRakClient, ScrApplyActorAnimation);
 	REGISTER_STATIC_RPC(pRakClient, ScrClearActorAnimation);
-	REGISTER_STATIC_RPC(pRakClient, ScrDisableVehicleCollision);
+	REGISTER_STATIC_RPC(pRakClient, ScrVehicleCollision);
+	REGISTER_STATIC_RPC(pRakClient, ScrClickTextDraw);
 }
 
 //----------------------------------------------------
